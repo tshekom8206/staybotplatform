@@ -1,0 +1,390 @@
+<div class="page-content">
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+      <h4 class="mb-3 mb-md-0">Message Templates</h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+      <button type="button"
+              class="btn btn-primary btn-icon-text"
+              (click)="openCreateModal(templateModal)">
+        <i appFeatherIcon="plus" featherIcon></i> New Template
+      </button>
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div class="row" *ngIf="success || error">
+    <div class="col-12">
+      <ngb-alert type="success"
+                 *ngIf="success"
+                 [dismissible]="false"
+                 class="alert-success">
+        <i appFeatherIcon="check-circle" featherIcon class="me-2"></i>
+        {{ success }}
+      </ngb-alert>
+      <ngb-alert type="danger"
+                 *ngIf="error"
+                 [dismissible]="false"
+                 class="alert-danger">
+        <i appFeatherIcon="alert-triangle" featherIcon class="me-2"></i>
+        {{ error }}
+      </ngb-alert>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Templates List -->
+    <div class="col-lg-8" [class.col-lg-12]="!selectedTemplate">
+      <div class="card">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <div class="d-flex align-items-center">
+                <i appFeatherIcon="file-text" featherIcon class="text-primary me-2"></i>
+                <h6 class="card-title mb-0">Templates ({{ filteredTemplates.length }})</h6>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex gap-2">
+                <!-- Category Filter -->
+                <select class="form-select form-select-sm"
+                        (change)="onCategoryChange($any($event.target).value)">
+                  <option value="all">All Categories</option>
+                  <option *ngFor="let category of templateCategories"
+                          [value]="category.value">
+                    {{ category.label }}
+                  </option>
+                </select>
+
+                <!-- Search -->
+                <div class="input-group input-group-sm">
+                  <input type="text"
+                         class="form-control"
+                         placeholder="Search templates..."
+                         [value]="searchTerm"
+                         (input)="onSearchChange($any($event.target).value)">
+                  <span class="input-group-text">
+                    <i appFeatherIcon="search"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body p-0">
+
+          <!-- Empty State -->
+          <div class="text-center py-5" *ngIf="filteredTemplates.length === 0">
+            <i appFeatherIcon="file-text" featherIcon class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+            <h6 class="text-muted">No templates found</h6>
+            <p class="text-muted small mb-3">
+              {{ searchTerm || selectedCategory !== 'all' ? 'Try adjusting your filters' : 'Create your first message template to get started' }}
+            </p>
+            <button type="button"
+                    class="btn btn-primary btn-sm"
+                    (click)="openCreateModal(templateModal)"
+                    *ngIf="!searchTerm && selectedCategory === 'all'">
+              <i appFeatherIcon="plus" featherIcon class="me-1"></i>
+              Create Template
+            </button>
+          </div>
+
+          <!-- Templates List -->
+          <div class="list-group list-group-flush" *ngIf="filteredTemplates.length > 0">
+            <div *ngFor="let template of filteredTemplates; trackBy: trackByTemplateId"
+                 class="list-group-item list-group-item-action template-item"
+                 [class.active]="selectedTemplate?.id === template.id">
+
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1" (click)="previewTemplate(template)">
+                  <div class="d-flex align-items-center mb-2">
+                    <i [appFeatherIcon]="getCategoryConfig(template.category).icon"
+                                             [style.color]="getCategoryConfig(template.category).color"
+                       class="me-2"></i>
+                    <h6 class="mb-0 me-2">{{ template.name }}</h6>
+                    <span [class]="getStatusClass(template.isActive)" class="me-2">
+                      {{ template.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                    <span class="badge bg-light text-dark" *ngIf="template.isDefault">
+                      Default
+                    </span>
+                  </div>
+
+                  <p class="mb-2 text-muted small">{{ template.subject }}</p>
+
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="small text-muted">
+                      <span class="me-3">
+                        <i appFeatherIcon="folder" featherIcon class="me-1"></i>
+                        {{ getCategoryConfig(template.category).label }}
+                      </span>
+                      <span class="me-3" [class]="getUsageColor(template.usageCount)">
+                        <i appFeatherIcon="trending-up" featherIcon class="me-1"></i>
+                        {{ template.usageCount }} uses
+                      </span>
+                      <span>
+                        <i appFeatherIcon="clock" featherIcon class="me-1"></i>
+                        Updated {{ template.updatedAt | date:'short' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="ms-3">
+                  <div ngbDropdown class="dropdown">
+                    <button class="btn btn-link btn-sm"
+                            ngbDropdownToggle
+                            id="template-actions-{{ template.id }}"
+                            data-bs-toggle="dropdown">
+                      <i appFeatherIcon="more-vertical" featherIcon></i>
+                    </button>
+                    <ul ngbDropdownMenu [attr.aria-labelledby]="'template-actions-' + template.id">
+                      <li>
+                        <button class="dropdown-item"
+                                (click)="previewTemplate(template)">
+                          <i appFeatherIcon="eye" featherIcon class="me-2"></i>
+                          Preview
+                        </button>
+                      </li>
+                      <li>
+                        <button class="dropdown-item"
+                                (click)="openEditModal(templateModal, template)">
+                          <i appFeatherIcon="edit-2" featherIcon class="me-2"></i>
+                          Edit
+                        </button>
+                      </li>
+                      <li>
+                        <button class="dropdown-item"
+                                (click)="duplicateTemplate(template)">
+                          <i appFeatherIcon="copy" featherIcon class="me-2"></i>
+                          Duplicate
+                        </button>
+                      </li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li>
+                        <button class="dropdown-item"
+                                (click)="toggleTemplateStatus(template)">
+                          <i [appFeatherIcon]="template.isActive ? 'pause' : 'play'"
+                             featherIcon class="me-2"></i>
+                          {{ template.isActive ? 'Deactivate' : 'Activate' }}
+                        </button>
+                      </li>
+                      <li>
+                        <button class="dropdown-item text-danger"
+                                (click)="deleteTemplate(template)"
+                                [disabled]="template.isDefault">
+                          <i appFeatherIcon="trash-2" featherIcon class="me-2"></i>
+                          Delete
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Template Preview -->
+    <div class="col-lg-4" *ngIf="selectedTemplate">
+      <div class="card sticky-top" style="top: 20px;">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="card-title mb-0">Template Preview</h6>
+            <button type="button"
+                    class="btn-close"
+                    (click)="closePreview()"></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <div class="d-flex align-items-center mb-2">
+              <i [appFeatherIcon]="getCategoryConfig(selectedTemplate.category).icon"
+                                 [style.color]="getCategoryConfig(selectedTemplate.category).color"
+                 class="me-2"></i>
+              <strong>{{ selectedTemplate.name }}</strong>
+            </div>
+            <small class="text-muted">{{ getCategoryConfig(selectedTemplate.category).label }}</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Subject:</label>
+            <div class="p-2 bg-light rounded small">{{ selectedTemplate.subject }}</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Content:</label>
+            <div class="p-3 bg-light rounded template-content"
+                 [innerHTML]="selectedTemplate.content"></div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <small class="text-muted d-block">Status</small>
+              <span [class]="getStatusClass(selectedTemplate.isActive)">
+                {{ selectedTemplate.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="col-6">
+              <small class="text-muted d-block">Usage</small>
+              <span [class]="getUsageColor(selectedTemplate.usageCount)">
+                {{ selectedTemplate.usageCount }} times
+              </span>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <small class="text-muted d-block">Created by</small>
+            <span class="small">{{ selectedTemplate.createdBy }}</span>
+            <br>
+            <small class="text-muted">{{ selectedTemplate.createdAt | date:'medium' }}</small>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="button"
+                    class="btn btn-primary btn-sm"
+                    (click)="openEditModal(templateModal, selectedTemplate)">
+              <i appFeatherIcon="edit-2" featherIcon class="me-1"></i>
+              Edit Template
+            </button>
+            <button type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    (click)="duplicateTemplate(selectedTemplate)">
+              <i appFeatherIcon="copy" featherIcon class="me-1"></i>
+              Duplicate Template
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Template Modal -->
+<ng-template #templateModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ editingTemplate ? 'Edit Template' : 'Create New Template' }}</h4>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <form [formGroup]="templateForm" (ngSubmit)="saveTemplate()">
+    <div class="modal-body">
+
+      <!-- Template Name -->
+      <div class="mb-3">
+        <label for="templateName" class="form-label">Template Name</label>
+        <input type="text"
+               class="form-control"
+               id="templateName"
+               formControlName="name"
+               placeholder="Enter template name..."
+               [class.is-invalid]="templateForm.get('name')?.invalid && templateForm.get('name')?.touched">
+        <div class="invalid-feedback"
+             *ngIf="templateForm.get('name')?.invalid && templateForm.get('name')?.touched">
+          <div *ngIf="templateForm.get('name')?.errors?.['required']">Template name is required</div>
+          <div *ngIf="templateForm.get('name')?.errors?.['maxlength']">Name must be less than 100 characters</div>
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div class="mb-3">
+        <label for="templateCategory" class="form-label">Category</label>
+        <select class="form-select"
+                id="templateCategory"
+                formControlName="category"
+                [class.is-invalid]="templateForm.get('category')?.invalid && templateForm.get('category')?.touched">
+          <option *ngFor="let category of templateCategories"
+                  [value]="category.value">
+            {{ category.label }}
+          </option>
+        </select>
+        <div class="form-text" *ngIf="templateForm.get('category')?.value">
+          {{ getCategoryConfig(templateForm.get('category')?.value).description }}
+        </div>
+      </div>
+
+      <!-- Subject -->
+      <div class="mb-3">
+        <label for="templateSubject" class="form-label">Subject Line</label>
+        <input type="text"
+               class="form-control"
+               id="templateSubject"
+               formControlName="subject"
+               placeholder="Enter message subject..."
+               [class.is-invalid]="templateForm.get('subject')?.invalid && templateForm.get('subject')?.touched">
+        <div class="invalid-feedback"
+             *ngIf="templateForm.get('subject')?.invalid && templateForm.get('subject')?.touched">
+          <div *ngIf="templateForm.get('subject')?.errors?.['required']">Subject is required</div>
+          <div *ngIf="templateForm.get('subject')?.errors?.['maxlength']">Subject must be less than 200 characters</div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="mb-3">
+        <label for="templateContent" class="form-label">Template Content</label>
+        <quill-editor
+          formControlName="content"
+          [modules]="quillConfig"
+          placeholder="Enter template content..."
+          theme="snow"
+          [class.is-invalid]="templateForm.get('content')?.invalid && templateForm.get('content')?.touched">
+        </quill-editor>
+        <div class="invalid-feedback"
+             *ngIf="templateForm.get('content')?.invalid && templateForm.get('content')?.touched">
+          <div *ngIf="templateForm.get('content')?.errors?.['required']">Content is required</div>
+          <div *ngIf="templateForm.get('content')?.errors?.['minlength']">Content must be at least 10 characters</div>
+        </div>
+      </div>
+
+      <!-- Template Options -->
+      <div class="row">
+        <div class="col-6">
+          <div class="form-check">
+            <input class="form-check-input"
+                   type="checkbox"
+                   id="isActive"
+                   formControlName="isActive">
+            <label class="form-check-label" for="isActive">
+              Active Template
+            </label>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="form-check">
+            <input class="form-check-input"
+                   type="checkbox"
+                   id="isDefault"
+                   formControlName="isDefault">
+            <label class="form-check-label" for="isDefault">
+              Default Template
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button type="button"
+              class="btn btn-secondary"
+              (click)="modal.dismiss()"
+              [disabled]="loading">
+        Cancel
+      </button>
+      <button type="submit"
+              class="btn btn-primary"
+              [disabled]="!isFormValid || loading">
+        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </span>
+        <i appFeatherIcon="save" featherIcon class="me-1" *ngIf="!loading"></i>
+        {{ loading ? 'Saving...' : (editingTemplate ? 'Update Template' : 'Create Template') }}
+      </button>
+    </div>
+  </form>
+</ng-template>

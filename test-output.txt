@@ -1,0 +1,11 @@
+At C:\Users\Administrator\Downloads\hostr\test-chatbot-resilience.ps1:322 char:13
++ Write-Host "DETAILED RESULTS:" -ForegroundColor $INFO
++             ~~~~~~~~
+Unexpected token 'DETAILED' in expression or statement.
+At C:\Users\Administrator\Downloads\hostr\test-chatbot-resilience.ps1:340 char:53
++ ... ost "========================================" -ForegroundColor $INFO
++                                                  ~~~~~~~~~~~~~~~~~~~~~~~~
+The string is missing the terminator: ".
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : UnexpectedToken
+ 

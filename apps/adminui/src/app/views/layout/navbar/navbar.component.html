@@ -1,0 +1,168 @@
+<nav class="navbar">
+  <div class="navbar-content">
+
+    <div class="logo-mini-wrapper">
+      <img src="images/logo-mini-light.png" class="logo-mini logo-mini-light" alt="logo">
+      <img src="images/logo-mini-dark.png" class="logo-mini logo-mini-dark" alt="logo">
+    </div>
+
+    <form class="search-form">
+      <div class="input-group">
+        <div class="input-group-text">
+          <i class="feather icon-search"></i>
+        </div>
+        <input type="text" class="form-control" id="navbarForm" placeholder="Search here...">
+      </div>
+    </form>
+
+    <ul class="navbar-nav">
+      <li class="theme-switcher-wrapper nav-item">
+        <input type="checkbox" (change)="onThemeCheckboxChange($event)" value="" id="theme-switcher">
+        <label for="theme-switcher">
+          <div class="box">
+            <div class="ball"></div>
+            <div class="icons">
+              <i class="feather icon-sun"></i>
+              <i class="feather icon-moon"></i>
+            </div>
+          </div>
+        </label>
+      </li>
+      <li class="nav-item" *ngIf="isSoundSupported()" ngbDropdown>
+        <a class="nav-link" ngbDropdownToggle
+           [ngbTooltip]="soundSettings.enabled ? 'Sound On' : 'Sound Off'"
+           id="soundDropdown" role="button">
+          <i class="feather" [class.icon-volume-2]="soundSettings.enabled" [class.icon-volume-x]="!soundSettings.enabled"></i>
+        </a>
+        <div ngbDropdownMenu class="px-3 py-2" aria-labelledby="soundDropdown" style="min-width: 200px;">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span>Sound Notifications</span>
+            <div class="form-check form-switch">
+              <input class="form-check-input"
+                     type="checkbox"
+                     [checked]="soundSettings.enabled"
+                     (change)="toggleSound()">
+            </div>
+          </div>
+          <div *ngIf="soundSettings.enabled" class="mt-2">
+            <small class="text-muted">Volume</small>
+            <input type="range"
+                   class="form-range mt-1"
+                   min="0"
+                   max="1"
+                   step="0.1"
+                   [value]="soundSettings.volume"
+                   (input)="soundService.setVolume(+$any($event.target).value)">
+          </div>
+          <div class="mt-2">
+            <button type="button"
+                    class="btn btn-sm btn-outline-primary w-100"
+                    (click)="testSound()">
+              Test Sound
+            </button>
+          </div>
+        </div>
+      </li>
+      <li class="nav-item" ngbDropdown>
+        <a class="nav-link" ngbDropdownToggle id="languageDropdown" role="button">
+          <img src="images/flags/za.svg" class="w-20px" title="za" alt="za">
+          <span class="ms-2 d-none d-md-inline-block">English</span>
+        </a>
+        <div ngbDropdownMenu aria-labelledby="languageDropdown">
+          <a ngbDropdownItem class="py-2 d-flex"> <img src="images/flags/za.svg" class="w-20px me-1" title="za" alt="za"> <span class="ms-2"> English </span></a>
+        </div>
+      </li>
+      <li class="nav-item nav-notifications" ngbDropdown>
+        <a class="nav-link position-relative" ngbDropdownToggle id="notificationDropdown">
+          <i class="link-icon feather icon-bell" [class.notification-ring]="unreadNotifications > 0"></i>
+          <span class="notification-count" *ngIf="unreadNotifications > 0">
+            {{ unreadNotifications > 9 ? '9+' : unreadNotifications }}
+          </span>
+        </a>
+        <div ngbDropdownMenu class="px-0" aria-labelledby="notificationDropdown">
+          <div class="px-3 py-2 d-flex align-items-center justify-content-between border-bottom">
+            <p *ngIf="notifications.length > 0">{{ unreadNotifications }} New Notifications</p>
+            <p *ngIf="notifications.length === 0">Notifications</p>
+            <a href=""
+               (click)="clearAllNotifications(); $event.preventDefault()"
+               class="text-secondary"
+               *ngIf="unreadNotifications > 0">Clear all</a>
+          </div>
+          <div class="p-1">
+            <a
+              *ngFor="let notification of notifications.slice(0, 6)"
+              href="javascript:void(0)"
+              (click)="onNotificationClick(notification, $event)"
+              [class.unread]="!notification.read"
+              class="dropdown-item d-flex align-items-center py-2 notification-item">
+              <div class="w-30px h-30px d-flex align-items-center justify-content-center {{ getNotificationIconClass(notification) }} rounded-circle me-3">
+                <i class="feather icon-{{ notification.icon }} icon-sm text-white"></i>
+              </div>
+              <div class="flex-grow-1 me-2">
+                <p class="mb-1 fw-medium">{{ notification.title }}</p>
+                <p class="mb-1 fs-13px text-secondary">{{ notification.message }}</p>
+                <p class="mb-0 fs-12px text-muted">{{ formatTimeAgo(notification.timestamp) }}</p>
+              </div>
+              <div *ngIf="!notification.read" class="notification-badge"></div>
+            </a>
+            <div *ngIf="notifications.length === 0" class="dropdown-item text-center py-4">
+              <i class="feather icon-bell-off text-secondary mb-2" style="font-size: 24px;"></i>
+              <p class="text-secondary mb-0">No new notifications</p>
+              <p class="fs-12px text-muted mb-0">You're all caught up!</p>
+            </div>
+          </div>
+          <div class="px-3 py-2 d-flex align-items-center justify-content-center border-top" *ngIf="notifications.length > 0">
+            <a href="javascript:void(0)" (click)="viewAllNotifications($event)" class="text-success fw-medium">View all</a>
+          </div>
+        </div>
+      </li>
+      <li class="nav-item nav-profile" ngbDropdown>
+        <a class="nav-link" ngbDropdownToggle id="profileDropdown">
+          <img class="w-30px h-30px ms-1 rounded-circle" src="https://placehold.co/30x30" alt="profile">
+        </a>
+        <div ngbDropdownMenu class="px-0" aria-labelledby="profileDropdown">
+          <div class="d-flex flex-column align-items-center border-bottom px-5 py-3">
+            <div class="mb-3">
+              <img class="w-80px h-80px rounded-circle" src="https://placehold.co/80x80" alt="">
+            </div>
+            <div class="text-center">
+              <p class="tx-16 fw-bolder">{{ currentUser?.email || 'Guest' }}</p>
+              <p class="fs-12px text-secondary">{{ currentUser?.email || 'Not logged in' }}</p>
+            </div>
+          </div>
+          <ul class="list-unstyled p-1">
+            <li>
+              <a routerLink="/general/profile" class="dropdown-item py-2 d-flex ms-0">
+                <i class="feather icon-user me-2 icon-md"></i>
+                <span>Profile</span>
+              </a>
+            </li>
+            <li>
+              <a href="" (click)="onEditProfile($event)" class="dropdown-item py-2 d-flex ms-0">
+                <i class="feather icon-edit me-2 icon-md"></i>
+                <span>Edit Profile</span>
+              </a>
+            </li>
+            <li>
+              <a href="" (click)="false" class="dropdown-item py-2 d-flex ms-0">
+                <i class="feather icon-repeat me-2 icon-md"></i>
+                <span>Switch User</span>
+              </a>
+            </li>
+            <li>
+              <a href="" (click)="onLogout($event)" class="dropdown-item py-2 d-flex ms-0">
+                <i class="feather icon-log-out me-2 icon-md"></i>
+                <span>Log Out</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+
+    <a href="" class="sidebar-toggler" (click)="toggleSidebar($event)">
+      <i class="feather icon-menu"></i>
+    </a>
+    
+  </div>
+</nav>

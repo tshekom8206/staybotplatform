@@ -1,0 +1,432 @@
+<div class="page-content">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">Guest Interaction History</h4>
+      <p class="text-muted mb-0">Browse historical guest interactions and resolutions</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary" (click)="exportData()">
+        <i appFeatherIcon="download"></i>
+        Export
+      </button>
+      <button class="btn btn-primary" (click)="refresh()" [disabled]="loading">
+        <i appFeatherIcon="refresh-cw" [class.spin]="loading"></i>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-lg-2 col-md-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-primary-subtle text-primary mb-2">
+            <i appFeatherIcon="archive"></i>
+          </div>
+          <h3 class="mb-0">{{ stats.total }}</h3>
+          <p class="text-muted mb-0 small">Total</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-success-subtle text-success mb-2">
+            <i appFeatherIcon="check-circle"></i>
+          </div>
+          <h3 class="mb-0">{{ stats.resolved }}</h3>
+          <p class="text-muted mb-0 small">Resolved</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-warning-subtle text-warning mb-2">
+            <i appFeatherIcon="clock"></i>
+          </div>
+          <h3 class="mb-0">{{ stats.pending }}</h3>
+          <p class="text-muted mb-0 small">Pending</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-danger-subtle text-danger mb-2">
+            <i appFeatherIcon="alert-circle"></i>
+          </div>
+          <h3 class="mb-0">{{ stats.escalated }}</h3>
+          <p class="text-muted mb-0 small">Escalated</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-info-subtle text-info mb-2">
+            <i appFeatherIcon="trending-up"></i>
+          </div>
+          <h3 class="mb-0">{{ stats.avgResolutionTime }}</h3>
+          <p class="text-muted mb-0 small">Avg. Resolution</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-primary-subtle text-primary mb-2">
+            <i [appFeatherIcon]="getTypeIcon(stats.mostCommonType)"></i>
+          </div>
+          <h6 class="mb-0">{{ stats.mostCommonType | titlecase }}</h6>
+          <p class="text-muted mb-0 small">Most Common</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Search -->
+        <div class="col-md-3">
+          <label class="form-label">Search</label>
+          <div class="position-relative">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search guests, staff, summary..."
+              [(ngModel)]="searchTerm"
+              (input)="applyFilters()"
+            >
+            <i appFeatherIcon="search" class="position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+          </div>
+        </div>
+
+        <!-- Type Filter -->
+        <div class="col-md-2">
+          <label class="form-label">Type</label>
+          <select class="form-select" [(ngModel)]="typeFilter" (change)="applyFilters()">
+            <option value="all">All Types</option>
+            <option value="chat">Chat</option>
+            <option value="task">Task</option>
+            <option value="emergency">Emergency</option>
+            <option value="complaint">Complaint</option>
+            <option value="request">Request</option>
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="all">All Status</option>
+            <option value="resolved">Resolved</option>
+            <option value="pending">Pending</option>
+            <option value="escalated">Escalated</option>
+          </select>
+        </div>
+
+        <!-- Staff Filter -->
+        <div class="col-md-2">
+          <label class="form-label">Staff Member</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Staff name"
+            [(ngModel)]="staffFilter"
+            (input)="applyFilters()"
+          >
+        </div>
+
+        <!-- Room Filter -->
+        <div class="col-md-2">
+          <label class="form-label">Room</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Room number"
+            [(ngModel)]="roomFilter"
+            (input)="applyFilters()"
+          >
+        </div>
+
+        <!-- Clear Button -->
+        <div class="col-md-1 d-flex align-items-end">
+          <button class="btn btn-outline-secondary" (click)="clearFilters()">
+            <i appFeatherIcon="x-circle"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Date Range -->
+      <div class="row g-3 mt-2">
+        <div class="col-md-3">
+          <label class="form-label">Date From</label>
+          <div class="input-group">
+            <input
+              class="form-control"
+              placeholder="yyyy-mm-dd"
+              name="dateFrom"
+              [(ngModel)]="dateFrom"
+              ngbDatepicker
+              #dpFrom="ngbDatepicker"
+              (ngModelChange)="applyFilters()"
+            >
+            <button class="btn btn-outline-secondary" (click)="dpFrom.toggle()" type="button">
+              <i appFeatherIcon="calendar"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Date To</label>
+          <div class="input-group">
+            <input
+              class="form-control"
+              placeholder="yyyy-mm-dd"
+              name="dateTo"
+              [(ngModel)]="dateTo"
+              ngbDatepicker
+              #dpTo="ngbDatepicker"
+              (ngModelChange)="applyFilters()"
+            >
+            <button class="btn btn-outline-secondary" (click)="dpTo.toggle()" type="button">
+              <i appFeatherIcon="calendar"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+          <span class="text-muted small">{{ filteredHistory.length }} of {{ history.length }} interactions</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="text-muted mt-3">Loading interaction history...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i appFeatherIcon="alert-triangle" class="me-2"></i>
+    {{ error }}
+    <button class="btn btn-sm btn-outline-danger ms-3" (click)="refresh()">
+      Try Again
+    </button>
+  </div>
+
+  <!-- History Table -->
+  <div *ngIf="!loading && !error" class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="cursor: pointer" (click)="sort('date')">
+                <div class="d-flex align-items-center">
+                  Date
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'date' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'date' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th style="cursor: pointer" (click)="sort('guestName')">
+                <div class="d-flex align-items-center">
+                  Guest
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'guestName' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'guestName' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th style="cursor: pointer" (click)="sort('roomNumber')">
+                <div class="d-flex align-items-center">
+                  Room
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'roomNumber' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'roomNumber' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th style="cursor: pointer" (click)="sort('interactionType')">
+                <div class="d-flex align-items-center">
+                  Type
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'interactionType' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'interactionType' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th>Summary</th>
+              <th style="cursor: pointer" (click)="sort('staffMember')">
+                <div class="d-flex align-items-center">
+                  Staff Member
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'staffMember' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'staffMember' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th style="cursor: pointer" (click)="sort('status')">
+                <div class="d-flex align-items-center">
+                  Status
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'status' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'status' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th>Duration</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let item of paginatedHistory"
+              class="history-row"
+              (click)="viewDetails(item)"
+            >
+              <td>
+                <div class="date-info">
+                  <div class="fw-semibold">{{ item.date | date:'short' }}</div>
+                  <small class="text-muted">{{ getRelativeDate(item.date) }}</small>
+                </div>
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="avatar-sm me-2">
+                    <div class="avatar-title rounded-circle bg-primary-subtle text-primary">
+                      {{ item.guestName.charAt(0).toUpperCase() }}
+                    </div>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">{{ item.guestName }}</h6>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark">
+                  Room {{ item.roomNumber }}
+                </span>
+              </td>
+              <td>
+                <span [class]="getTypeClass(item.interactionType)">
+                  <i [appFeatherIcon]="getTypeIcon(item.interactionType)" class="me-1"></i>
+                  {{ item.interactionType | titlecase }}
+                </span>
+              </td>
+              <td>
+                <div class="summary-text" [ngbTooltip]="item.summary">
+                  {{ item.summary }}
+                </div>
+              </td>
+              <td>
+                <div class="staff-info">
+                  <span class="fw-semibold">{{ item.staffMember }}</span>
+                </div>
+              </td>
+              <td>
+                <span [class]="getStatusClass(item.status)">
+                  <i [appFeatherIcon]="getStatusIcon(item.status)" class="me-1"></i>
+                  {{ item.status | titlecase }}
+                </span>
+              </td>
+              <td>
+                <span class="duration-badge" *ngIf="item.duration">
+                  <i appFeatherIcon="clock" class="me-1"></i>
+                  {{ item.duration }}
+                </span>
+                <span class="text-muted" *ngIf="!item.duration">-</span>
+              </td>
+              <td>
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="viewDetails(item); $event.stopPropagation()"
+                  ngbTooltip="View Details"
+                >
+                  <i appFeatherIcon="eye"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredHistory.length === 0" class="text-center py-5">
+        <i appFeatherIcon="archive" class="text-muted mb-3" style="font-size: 3rem;"></i>
+        <h5 class="text-muted">No interaction history found</h5>
+        <p class="text-muted mb-0">
+          <span *ngIf="searchTerm || typeFilter !== 'all' || statusFilter !== 'all' || staffFilter || roomFilter">
+            Try adjusting your filters to see more results.
+          </span>
+          <span *ngIf="!searchTerm && typeFilter === 'all' && statusFilter === 'all' && !staffFilter && !roomFilter">
+            No interaction history available for the selected date range.
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="card-footer" *ngIf="totalPages > 1">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="text-muted small">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }} interactions
+        </div>
+        <ngb-pagination
+          [(page)]="currentPage"
+          [pageSize]="pageSize"
+          [collectionSize]="totalItems"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="onPageChange($event)"
+        ></ngb-pagination>
+      </div>
+    </div>
+  </div>
+</div>

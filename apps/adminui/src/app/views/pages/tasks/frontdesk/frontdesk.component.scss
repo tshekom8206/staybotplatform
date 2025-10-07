@@ -1,0 +1,151 @@
+// Front Desk Component Styles (similar to other task components)
+
+.page-title {
+  color: var(--bs-dark);
+  font-weight: 600;
+}
+
+.stats-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .feather-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.task-icon {
+  .feather-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// Priority Colors
+.text-danger.fw-bold {
+  color: #dc3545 !important;
+}
+
+.text-warning.fw-bold {
+  color: #fd7e14 !important;
+}
+
+.text-primary {
+  color: #25D466 !important;
+}
+
+.text-secondary {
+  color: #6c757d !important;
+}
+
+// Badge Styles
+.badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+
+  &.bg-light {
+    color: var(--bs-gray-700) !important;
+    border: 1px solid var(--bs-gray-300);
+  }
+}
+
+// Button Styles
+.btn {
+  font-weight: 500;
+  border-radius: 0.375rem;
+
+  &.btn-primary {
+    background-color: #25D466;
+    border-color: #25D466;
+
+    &:hover {
+      background-color: #20c05a;
+      border-color: #20c05a;
+    }
+  }
+
+  .feather-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Table Styles
+.table {
+  td {
+    vertical-align: middle;
+  }
+}
+
+// Dropdown Styles
+.dropdown-menu {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+
+  .dropdown-item {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+
+    .feather-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      background-color: var(--bs-light);
+    }
+  }
+}
+
+// Card Styles
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+// Loading States
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+}
+
+.feather-icon {
+  stroke-width: 2;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .stats-icon {
+    width: 36px;
+    height: 36px;
+
+    .feather-icon {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .table {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .table {
+    font-size: 0.8rem;
+
+    th,
+    td {
+      padding: 0.5rem 0.25rem;
+    }
+  }
+}

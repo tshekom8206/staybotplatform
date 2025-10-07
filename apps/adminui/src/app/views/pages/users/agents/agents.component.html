@@ -1,0 +1,376 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h4 class="page-title mb-0">Agent Dashboard</h4>
+    <p class="text-muted mb-0">Real-time agent availability and workload management</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button type="button" class="btn btn-outline-secondary" (click)="loadData()">
+      <i data-feather="refresh-cw" class="feather-icon" appFeatherIcon></i>
+      Refresh
+    </button>
+  </div>
+</div>
+
+<!-- Alert Messages -->
+<ngb-alert *ngIf="error" type="danger" (closed)="dismissError()">
+  <i data-feather="alert-circle" class="feather-icon me-2" appFeatherIcon></i>
+  {{ error }}
+</ngb-alert>
+
+<ngb-alert *ngIf="successMessage" type="success" (closed)="dismissSuccess()">
+  <i data-feather="check-circle" class="feather-icon me-2" appFeatherIcon></i>
+  {{ successMessage }}
+</ngb-alert>
+
+<!-- Statistics Cards -->
+<div class="row mb-4" *ngIf="stats">
+  <div class="col-xl-3 col-md-6 col-12 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon bg-primary bg-opacity-10 rounded-circle me-3">
+            <i data-feather="users" class="feather-icon text-primary" appFeatherIcon></i>
+          </div>
+          <div>
+            <h6 class="stats-title text-muted mb-1">Total Agents</h6>
+            <h4 class="mb-0 text-primary">{{ stats.totalAgents }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 col-12 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon bg-success bg-opacity-10 rounded-circle me-3">
+            <i data-feather="check-circle" class="feather-icon text-success" appFeatherIcon></i>
+          </div>
+          <div>
+            <h6 class="stats-title text-muted mb-1">Available</h6>
+            <h4 class="mb-0 text-success">{{ stats.availableAgents }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 col-12 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon bg-warning bg-opacity-10 rounded-circle me-3">
+            <i data-feather="clock" class="feather-icon text-warning" appFeatherIcon></i>
+          </div>
+          <div>
+            <h6 class="stats-title text-muted mb-1">Busy</h6>
+            <h4 class="mb-0 text-warning">{{ stats.busyAgents }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 col-12 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon bg-info bg-opacity-10 rounded-circle me-3">
+            <i data-feather="message-circle" class="feather-icon text-info" appFeatherIcon></i>
+          </div>
+          <div>
+            <h6 class="stats-title text-muted mb-1">Active Conversations</h6>
+            <h4 class="mb-0 text-info">{{ stats.totalActiveConversations }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="row g-3 align-items-end">
+      <!-- Search -->
+      <div class="col-lg-3 col-md-6">
+        <label for="search" class="form-label">Search</label>
+        <input
+          type="text"
+          id="search"
+          class="form-control"
+          placeholder="Search agents..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearch()"
+        >
+      </div>
+
+      <!-- Department Filter -->
+      <div class="col-lg-2 col-md-6">
+        <label for="department" class="form-label">Department</label>
+        <select
+          id="department"
+          class="form-select"
+          [(ngModel)]="selectedDepartment"
+          (change)="onFilterChange()"
+        >
+          <option value="">All Departments</option>
+          <option *ngFor="let dept of getDepartments()" [value]="dept">{{ dept }}</option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="col-lg-2 col-md-6">
+        <label for="status" class="form-label">Status</label>
+        <select
+          id="status"
+          class="form-select"
+          [(ngModel)]="selectedStatus"
+          (change)="onFilterChange()"
+        >
+          <option value="">All Statuses</option>
+          <option *ngFor="let status of getStatusOptions()" [value]="status">{{ status }}</option>
+        </select>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="col-lg-4 col-md-6">
+        <div class="btn-group w-100" role="group">
+          <input type="radio" class="btn-check" name="agentTabs" id="allAgents"
+                 [checked]="activeTab === 'all'" (change)="setActiveTab('all')">
+          <label class="btn btn-outline-primary" for="allAgents">All</label>
+
+          <input type="radio" class="btn-check" name="agentTabs" id="availableAgents"
+                 [checked]="activeTab === 'available'" (change)="setActiveTab('available')">
+          <label class="btn btn-outline-success" for="availableAgents">Available</label>
+
+          <input type="radio" class="btn-check" name="agentTabs" id="busyAgents"
+                 [checked]="activeTab === 'busy'" (change)="setActiveTab('busy')">
+          <label class="btn btn-outline-warning" for="busyAgents">Busy</label>
+
+          <input type="radio" class="btn-check" name="agentTabs" id="offlineAgents"
+                 [checked]="activeTab === 'offline'" (change)="setActiveTab('offline')">
+          <label class="btn btn-outline-secondary" for="offlineAgents">Offline</label>
+        </div>
+      </div>
+
+      <!-- Clear Filters -->
+      <div class="col-lg-1 col-md-6">
+        <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()">
+          <i data-feather="x" class="feather-icon" appFeatherIcon></i>
+          Clear
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Agents Grid -->
+<div class="row" *ngIf="!loading">
+  <div class="col-xl-4 col-lg-6 col-md-12 mb-4" *ngFor="let agent of filteredAgents; trackBy: agentTrackBy">
+    <div class="card h-100">
+      <div class="card-body">
+        <!-- Agent Header -->
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex align-items-center">
+            <div class="agent-avatar me-3">
+              <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
+                   style="width: 48px; height: 48px;">
+                <i data-feather="user" class="feather-icon text-muted" appFeatherIcon></i>
+              </div>
+            </div>
+            <div>
+              <h6 class="mb-0">{{ agent.name }}</h6>
+              <small class="text-muted">{{ agent.email }}</small>
+            </div>
+          </div>
+          <div class="btn-group" ngbDropdown>
+            <button type="button" class="btn btn-sm btn-outline-secondary" ngbDropdownToggle>
+              <i data-feather="more-horizontal" class="feather-icon" appFeatherIcon></i>
+            </button>
+            <div class="dropdown-menu" ngbDropdownMenu>
+              <button class="dropdown-item" (click)="openStatusModal(agent)">
+                <i data-feather="edit" class="feather-icon me-2" appFeatherIcon></i>
+                Update Status
+              </button>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" *ngFor="let workload of agentWorkloads.get(agent.agentId)?.activeChats || []"
+                      (click)="releaseConversation(workload.conversationId)">
+                <i data-feather="x-circle" class="feather-icon me-2" appFeatherIcon></i>
+                Release {{ workload.phoneNumber }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status and Department -->
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <span [class]="'badge ' + getStatusBadgeClass(agent.state)">
+            {{ agent.state }}
+          </span>
+          <span class="badge bg-light text-dark">{{ agent.department }}</span>
+        </div>
+
+        <!-- Status Message -->
+        <div *ngIf="agent.statusMessage" class="mb-3">
+          <small class="text-muted fst-italic">{{ agent.statusMessage }}</small>
+        </div>
+
+        <!-- Skills -->
+        <div class="mb-3" *ngIf="agent.skills.length > 0">
+          <small class="text-muted d-block mb-1">Skills:</small>
+          <div>
+            <span *ngFor="let skill of agent.skills" class="badge bg-secondary me-1 mb-1">{{ skill }}</span>
+          </div>
+        </div>
+
+        <!-- Workload Information -->
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <div class="text-center p-2 bg-light rounded">
+              <div class="small text-muted">Current Load</div>
+              <div class="fw-bold">{{ agent.currentWorkload }}/{{ agent.maxConcurrentChats }}</div>
+              <span [class]="'badge ' + getWorkloadBadgeClass(agent.currentWorkload, agent.maxConcurrentChats)">
+                {{ Math.round((agent.currentWorkload / agent.maxConcurrentChats) * 100) }}%
+              </span>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="text-center p-2 bg-light rounded">
+              <div class="small text-muted">Availability</div>
+              <div class="fw-bold">{{ getAvailabilityText(agent.availabilityScore) }}</div>
+              <span [class]="'badge ' + getAvailabilityBadgeClass(agent.availabilityScore)">
+                {{ Math.round(agent.availabilityScore * 100) }}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <div class="small text-muted">Avg. Response</div>
+            <div class="fw-semibold">{{ formatResponseTime(agent.averageResponseTime) }}</div>
+          </div>
+          <div class="col-6">
+            <div class="small text-muted">Last Activity</div>
+            <div class="fw-semibold">{{ formatLastActivity(agent.lastActivity) }}</div>
+          </div>
+        </div>
+
+        <!-- Active Conversations -->
+        <div *ngIf="agentWorkloads.get(agent.agentId) as workload" class="mt-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <small class="text-muted fw-semibold">Active Conversations</small>
+            <span class="badge bg-primary">{{ workload.activeConversations }}</span>
+          </div>
+
+          <div *ngIf="workload.activeChats.length > 0" class="active-chats">
+            <div *ngFor="let chat of workload.activeChats"
+                 class="d-flex align-items-center justify-content-between py-1 border-bottom">
+              <div class="flex-grow-1">
+                <div class="small fw-semibold">{{ chat.phoneNumber }}</div>
+                <div class="small text-muted">{{ formatLastActivity(chat.lastMessageAt) }}</div>
+              </div>
+              <div class="text-end">
+                <span [class]="'badge badge-sm ' + (chat.priority === 'Emergency' || chat.priority === 'Urgent' ? 'bg-danger' : 'bg-secondary')">
+                  {{ chat.priority }}
+                </span>
+                <button class="btn btn-sm btn-outline-danger ms-1"
+                        (click)="releaseConversation(chat.conversationId)"
+                        title="Release conversation">
+                  <i data-feather="x" class="feather-icon" appFeatherIcon style="width: 12px; height: 12px;"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="workload.activeChats.length === 0" class="text-center py-2">
+            <small class="text-muted">No active conversations</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="mb-0 mt-2 text-muted">Loading agent data...</p>
+</div>
+
+<!-- Empty State -->
+<div *ngIf="!loading && filteredAgents.length === 0" class="text-center py-5">
+  <i data-feather="users" class="feather-icon text-muted mb-3" appFeatherIcon style="width: 64px; height: 64px;"></i>
+  <h5 class="text-muted">No agents found</h5>
+  <p class="text-muted">No agents match your current filters.</p>
+  <button type="button" class="btn btn-outline-primary" (click)="clearFilters()">
+    Clear Filters
+  </button>
+</div>
+
+<!-- Agent Status Update Modal -->
+<ng-template #statusModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Update Agent Status</h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <form [formGroup]="statusForm" (ngSubmit)="updateAgentStatus()">
+    <div class="modal-body" *ngIf="selectedAgent">
+      <div class="mb-3">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3"
+               style="width: 48px; height: 48px;">
+            <i data-feather="user" class="feather-icon text-muted" appFeatherIcon></i>
+          </div>
+          <div>
+            <h6 class="mb-0">{{ selectedAgent.name }}</h6>
+            <small class="text-muted">{{ selectedAgent.email }}</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-12">
+          <label for="status" class="form-label">Status *</label>
+          <select
+            id="status"
+            class="form-select"
+            formControlName="status"
+            [class.is-invalid]="isFieldInvalid('status')"
+          >
+            <option *ngFor="let status of getStatusOptions()" [value]="status">{{ status }}</option>
+          </select>
+          <div class="invalid-feedback" *ngIf="isFieldInvalid('status')">
+            {{ getFieldError('status') }}
+          </div>
+        </div>
+
+        <div class="col-12">
+          <label for="statusMessage" class="form-label">Status Message</label>
+          <textarea
+            id="statusMessage"
+            class="form-control"
+            rows="3"
+            formControlName="statusMessage"
+            placeholder="Optional status message (e.g., 'On break until 2:00 PM')"
+          ></textarea>
+        </div>
+      </div>
+
+      <div *ngIf="error" class="alert alert-danger mt-3">
+        {{ error }}
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="statusForm.invalid">
+        Update Status
+      </button>
+    </div>
+  </form>
+</ng-template>

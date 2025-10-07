@@ -1,0 +1,319 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="mb-1">FAQ Management</h4>
+    <p class="text-muted mb-0">Manage frequently asked questions for your guests</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openCreateModal()">
+    <i feather="plus" class="me-2"></i>Add FAQ
+  </button>
+</div>
+
+<!-- Success/Error Alerts -->
+<div class="row" *ngIf="success || error">
+  <div class="col-12">
+    <ngb-alert *ngIf="success" type="success" [dismissible]="false" class="mb-3">
+      {{ success }}
+    </ngb-alert>
+    <ngb-alert *ngIf="error" type="danger" [dismissible]="false" class="mb-3">
+      {{ error }}
+    </ngb-alert>
+  </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4" *ngIf="stats">
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="icon-shape bg-primary-soft text-primary rounded-circle me-3">
+            <i feather="help-circle"></i>
+          </div>
+          <div>
+            <h5 class="mb-0">{{ stats.total }}</h5>
+            <small class="text-muted">Total FAQs</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="icon-shape bg-success-soft text-success rounded-circle me-3">
+            <i feather="globe"></i>
+          </div>
+          <div>
+            <h5 class="mb-0">{{ stats.byLanguage.length }}</h5>
+            <small class="text-muted">Languages</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="icon-shape bg-info-soft text-info rounded-circle me-3">
+            <i feather="tag"></i>
+          </div>
+          <div>
+            <h5 class="mb-0">{{ stats.uniqueTags.length }}</h5>
+            <small class="text-muted">Unique Tags</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="icon-shape bg-warning-soft text-warning rounded-circle me-3">
+            <i feather="filter"></i>
+          </div>
+          <div>
+            <h5 class="mb-0">{{ filteredFAQs.length }}</h5>
+            <small class="text-muted">Filtered Results</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="filter-section">
+  <div class="row">
+    <div class="col-lg-4 col-md-6 mb-3">
+      <label class="form-label">Search FAQs</label>
+      <div class="input-group">
+        <span class="input-group-text">
+          <i feather="search"></i>
+        </span>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search questions, answers, or tags..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+    </div>
+
+    <div class="col-lg-2 col-md-3 mb-3">
+      <label class="form-label">Language</label>
+      <select class="form-select" [(ngModel)]="languageFilter" (ngModelChange)="applyFilters()">
+        <option value="all">All Languages</option>
+        <option *ngFor="let lang of uniqueLanguages" [value]="lang">
+          {{ getLanguageName(lang) }}
+        </option>
+      </select>
+    </div>
+
+    <div class="col-lg-2 col-md-3 mb-3">
+      <label class="form-label">Tag</label>
+      <select class="form-select" [(ngModel)]="tagFilter" (ngModelChange)="applyFilters()">
+        <option value="all">All Tags</option>
+        <option *ngFor="let tag of availableTags" [value]="tag">
+          {{ tag }} ({{ getTagCount(tag) }})
+        </option>
+      </select>
+    </div>
+
+    <div class="col-lg-4 col-md-12 mb-3 d-flex align-items-end">
+      <button type="button" class="btn btn-outline-secondary me-2" (click)="exportFAQs()">
+        <i feather="download" class="me-2"></i>Export
+      </button>
+      <div class="ms-auto">
+        <small class="text-muted">{{ filteredFAQs.length }} of {{ faqs.length }} FAQs</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="text-center py-5" *ngIf="loading">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="text-muted mt-2">Loading FAQs...</p>
+</div>
+
+<!-- FAQ List -->
+<div class="row" *ngIf="!loading">
+  <div class="col-12" *ngFor="let faq of filteredFAQs; trackBy: trackByFAQId">
+    <div class="card faq-card mb-3">
+      <div class="card-body">
+        <div class="d-flex align-items-start">
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center mb-2">
+              <h6 class="mb-0 me-3">{{ faq.question }}</h6>
+              <span class="badge bg-primary-soft text-primary me-2">{{ getLanguageName(faq.language) }}</span>
+              <span class="badge bg-secondary-soft text-secondary me-1" *ngFor="let tag of faq.tags">{{ tag }}</span>
+            </div>
+
+            <p class="text-muted mb-2" [innerHTML]="faq.answer"></p>
+
+            <div class="d-flex align-items-center text-muted small">
+              <i feather="clock" class="me-1" style="width: 14px; height: 14px;"></i>
+              <span>Updated {{ faq.updatedAt | date:'short' }}</span>
+            </div>
+          </div>
+
+          <div class="ms-3">
+            <div class="dropdown">
+              <button
+                class="btn btn-sm btn-link text-muted"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <i feather="more-vertical"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <button class="dropdown-item" (click)="openEditModal(faq)">
+                    <i feather="edit-2" class="me-2"></i>Edit
+                  </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <button class="dropdown-item text-danger" (click)="deleteFAQ(faq)">
+                    <i feather="trash-2" class="me-2"></i>Delete
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Empty State -->
+<div class="empty-state" *ngIf="!loading && filteredFAQs.length === 0">
+  <div class="text-center">
+    <i feather="help-circle" class="empty-icon"></i>
+    <h5 class="mt-3 mb-2">No FAQs Found</h5>
+    <p class="text-muted mb-4">
+      <span *ngIf="searchTerm || languageFilter !== 'all' || tagFilter !== 'all'">
+        No FAQs match your current filters. Try adjusting your search criteria.
+      </span>
+      <span *ngIf="!searchTerm && languageFilter === 'all' && tagFilter === 'all'">
+        Get started by creating your first FAQ to help guests find answers quickly.
+      </span>
+    </p>
+    <button type="button" class="btn btn-primary" (click)="openCreateModal()">
+      <i feather="plus" class="me-2"></i>Add Your First FAQ
+    </button>
+  </div>
+</div>
+
+<!-- FAQ Modal -->
+<ng-template #faqModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ isEditMode ? 'Edit FAQ' : 'Add New FAQ' }}</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <form [formGroup]="faqForm" (ngSubmit)="saveFAQ()">
+    <div class="modal-body">
+      <div class="row">
+        <div class="col-12 mb-3">
+          <label class="form-label required">Question</label>
+          <input
+            type="text"
+            class="form-control"
+            formControlName="question"
+            placeholder="Enter the frequently asked question..."
+            [class.is-invalid]="faqForm.get('question')?.invalid && faqForm.get('question')?.touched"
+          />
+          <div class="invalid-feedback" *ngIf="faqForm.get('question')?.invalid && faqForm.get('question')?.touched">
+            <span *ngIf="faqForm.get('question')?.errors?.['required']">Question is required</span>
+            <span *ngIf="faqForm.get('question')?.errors?.['maxlength']">Question must be less than 500 characters</span>
+          </div>
+        </div>
+
+        <div class="col-12 mb-3">
+          <label class="form-label required">Answer</label>
+          <textarea
+            class="form-control"
+            formControlName="answer"
+            rows="6"
+            placeholder="Enter the detailed answer..."
+            [class.is-invalid]="faqForm.get('answer')?.invalid && faqForm.get('answer')?.touched"
+          ></textarea>
+          <div class="invalid-feedback" *ngIf="faqForm.get('answer')?.invalid && faqForm.get('answer')?.touched">
+            <span *ngIf="faqForm.get('answer')?.errors?.['required']">Answer is required</span>
+            <span *ngIf="faqForm.get('answer')?.errors?.['maxlength']">Answer must be less than 2000 characters</span>
+          </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label required">Language</label>
+          <select class="form-select" formControlName="language">
+            <option *ngFor="let lang of availableLanguages" [value]="lang.code">
+              {{ lang.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Tags</label>
+          <div class="mb-2">
+            <div class="d-flex flex-wrap gap-1">
+              <span
+                class="badge bg-primary-soft text-primary"
+                *ngFor="let tag of faqForm.get('tags')?.value"
+              >
+                {{ tag }}
+                <button
+                  type="button"
+                  class="btn-close btn-close-sm ms-1"
+                  (click)="removeTag(tag)"
+                ></button>
+              </span>
+            </div>
+          </div>
+
+          <div class="dropdown">
+            <button
+              class="btn btn-outline-secondary btn-sm dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+            >
+              Add Tag
+            </button>
+            <ul class="dropdown-menu">
+              <li *ngFor="let tag of commonTags">
+                <button
+                  type="button"
+                  class="dropdown-item"
+                  (click)="addTag(tag)"
+                  [disabled]="faqForm.get('tags')?.value?.includes(tag)"
+                >
+                  {{ tag }}
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving || faqForm.invalid">
+        <span *ngIf="saving" class="spinner-border spinner-border-sm me-2" role="status"></span>
+        {{ isEditMode ? 'Update FAQ' : 'Create FAQ' }}
+      </button>
+    </div>
+  </form>
+</ng-template>

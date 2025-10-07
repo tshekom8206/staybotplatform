@@ -1,0 +1,311 @@
+.page-content {
+  padding: 1.5rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}
+
+.conversation-row {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: rgba(37, 212, 102, 0.05);
+    transform: translateY(-1px);
+  }
+
+  &.table-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-left: 3px solid #ffc107;
+
+    &:hover {
+      background-color: rgba(255, 193, 7, 0.15);
+    }
+  }
+}
+
+.avatar-sm {
+  width: 2.5rem;
+  height: 2.5rem;
+
+  .avatar-title {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+}
+
+.message-preview {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  &.bg-danger {
+    background-color: #dc3545 !important;
+  }
+
+  &.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+  }
+
+  &.bg-info {
+    background-color: #0dcaf0 !important;
+  }
+
+  &.bg-success {
+    background-color: #25D466 !important;
+  }
+
+  &.bg-secondary {
+    background-color: #6c757d !important;
+  }
+
+  &.bg-light {
+    background-color: #f8f9fa !important;
+    color: #495057 !important;
+    border: 1px solid #dee2e6;
+  }
+}
+
+.table {
+  margin-bottom: 0;
+
+  th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.875rem;
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+
+    &[style*="cursor: pointer"] {
+      user-select: none;
+
+      &:hover {
+        background-color: #e9ecef;
+      }
+    }
+
+    .d-flex {
+      white-space: nowrap;
+
+      i {
+        font-size: 0.75rem;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+
+        &.text-primary {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  tbody tr:hover {
+    td {
+      border-top-color: rgba(37, 212, 102, 0.2);
+    }
+  }
+}
+
+.btn-group {
+  .btn {
+    border-radius: 0.25rem;
+    margin-right: 0.25rem;
+
+    &:last-child {
+      margin-right: 0;
+    }
+
+    i {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// Card styling
+.card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border-radius: 0.5rem;
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  .card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.5rem;
+  }
+}
+
+// Form styling
+.form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.form-control,
+.form-select {
+  font-size: 0.875rem;
+  border-color: #ced4da;
+
+  &:focus {
+    border-color: #25D466;
+    box-shadow: 0 0 0 0.2rem rgba(37, 212, 102, 0.25);
+  }
+}
+
+// Position relative for search icon
+.position-relative {
+  i {
+    pointer-events: none;
+    z-index: 5;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .message-preview {
+    max-width: 150px;
+  }
+
+  .btn-group {
+    .btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+    }
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .avatar-sm {
+    width: 2rem;
+    height: 2rem;
+
+    .avatar-title {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    align-items: flex-start !important;
+
+    .btn {
+      margin-top: 1rem;
+      align-self: flex-end;
+    }
+  }
+
+  .row.g-3 {
+    .col-md-3,
+    .col-md-2 {
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+// Priority and status colors
+.bg-primary-subtle {
+  background-color: rgba(37, 212, 102, 0.1);
+}
+
+.text-primary {
+  color: #25D466 !important;
+}
+
+// Alert styling
+.alert {
+  border: none;
+  border-radius: 0.5rem;
+
+  i {
+    vertical-align: middle;
+  }
+}
+
+// Quick reply styling
+.quick-reply-container {
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  border: 1px solid #e9ecef;
+
+  .input-group {
+    .form-control {
+      border-right: none;
+
+      &:focus {
+        box-shadow: 0 0 0 0.2rem rgba(37, 212, 102, 0.25);
+        border-color: #25D466;
+      }
+    }
+
+    .btn {
+      border-left: none;
+
+      &.btn-primary {
+        background-color: #25D466;
+        border-color: #25D466;
+
+        &:hover {
+          background-color: #1ea454;
+          border-color: #1ea454;
+        }
+
+        &:disabled {
+          background-color: #6c757d;
+          border-color: #6c757d;
+        }
+      }
+    }
+  }
+
+  .text-muted {
+    font-size: 0.75rem;
+  }
+}

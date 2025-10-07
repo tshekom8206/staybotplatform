@@ -1,0 +1,358 @@
+<!-- Header Section -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h4 class="fw-bold mb-1">User Activity</h4>
+    <p class="text-muted mb-0">Track user actions and system events</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-primary" (click)="refreshData()" [disabled]="loading">
+      <i data-feather="refresh-cw" featherIcon class="me-2" [class.spin]="loading"></i>
+      Refresh
+    </button>
+    <button class="btn btn-outline-primary" (click)="exportActivities()">
+      <i data-feather="download" featherIcon class="me-2"></i>
+      Export
+    </button>
+  </div>
+</div>
+
+<!-- Alert Messages -->
+<div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+  {{ error }}
+  <button type="button" class="btn-close" (click)="dismissError()"></button>
+</div>
+
+<div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+  {{ successMessage }}
+  <button type="button" class="btn-close" (click)="dismissSuccess()"></button>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4" *ngIf="stats">
+  <div class="col-lg-3 col-sm-6">
+    <div class="card h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+            <i data-feather="activity" featherIcon class="text-white"></i>
+          </div>
+        </div>
+        <div>
+          <h4 class="fw-bold mb-0">{{ getTotalActivitiesCount() | number }}</h4>
+          <p class="text-muted mb-0">Total Activities</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-sm-6">
+    <div class="card h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+            <i data-feather="calendar" featherIcon class="text-white"></i>
+          </div>
+        </div>
+        <div>
+          <h4 class="fw-bold mb-0">{{ getTodayActivitiesCount() | number }}</h4>
+          <p class="text-muted mb-0">Today's Activities</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-sm-6">
+    <div class="card h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <div class="bg-info rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+            <i data-feather="trending-up" featherIcon class="text-white"></i>
+          </div>
+        </div>
+        <div>
+          <h4 class="fw-bold mb-0">{{ getWeekActivitiesCount() | number }}</h4>
+          <p class="text-muted mb-0">This Week</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-sm-6">
+    <div class="card h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+            <i data-feather="users" featherIcon class="text-white"></i>
+          </div>
+        </div>
+        <div>
+          <h4 class="fw-bold mb-0">{{ getActiveUsersCount() | number }}</h4>
+          <p class="text-muted mb-0">Active Users</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Top Activities Summary -->
+<div class="row mb-4" *ngIf="stats">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h6 class="mb-0">Top Actions</h6>
+      </div>
+      <div class="card-body">
+        <div *ngFor="let item of getTopActionsByCount()" class="d-flex justify-content-between align-items-center mb-2">
+          <div class="d-flex align-items-center">
+            <i data-feather="activity" featherIcon class="me-2" [class]="getActivityColor(item.action)"></i>
+            <span>{{ formatActionName(item.action) }}</span>
+          </div>
+          <span class="badge bg-light text-dark">{{ item.count }}</span>
+        </div>
+        <div *ngIf="getTopActionsByCount().length === 0" class="text-muted text-center py-3">
+          No activity data available
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h6 class="mb-0">Top Entities</h6>
+      </div>
+      <div class="card-body">
+        <div *ngFor="let item of getTopEntitiesByCount()" class="d-flex justify-content-between align-items-center mb-2">
+          <div class="d-flex align-items-center">
+            <i data-feather="file-text" featherIcon class="me-2 text-muted"></i>
+            <span>{{ formatEntityName(item.entity) }}</span>
+          </div>
+          <span class="badge bg-light text-dark">{{ item.count }}</span>
+        </div>
+        <div *ngIf="getTopEntitiesByCount().length === 0" class="text-muted text-center py-3">
+          No entity data available
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="input-group">
+          <span class="input-group-text">
+            <i data-feather="search" featherIcon></i>
+          </span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search activities..."
+            [(ngModel)]="searchTerm"
+            (input)="onSearch()">
+        </div>
+      </div>
+
+      <div class="col-md-2">
+        <select class="form-select" [(ngModel)]="selectedAction" (change)="onFilterChange()">
+          <option value="">All Actions</option>
+          <option *ngFor="let action of availableActions" [value]="action">{{ formatActionName(action) }}</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <select class="form-select" [(ngModel)]="selectedEntity" (change)="onFilterChange()">
+          <option value="">All Entities</option>
+          <option *ngFor="let entity of availableEntities" [value]="entity">{{ formatEntityName(entity) }}</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <select class="form-select" [(ngModel)]="selectedDateRange" (change)="onPredefinedDateRangeChange()">
+          <option value="">All Time</option>
+          <option value="today">Today</option>
+          <option value="week">Last 7 Days</option>
+          <option value="month">Last 30 Days</option>
+          <option value="quarter">Last 90 Days</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <button class="btn btn-outline-secondary w-100" (click)="clearFilters()">
+          <i data-feather="x" featherIcon class="me-1"></i>
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom Date Range -->
+    <form [formGroup]="dateRangeForm" class="row g-3 mt-2">
+      <div class="col-md-3">
+        <label class="form-label small">From Date</label>
+        <input
+          type="date"
+          class="form-control"
+          formControlName="dateFrom"
+          (change)="onDateRangeChange()">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small">To Date</label>
+        <input
+          type="date"
+          class="form-control"
+          formControlName="dateTo"
+          (change)="onDateRangeChange()">
+      </div>
+    </form>
+
+    <!-- Tab Navigation -->
+    <ul class="nav nav-pills mt-3">
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'all'" (click)="setActiveTab('all')">
+          All Activity
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'today'" (click)="setActiveTab('today')">
+          Today
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'week'" (click)="setActiveTab('week')">
+          This Week
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'users'" (click)="setActiveTab('users')">
+          User Activity
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'tasks'" (click)="setActiveTab('tasks')">
+          Task Activity
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="mt-3 text-muted">Loading activity data...</p>
+</div>
+
+<!-- Activity List -->
+<div *ngIf="!loading" class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h6 class="mb-0">Activity Log</h6>
+    <div class="text-muted small">
+      {{ totalCount }} total activities
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div *ngIf="activities.length === 0" class="text-center py-5">
+      <i data-feather="activity" featherIcon class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+      <h6 class="text-muted">No activities found</h6>
+      <p class="text-muted mb-0">
+        <span *ngIf="searchTerm || selectedAction || selectedEntity || selectedDateRange">
+          Try adjusting your filters to find the activities you're looking for.
+        </span>
+        <span *ngIf="!searchTerm && !selectedAction && !selectedEntity && !selectedDateRange">
+          Activity will appear here as users interact with the system.
+        </span>
+      </p>
+    </div>
+
+    <div *ngIf="activities.length > 0" class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="border-0">User</th>
+            <th class="border-0">Activity</th>
+            <th class="border-0">Entity</th>
+            <th class="border-0">Time</th>
+            <th class="border-0">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let activity of activities">
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                  <i data-feather="user" featherIcon class="text-muted small"></i>
+                </div>
+                <div>
+                  <div class="fw-medium">{{ activity.actorUserEmail }}</div>
+                  <div *ngIf="activity.actorUserId" class="text-muted small">ID: {{ activity.actorUserId }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <i data-feather="activity" featherIcon class="me-2" [class]="getActivityColor(activity.action)"></i>
+                <span>{{ formatActionName(activity.action) }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <i data-feather="file-text" featherIcon class="me-2 text-muted small"></i>
+                <div>
+                  <div>{{ formatEntityName(activity.entity) }}</div>
+                  <div *ngIf="activity.entityId" class="text-muted small">ID: {{ activity.entityId }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div>
+                <div class="fw-medium">{{ activity.timeAgo }}</div>
+                <div class="text-muted small">{{ formatDateTime(activity.createdAt) }}</div>
+              </div>
+            </td>
+            <td>
+              <div *ngIf="activity.details" class="text-muted small" style="max-width: 200px;">
+                {{ activity.details }}
+              </div>
+              <span *ngIf="!activity.details" class="text-muted">-</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="totalPages > 1" class="card-footer">
+    <nav aria-label="Activity pagination">
+      <ul class="pagination justify-content-center mb-0">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <a class="page-link" (click)="onPageChange(currentPage - 1)" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+
+        <li *ngFor="let page of getPaginationNumbers()"
+            class="page-item"
+            [class.active]="page === currentPage">
+          <a class="page-link" (click)="onPageChange(page)">{{ page }}</a>
+        </li>
+
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <a class="page-link" (click)="onPageChange(currentPage + 1)" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="text-center mt-2">
+      <small class="text-muted">
+        Showing page {{ currentPage }} of {{ totalPages }} ({{ totalCount }} total activities)
+      </small>
+    </div>
+  </div>
+</div>

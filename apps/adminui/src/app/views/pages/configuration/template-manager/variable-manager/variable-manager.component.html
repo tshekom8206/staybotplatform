@@ -1,0 +1,336 @@
+<div class="variable-manager">
+
+  <!-- Success/Error Messages -->
+  <div class="row" *ngIf="success || error">
+    <div class="col-12">
+      <div class="alert alert-success alert-dismissible fade show" *ngIf="success">
+        <i data-feather="check-circle" featherIcon class="me-2"></i>
+        {{ success }}
+      </div>
+      <div class="alert alert-danger alert-dismissible fade show" *ngIf="error">
+        <i data-feather="alert-triangle" featherIcon class="me-2"></i>
+        {{ error }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions and Filters -->
+  <div class="d-flex justify-content-between align-items-center mb-4" *ngIf="!showForm">
+    <div class="d-flex align-items-center">
+      <button type="button"
+              class="btn btn-primary me-3"
+              (click)="onShowForm()">
+        <i data-feather="plus" featherIcon class="me-1"></i>
+        Add Variable
+      </button>
+      <div class="text-muted">
+        <small>{{ filteredVariableCount }} of {{ totalVariableCount }} variables</small>
+      </div>
+    </div>
+    <div class="d-flex align-items-center">
+      <button type="button"
+              class="btn btn-outline-secondary btn-sm"
+              (click)="onClearFilters()"
+              [disabled]="!hasFilters">
+        <i data-feather="x" featherIcon class="me-1"></i>
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <div class="row mb-4" *ngIf="!showForm">
+    <div class="col-md-4">
+      <div class="input-group">
+        <span class="input-group-text">
+          <i data-feather="search" featherIcon></i>
+        </span>
+        <input type="text"
+               class="form-control"
+               placeholder="Search variables..."
+               [(ngModel)]="searchTerm"
+               (ngModelChange)="onSearchChange()">
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <select class="form-select"
+              [(ngModel)]="selectedCategory"
+              (ngModelChange)="onCategoryFilterChange($event)">
+        <option value="">All Categories</option>
+        <option *ngFor="let category of availableCategories" [value]="category">
+          {{ category }}
+        </option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <div class="form-check form-switch d-flex align-items-center">
+        <input class="form-check-input"
+               type="checkbox"
+               id="showActiveOnly"
+               [(ngModel)]="showActiveOnly"
+               (ngModelChange)="onActiveFilterChange()">
+        <label class="form-check-label ms-2" for="showActiveOnly">
+          Active Only
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Variable Form -->
+  <div class="card mb-4" *ngIf="showForm">
+    <div class="card-header">
+      <div class="d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+          <i data-feather="settings" featherIcon class="me-2"></i>
+          {{ formTitle }}
+        </h6>
+        <button type="button"
+                class="btn btn-outline-secondary btn-sm"
+                (click)="onCancelEdit()">
+          <i data-feather="x" featherIcon class="me-1"></i>
+          Cancel
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="variableForm">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="variableName" class="form-label">
+              Variable Name <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <input type="text"
+                     class="form-control"
+                     id="variableName"
+                     formControlName="variableName"
+                     placeholder="e.g., hotel_name"
+                     [class.is-invalid]="isFieldInvalid('variableName')">
+              <select class="form-select form-select-sm mt-2"
+                      (change)="onSelectPredefinedVariable($event)"
+                      title="Select predefined variable">
+                <option value="">Select predefined variable...</option>
+                <optgroup *ngFor="let category of Object.keys(availableVariableNames)" [label]="category">
+                  <option *ngFor="let variableName of availableVariableNames[category]" [value]="variableName">
+                    {{ variableName }}
+                  </option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('variableName')">
+              {{ getFieldError('variableName') }}
+            </div>
+            <small class="form-text text-muted">
+              Use lowercase with underscores (e.g., hotel_name)
+            </small>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="category" class="form-label">Category</label>
+            <input type="text"
+                   class="form-control"
+                   id="category"
+                   formControlName="category"
+                   placeholder="e.g., Hotel Info"
+                   list="categoryList">
+            <datalist id="categoryList">
+              <option *ngFor="let category of availableCategories" [value]="category">
+            </datalist>
+            <small class="form-text text-muted">
+              Optional category for organization
+            </small>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-8 mb-3">
+            <label for="variableValue" class="form-label">
+              Variable Value <span class="text-danger">*</span>
+            </label>
+            <textarea class="form-control"
+                      id="variableValue"
+                      formControlName="variableValue"
+                      rows="3"
+                      placeholder="Enter the value for this variable"
+                      [class.is-invalid]="isFieldInvalid('variableValue')"></textarea>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('variableValue')">
+              {{ getFieldError('variableValue') }}
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Status</label>
+            <div class="form-check form-switch">
+              <input class="form-check-input"
+                     type="checkbox"
+                     id="isActive"
+                     formControlName="isActive">
+              <label class="form-check-label" for="isActive">
+                Active Variable
+              </label>
+            </div>
+            <small class="form-text text-muted">
+              Only active variables are available for templates
+            </small>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end">
+          <button type="button"
+                  class="btn btn-outline-secondary me-2"
+                  (click)="onCancelEdit()">
+            Cancel
+          </button>
+          <button type="button"
+                  class="btn btn-primary"
+                  (click)="onSaveVariable()"
+                  [disabled]="variableForm.invalid || saving">
+            <span *ngIf="saving" class="spinner-border spinner-border-sm me-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </span>
+            <i data-feather="save" featherIcon class="me-1" *ngIf="!saving"></i>
+            {{ saveButtonText }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Variables List -->
+  <div *ngIf="!showForm">
+
+    <!-- No Variables Message -->
+    <div *ngIf="variables.length === 0" class="text-center py-5">
+      <i data-feather="settings" featherIcon class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+      <h5 class="text-muted">No variables defined</h5>
+      <p class="text-muted mb-3">
+        Variables are placeholders that can be used in templates to insert dynamic content.
+      </p>
+      <button type="button"
+              class="btn btn-primary"
+              (click)="onShowForm()">
+        <i data-feather="plus" featherIcon class="me-1"></i>
+        Create Your First Variable
+      </button>
+    </div>
+
+    <!-- Filtered Variables Empty State -->
+    <div *ngIf="variables.length > 0 && filteredVariables.length === 0" class="text-center py-5">
+      <i data-feather="search" featherIcon class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+      <h5 class="text-muted">No variables match your filters</h5>
+      <p class="text-muted mb-3">
+        Try adjusting your search term or category filter.
+      </p>
+      <button type="button"
+              class="btn btn-outline-primary"
+              (click)="onClearFilters()">
+        <i data-feather="x" featherIcon class="me-1"></i>
+        Clear Filters
+      </button>
+    </div>
+
+    <!-- Variables by Category -->
+    <div *ngIf="filteredVariables.length > 0">
+
+      <!-- Grouped by Category -->
+      <div *ngFor="let category of categoryKeys" class="mb-4">
+        <h6 class="text-primary border-bottom pb-2 mb-3">
+          <i data-feather="folder" featherIcon class="me-2"></i>
+          {{ category }}
+          <span class="badge bg-secondary ms-2">
+            {{ variablesByCategory[category].length }}
+          </span>
+        </h6>
+
+        <div class="row">
+          <div class="col-lg-6 mb-3"
+               *ngFor="let variable of variablesByCategory[category]; trackBy: trackByVariableId">
+            <div class="card variable-card"
+                 [class.inactive]="!variable.isActive">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div class="flex-grow-1">
+                    <h6 class="card-title mb-1">
+                      <code class="variable-name">{{ variable.variableName }}</code>
+                      <span class="badge bg-success ms-2" *ngIf="variable.isActive">Active</span>
+                      <span class="badge bg-secondary ms-2" *ngIf="!variable.isActive">Inactive</span>
+                    </h6>
+                    <p class="card-text text-muted mb-2">
+                      {{ variable.variableValue }}
+                    </p>
+                    <small class="text-muted">
+                      Created: {{ variable.createdAt | date:'MMM d, y' }}
+                    </small>
+                  </div>
+                  <div class="btn-group">
+                    <button type="button"
+                            class="btn btn-sm btn-outline-primary me-1"
+                            (click)="onEditVariable(variable)"
+                            title="Edit Variable">
+                      <i data-feather="edit" featherIcon></i>
+                    </button>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            (click)="onDeleteVariable(variable)"
+                            title="Delete Variable">
+                      <i data-feather="trash-2" featherIcon></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flat List (when filtered and not showing by category) -->
+      <div *ngIf="(selectedCategory || searchTerm) && filteredVariables.length > 0" class="row">
+        <div class="col-lg-6 mb-3"
+             *ngFor="let variable of filteredVariables; trackBy: trackByVariableId">
+          <div class="card variable-card"
+               [class.inactive]="!variable.isActive">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex-grow-1">
+                  <h6 class="card-title mb-1">
+                    <code class="variable-name">{{ variable.variableName }}</code>
+                    <span class="badge bg-light text-dark ms-2" *ngIf="variable.category">
+                      {{ variable.category }}
+                    </span>
+                    <span class="badge bg-success ms-2" *ngIf="variable.isActive">Active</span>
+                    <span class="badge bg-secondary ms-2" *ngIf="!variable.isActive">Inactive</span>
+                  </h6>
+                  <p class="card-text text-muted mb-2">
+                    {{ variable.variableValue }}
+                  </p>
+                  <small class="text-muted">
+                    Created: {{ variable.createdAt | date:'MMM d, y' }}
+                  </small>
+                </div>
+                <div class="btn-group">
+                  <button type="button"
+                          class="btn btn-sm btn-outline-primary me-1"
+                          (click)="onEditVariable(variable)"
+                          title="Edit Variable">
+                    <i data-feather="edit" featherIcon></i>
+                  </button>
+                  <button type="button"
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="onDeleteVariable(variable)"
+                          title="Delete Variable">
+                    <i data-feather="trash-2" featherIcon></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

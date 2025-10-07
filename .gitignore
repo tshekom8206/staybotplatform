@@ -1,0 +1,80 @@
+# Build artifacts
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.cache
+
+# Configuration files with secrets
+appsettings.json
+appsettings.*.json
+!appsettings.Example.json
+
+# User-specific files
+*.user
+*.suo
+*.userprefs
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Node modules
+node_modules/
+npm-debug.log
+
+# Build outputs
+publish/
+publish-win/
+dist/
+out/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+nul
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test-*.pdf
+test-*.json
+test-*.html
+
+# API logs
+api-logs*/
+api_logs*.txt
+api_output.log
+api_runtime.log
+
+# Auth tokens
+auth*.json
+cookies.txt
+
+# Database dumps
+*.sql
+
+# Archives
+*.zip
+
+# Documentation (temporary)
+*.md
+!README.md
+!CLAUDE.md
+
+# Deployment
+infra/
+deploy-*.ps1
+
+# Listings
+*listings/
+
+# Worker outputs
+workers_output.log
+adminui_output.log

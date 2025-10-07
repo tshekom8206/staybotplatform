@@ -1,0 +1,231 @@
+// Emergency alert status indicators
+.alert-active {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-left: 4px solid #dc3545;
+}
+
+.alert-resolved {
+  background-color: rgba(40, 167, 69, 0.1);
+  border-left: 4px solid #28a745;
+  opacity: 0.8;
+}
+
+// Card header customizations
+.card-header {
+  &.bg-danger {
+    background-color: #dc3545 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
+    .card-title {
+      color: white;
+      font-weight: 600;
+    }
+  }
+}
+
+// Badge customizations
+.badge {
+  &.bg-danger {
+    background-color: #dc3545 !important;
+  }
+
+  &.bg-warning {
+    background-color: #fd7e14 !important;
+  }
+
+  &.bg-info {
+    background-color: #25d466 !important;
+  }
+
+  &.bg-secondary {
+    background-color: #6c757d !important;
+  }
+
+  &.bg-success {
+    background-color: #28a745 !important;
+  }
+}
+
+// Emergency type icons styling
+.emergency-icon {
+  font-size: 1.2rem;
+
+  &.fire { color: #dc3545; }
+  &.medical { color: #e83e8c; }
+  &.security { color: #fd7e14; }
+  &.weather { color: #20c997; }
+  &.evacuation { color: #dc3545; }
+  &.other { color: #6f42c1; }
+}
+
+// Form validation states
+.form-control,
+.form-select {
+  &.is-invalid {
+    border-color: #dc3545;
+
+    &:focus {
+      border-color: #dc3545;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+  }
+}
+
+.invalid-feedback {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #dc3545;
+}
+
+// Emergency button styling
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  font-weight: 600;
+
+  &:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+  }
+
+  &:disabled {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    opacity: 0.8;
+  }
+}
+
+// Template list styling
+.list-group-item {
+  &.list-group-item-action {
+    &.active {
+      background-color: rgba(37, 212, 102, 0.1);
+      border-color: rgba(37, 212, 102, 0.3);
+      color: #25d466;
+
+      .fw-medium {
+        color: #25d466;
+      }
+    }
+
+    &:hover:not(.active) {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+  }
+}
+
+// Loading spinner
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+// Alert styling improvements
+.alert {
+  &.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #721c24;
+
+    .feather {
+      color: #dc3545;
+    }
+  }
+
+  &.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-color: rgba(40, 167, 69, 0.3);
+    color: #155724;
+
+    .feather {
+      color: #28a745;
+    }
+  }
+}
+
+// Collapse content styling
+.collapse-content {
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 1rem;
+  border-radius: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+// Button group vertical spacing
+.btn-group-vertical {
+  .btn {
+    &:not(:last-child) {
+      margin-bottom: 0.25rem;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .d-flex.justify-content-between.align-items-center.flex-wrap {
+    .btn {
+      margin-bottom: 0.5rem;
+      width: 100%;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .btn-group-vertical {
+    .btn {
+      width: 100%;
+    }
+  }
+}
+
+// Small screen adjustments for emergency cards
+@media (max-width: 576px) {
+  .card-body {
+    padding: 1rem 0.75rem;
+  }
+
+  .alert-active,
+  .alert-resolved {
+    margin: 0 -0.75rem;
+    padding: 1rem 0.75rem;
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .alert-active {
+    background-color: rgba(220, 53, 69, 0.2);
+  }
+
+  .alert-resolved {
+    background-color: rgba(40, 167, 69, 0.2);
+  }
+
+  .collapse-content {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .list-group-item {
+    background-color: transparent;
+    border-color: rgba(255, 255, 255, 0.125);
+
+    &.list-group-item-action {
+      color: rgba(255, 255, 255, 0.8);
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: white;
+      }
+
+      &.active {
+        background-color: rgba(37, 212, 102, 0.2);
+        color: #25d466;
+      }
+    }
+  }
+}

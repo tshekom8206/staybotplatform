@@ -1,0 +1,612 @@
+// Maintenance Component Styles - Modern Professional Design
+
+// Design System Variables
+:root {
+  --maintenance-primary: #FF6B35;
+  --maintenance-primary-hover: #e55a2b;
+  --maintenance-secondary: #6c757d;
+  --maintenance-success: #198754;
+  --maintenance-info: #0dcaf0;
+  --maintenance-warning: #fd7e14;
+  --maintenance-danger: #dc3545;
+  --maintenance-light: #f8f9fa;
+  --maintenance-dark: #212529;
+  --maintenance-border: rgba(0, 0, 0, 0.125);
+  --maintenance-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --maintenance-shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  --maintenance-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+  --maintenance-border-radius: 0.5rem;
+  --maintenance-border-radius-sm: 0.375rem;
+  --maintenance-spacing-xs: 0.25rem;
+  --maintenance-spacing-sm: 0.5rem;
+  --maintenance-spacing-md: 1rem;
+  --maintenance-spacing-lg: 1.5rem;
+  --maintenance-spacing-xl: 2rem;
+}
+
+// Page Header
+.page-header {
+  margin-bottom: var(--maintenance-spacing-xl);
+
+  .page-title {
+    color: var(--maintenance-dark);
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: var(--maintenance-spacing-xs);
+    letter-spacing: -0.025em;
+  }
+
+  .page-subtitle {
+    color: var(--maintenance-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+    font-weight: 400;
+  }
+}
+
+// Statistics Cards - Enhanced Design
+.stats-container {
+  margin-bottom: var(--maintenance-spacing-xl);
+
+  .stats-card {
+    border: 1px solid var(--maintenance-border);
+    border-radius: var(--maintenance-border-radius);
+    background: white;
+    box-shadow: var(--maintenance-shadow-sm);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: relative;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--maintenance-shadow-md);
+      border-color: var(--maintenance-primary);
+    }
+
+    .card-body {
+      padding: var(--maintenance-spacing-lg);
+      text-align: center;
+      position: relative;
+    }
+
+    .stats-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--maintenance-spacing-md);
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, transparent 30%, currentColor 100%);
+        opacity: 0.1;
+        z-index: -1;
+      }
+
+      .feather-icon {
+        width: 24px;
+        height: 24px;
+        stroke-width: 2.5;
+      }
+    }
+
+    .stats-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: var(--maintenance-spacing-xs);
+      letter-spacing: -0.02em;
+    }
+
+    .stats-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--maintenance-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+}
+
+// Enhanced Filters Card
+.filters-card {
+  margin-bottom: var(--maintenance-spacing-xl);
+  border: 1px solid var(--maintenance-border);
+  border-radius: var(--maintenance-border-radius);
+  background: white;
+  box-shadow: var(--maintenance-shadow-sm);
+}
+
+// Enhanced Tasks Table
+.tasks-table-card {
+  border: 1px solid var(--maintenance-border);
+  border-radius: var(--maintenance-border-radius);
+  background: white;
+  box-shadow: var(--maintenance-shadow-sm);
+  overflow: hidden;
+
+  .table {
+    margin-bottom: 0;
+
+    thead th {
+      background: var(--maintenance-light);
+      border-bottom: 2px solid var(--maintenance-border);
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--maintenance-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 1rem 0.75rem;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: rgba(255, 107, 53, 0.02);
+      }
+
+      &.table-warning {
+        background-color: #fff3cd !important;
+      }
+    }
+
+    td {
+      vertical-align: middle;
+      padding: 1rem 0.75rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  .task-info-cell {
+    .task-icon-wrapper {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--maintenance-primary) 0%, var(--maintenance-primary-hover) 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: var(--maintenance-shadow-sm);
+
+      .feather-icon {
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .task-info {
+      .task-title {
+        font-weight: 600;
+        color: var(--maintenance-dark);
+        margin-bottom: 0.25rem;
+      }
+
+      .task-description {
+        color: var(--maintenance-secondary);
+        font-size: 0.8rem;
+        max-width: 300px;
+      }
+    }
+  }
+
+  .date-info {
+    font-size: 0.85rem;
+    color: var(--maintenance-secondary);
+
+    .feather-icon {
+      width: 14px;
+      height: 14px;
+      opacity: 0.7;
+    }
+  }
+
+  .assigned-user {
+    color: var(--maintenance-secondary);
+    font-size: 0.85rem;
+
+    .feather-icon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .unassigned {
+    color: var(--maintenance-secondary);
+    font-size: 0.85rem;
+    font-style: italic;
+
+    .feather-icon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+// Badge Styles
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+  border-radius: 0.375rem;
+
+  // Priority badges
+  &.priority-urgent {
+    background-color: #dc3545;
+    color: white;
+    border: 1px solid #dc3545;
+  }
+
+  &.priority-high {
+    background-color: #fd7e14;
+    color: white;
+    border: 1px solid #fd7e14;
+  }
+
+  &.priority-medium {
+    background-color: var(--maintenance-primary);
+    color: white;
+    border: 1px solid var(--maintenance-primary);
+  }
+
+  &.priority-low {
+    background-color: var(--maintenance-secondary);
+    color: white;
+    border: 1px solid var(--maintenance-secondary);
+  }
+
+  // Status badges
+  &.status-completed {
+    background-color: var(--maintenance-success);
+    color: white;
+    border: 1px solid var(--maintenance-success);
+  }
+
+  &.status-inprogress {
+    background-color: var(--maintenance-info);
+    color: white;
+    border: 1px solid var(--maintenance-info);
+  }
+
+  &.status-pending {
+    background-color: var(--maintenance-warning);
+    color: white;
+    border: 1px solid var(--maintenance-warning);
+  }
+
+  &.status-onhold {
+    background-color: var(--maintenance-secondary);
+    color: white;
+    border: 1px solid var(--maintenance-secondary);
+  }
+
+  // Category and room badges
+  &.category-badge, &.room-badge {
+    background-color: var(--maintenance-light);
+    color: var(--maintenance-dark);
+    border: 1px solid var(--maintenance-border);
+  }
+}
+
+// Button Styles
+.btn {
+  font-weight: 500;
+  border-radius: var(--maintenance-border-radius-sm);
+  transition: all 0.2s ease;
+
+  &.btn-primary {
+    background-color: var(--maintenance-primary);
+    border-color: var(--maintenance-primary);
+
+    &:hover {
+      background-color: var(--maintenance-primary-hover);
+      border-color: var(--maintenance-primary-hover);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.btn-outline-primary {
+    color: var(--maintenance-primary);
+    border-color: var(--maintenance-primary);
+
+    &:hover {
+      background-color: var(--maintenance-primary);
+      border-color: var(--maintenance-primary);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.btn-clear-filters {
+    border-radius: var(--maintenance-border-radius-sm);
+  }
+
+  .feather-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 0.25rem;
+
+    &:only-child {
+      margin: 0;
+    }
+  }
+}
+
+// Dropdown Styles
+.dropdown-menu {
+  border: 1px solid var(--maintenance-border);
+  border-radius: var(--maintenance-border-radius-sm);
+  box-shadow: var(--maintenance-shadow-md);
+  padding: 0.5rem 0;
+
+  .dropdown-item {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+
+    .feather-icon {
+      width: 16px;
+      height: 16px;
+      margin-right: 0.5rem;
+    }
+
+    &:hover {
+      background-color: var(--maintenance-light);
+      color: var(--maintenance-primary);
+    }
+
+    &.text-danger:hover {
+      background-color: var(--maintenance-danger);
+      color: white;
+    }
+  }
+}
+
+// Modal Styles
+.modal {
+  .modal-header {
+    border-bottom: 1px solid var(--maintenance-border);
+    background: var(--maintenance-light);
+    border-radius: var(--maintenance-border-radius) var(--maintenance-border-radius) 0 0;
+
+    .modal-title {
+      font-weight: 600;
+      color: var(--maintenance-dark);
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .modal-body {
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--maintenance-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.875rem;
+      border: 1px solid var(--maintenance-border);
+      border-radius: var(--maintenance-border-radius-sm);
+
+      &:focus {
+        border-color: var(--maintenance-primary);
+        box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+      }
+    }
+
+    .form-text {
+      font-size: 0.8rem;
+      color: var(--maintenance-secondary);
+      font-style: italic;
+    }
+  }
+
+  .modal-footer {
+    border-top: 1px solid var(--maintenance-border);
+    background: var(--maintenance-light);
+  }
+}
+
+// Loading & Empty States
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+
+  .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    color: var(--maintenance-primary);
+  }
+
+  .loading-text {
+    margin-top: 1rem;
+    color: var(--maintenance-secondary);
+    font-size: 0.95rem;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    color: var(--maintenance-secondary);
+    opacity: 0.5;
+    margin-bottom: 1rem;
+  }
+
+  .empty-title {
+    color: var(--maintenance-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-message {
+    color: var(--maintenance-secondary);
+  }
+}
+
+// Info Grid for Modal Content
+.info-grid {
+  display: grid;
+  gap: var(--maintenance-spacing-sm);
+
+  .info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--maintenance-spacing-sm) 0;
+    border-bottom: 1px solid var(--maintenance-border);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    label {
+      font-weight: 600;
+      color: var(--maintenance-secondary);
+      margin-bottom: 0;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+    }
+
+    span {
+      font-weight: 500;
+
+      &.badge {
+        font-size: 0.7rem;
+      }
+    }
+  }
+}
+
+// Animation Classes
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-up {
+  animation: fadeIn 0.4s ease-out;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .stats-container .stats-card:hover {
+    transform: none;
+  }
+
+  .stats-icon {
+    width: 40px !important;
+    height: 40px !important;
+
+    .feather-icon {
+      width: 20px !important;
+      height: 20px !important;
+    }
+  }
+
+  .task-icon-wrapper {
+    width: 32px !important;
+    height: 32px !important;
+
+    .feather-icon {
+      width: 16px !important;
+      height: 16px !important;
+    }
+  }
+
+  .btn-group .btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .page-title {
+    font-size: 1.5rem !important;
+  }
+
+  .card-body {
+    padding: 1rem !important;
+  }
+
+  .table {
+    font-size: 0.8rem !important;
+
+    th, td {
+      padding: 0.5rem 0.25rem !important;
+    }
+  }
+
+  .modal-body {
+    padding: 1rem !important;
+  }
+}
+
+// Print Styles
+@media print {
+  .btn,
+  .pagination,
+  .modal,
+  .dropdown,
+  .action-buttons {
+    display: none !important;
+  }
+
+  .stats-card,
+  .tasks-table-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+}
+
+// Special maintenance theme colors
+.text-primary {
+  color: var(--maintenance-primary) !important;
+}
+
+.bg-primary {
+  background-color: var(--maintenance-primary) !important;
+}
+
+// Priority text colors (legacy support)
+.text-danger.fw-bold {
+  color: #dc3545 !important;
+}
+
+.text-warning.fw-bold {
+  color: #fd7e14 !important;
+}
+
+.text-secondary {
+  color: var(--maintenance-secondary) !important;
+}

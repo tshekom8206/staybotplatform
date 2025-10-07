@@ -1,0 +1,342 @@
+// All Tasks Component Styles
+
+.page-title {
+  color: var(--bs-dark);
+  font-weight: 600;
+}
+
+.stats-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .feather-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.stats-title {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// Table Styles
+.table {
+  .sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease-in-out;
+
+    &:hover {
+      background-color: var(--bs-light) !important;
+    }
+
+    .feather-icon {
+      width: 14px;
+      height: 14px;
+      opacity: 0.7;
+    }
+  }
+
+  .task-icon {
+    .feather-icon {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  tr {
+    transition: background-color 0.15s ease-in-out;
+
+    &.table-warning {
+      --bs-table-bg: #fff3cd;
+      --bs-table-striped-bg: #f9ecb7;
+    }
+
+    &:hover {
+      background-color: var(--bs-table-hover-bg) !important;
+    }
+  }
+
+  .form-check-input {
+    margin-top: 0;
+  }
+}
+
+// Badge Styles
+.badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+
+  &.bg-light {
+    color: var(--bs-gray-700) !important;
+    border: 1px solid var(--bs-gray-300);
+  }
+}
+
+// Priority Colors
+.text-danger.fw-bold {
+  color: #dc3545 !important;
+}
+
+.text-warning.fw-bold {
+  color: #fd7e14 !important;
+}
+
+.text-primary {
+  color: #25D466 !important;
+}
+
+.text-secondary {
+  color: #6c757d !important;
+}
+
+// Filter Card
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+
+  .card-body {
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--bs-gray-700);
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+// Button Styles
+.btn {
+  font-weight: 500;
+  border-radius: 0.375rem;
+
+  &.btn-primary {
+    background-color: #25D466;
+    border-color: #25D466;
+
+    &:hover {
+      background-color: #20c05a;
+      border-color: #20c05a;
+    }
+
+    &:focus {
+      background-color: #20c05a;
+      border-color: #20c05a;
+      box-shadow: 0 0 0 0.2rem rgba(37, 212, 102, 0.25);
+    }
+  }
+
+  &.btn-outline-secondary {
+    color: var(--bs-gray-700);
+    border-color: var(--bs-gray-400);
+
+    &:hover {
+      background-color: var(--bs-gray-100);
+      border-color: var(--bs-gray-400);
+      color: var(--bs-gray-800);
+    }
+  }
+
+  .feather-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 0.25rem;
+
+    &:last-child {
+      margin-right: 0;
+      margin-left: 0.25rem;
+    }
+
+    &:only-child {
+      margin: 0;
+    }
+  }
+}
+
+// Dropdown Styles
+.dropdown-menu {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+
+  .dropdown-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--bs-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .dropdown-item {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+
+    .feather-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      background-color: var(--bs-light);
+    }
+
+    &.text-danger:hover {
+      background-color: var(--bs-danger);
+      color: white;
+    }
+  }
+}
+
+// Modal Styles
+.modal {
+  .modal-header {
+    border-bottom: 1px solid var(--bs-gray-300);
+
+    .modal-title {
+      font-weight: 600;
+      color: var(--bs-dark);
+    }
+
+    .btn-close {
+      font-size: 0.875rem;
+    }
+  }
+
+  .modal-body {
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--bs-gray-700);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.875rem;
+      border: 1px solid var(--bs-gray-400);
+
+      &:focus {
+        border-color: #25D466;
+        box-shadow: 0 0 0 0.2rem rgba(37, 212, 102, 0.25);
+      }
+    }
+
+    .text-danger.small {
+      font-size: 0.75rem;
+    }
+
+    h6 {
+      color: var(--bs-dark);
+      font-weight: 600;
+      border-bottom: 1px solid var(--bs-gray-300);
+      padding-bottom: 0.5rem;
+    }
+  }
+
+  .modal-footer {
+    border-top: 1px solid var(--bs-gray-300);
+  }
+}
+
+// Loading & Empty States
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+}
+
+.feather-icon {
+  stroke-width: 2;
+}
+
+// Utility Classes
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .btn-group {
+    .btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  .stats-icon {
+    width: 40px;
+    height: 40px;
+
+    .feather-icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .table {
+    font-size: 0.8rem;
+
+    th,
+    td {
+      padding: 0.5rem 0.25rem;
+    }
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+}
+
+// Animation
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+// Print Styles
+@media print {
+  .btn,
+  .pagination,
+  .modal {
+    display: none !important;
+  }
+
+  .table {
+    font-size: 0.75rem;
+  }
+}

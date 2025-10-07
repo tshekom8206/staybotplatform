@@ -1,0 +1,362 @@
+<div class="page-content">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">Today's Check-ins</h4>
+      <p class="text-muted mb-0">Manage guest arrivals and check-in process</p>
+    </div>
+    <button class="btn btn-primary" (click)="refresh()" [disabled]="loading">
+      <i appFeatherIcon="refresh-cw" [class.spin]="loading"></i>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-primary-subtle text-primary mb-2">
+            <i appFeatherIcon="calendar"></i>
+          </div>
+          <h3 class="mb-0">{{ stats.total }}</h3>
+          <p class="text-muted mb-0 small">Total</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-success-subtle text-success mb-2">
+            <i appFeatherIcon="check-circle"></i>
+          </div>
+          <h3 class="mb-0">{{ stats.completed }}</h3>
+          <p class="text-muted mb-0 small">Completed</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-warning-subtle text-warning mb-2">
+            <i appFeatherIcon="clock"></i>
+          </div>
+          <h3 class="mb-0">{{ stats.pending }}</h3>
+          <p class="text-muted mb-0 small">Pending</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-info-subtle text-info mb-2">
+            <i appFeatherIcon="activity"></i>
+          </div>
+          <h3 class="mb-0">{{ stats.inProgress }}</h3>
+          <p class="text-muted mb-0 small">In Progress</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-danger-subtle text-danger mb-2">
+            <i appFeatherIcon="x-circle"></i>
+          </div>
+          <h3 class="mb-0">{{ stats.noShow }}</h3>
+          <p class="text-muted mb-0 small">No Show</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+      <div class="card stats-card">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-primary-subtle text-primary mb-2">
+            <i appFeatherIcon="trending-up"></i>
+          </div>
+          <h3 class="mb-0">{{ stats.completionRate }}%</h3>
+          <p class="text-muted mb-0 small">Completion</p>
+          <ngb-progressbar
+            [value]="stats.completionRate"
+            type="success"
+            height="4px"
+            class="mt-2"
+          ></ngb-progressbar>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Search -->
+        <div class="col-md-3">
+          <label class="form-label">Search</label>
+          <div class="position-relative">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search guests, rooms..."
+              [(ngModel)]="searchTerm"
+              (input)="applyFilters()"
+            >
+            <i appFeatherIcon="search" class="position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+          </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="no-show">No Show</option>
+          </select>
+        </div>
+
+        <!-- Time Filter -->
+        <div class="col-md-3">
+          <label class="form-label">Time</label>
+          <select class="form-select" [(ngModel)]="timeFilter" (change)="applyFilters()">
+            <option value="all">All Time</option>
+            <option value="overdue">Overdue</option>
+            <option value="today">Today</option>
+            <option value="upcoming">Upcoming</option>
+          </select>
+        </div>
+
+        <!-- Clear Filters -->
+        <div class="col-md-3 d-flex align-items-end">
+          <button class="btn btn-outline-secondary me-2" (click)="clearFilters()">
+            <i appFeatherIcon="x-circle"></i>
+            Clear
+          </button>
+          <span class="text-muted small">{{ filteredCheckins.length }} of {{ checkins.length }} check-ins</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="text-muted mt-3">Loading check-ins...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i appFeatherIcon="alert-triangle" class="me-2"></i>
+    {{ error }}
+    <button class="btn btn-sm btn-outline-danger ms-3" (click)="refresh()">
+      Try Again
+    </button>
+  </div>
+
+  <!-- Check-ins Table -->
+  <div *ngIf="!loading && !error" class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="cursor: pointer" (click)="sort('guestName')">
+                <div class="d-flex align-items-center">
+                  Guest
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'guestName' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'guestName' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th style="cursor: pointer" (click)="sort('roomNumber')">
+                <div class="d-flex align-items-center">
+                  Room
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'roomNumber' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'roomNumber' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th style="cursor: pointer" (click)="sort('expectedArrival')">
+                <div class="d-flex align-items-center">
+                  Expected Arrival
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'expectedArrival' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'expectedArrival' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th>Actual Arrival</th>
+              <th>Status</th>
+              <th>Time Status</th>
+              <th>Guests</th>
+              <th>Special Requests</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let checkin of paginatedCheckins"
+              class="checkin-row"
+              (click)="viewGuestDetails(checkin)"
+              [class.table-warning]="isOverdue(checkin)"
+            >
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="avatar-sm me-3">
+                    <div class="avatar-title rounded-circle bg-primary-subtle text-primary">
+                      {{ checkin.guestName.charAt(0).toUpperCase() }}
+                    </div>
+                  </div>
+                  <div>
+                    <h6 class="mb-1">{{ checkin.guestName }}</h6>
+                    <p class="text-muted mb-0 small">{{ checkin.phoneNumber }}</p>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark">
+                  Room {{ checkin.roomNumber }}
+                </span>
+              </td>
+              <td>
+                <div class="time-info">
+                  <div>{{ checkin.expectedArrival | date:'shortTime' }}</div>
+                  <small class="text-muted">{{ checkin.expectedArrival | date:'shortDate' }}</small>
+                </div>
+              </td>
+              <td>
+                <div *ngIf="checkin.actualArrival; else noArrival" class="time-info">
+                  <div>{{ checkin.actualArrival | date:'shortTime' }}</div>
+                  <small class="text-muted">{{ checkin.actualArrival | date:'shortDate' }}</small>
+                </div>
+                <ng-template #noArrival>
+                  <span class="text-muted">-</span>
+                </ng-template>
+              </td>
+              <td>
+                <span [class]="getStatusClass(checkin.status)">
+                  <i [appFeatherIcon]="getStatusIcon(checkin.status)" class="me-1"></i>
+                  {{ checkin.status | titlecase }}
+                </span>
+              </td>
+              <td>
+                <span
+                  class="time-status-badge"
+                  [class.text-danger]="isOverdue(checkin)"
+                  [class.text-success]="getTimeStatus(checkin.expectedArrival, checkin.actualArrival).includes('On Time')"
+                  [class.text-warning]="getTimeStatus(checkin.expectedArrival, checkin.actualArrival).includes('Late') || getTimeStatus(checkin.expectedArrival, checkin.actualArrival).includes('Early')"
+                  [ngbTooltip]="'Expected: ' + (checkin.expectedArrival | date:'medium')"
+                >
+                  {{ getTimeStatus(checkin.expectedArrival, checkin.actualArrival) }}
+                </span>
+              </td>
+              <td>
+                <span class="badge bg-secondary">{{ checkin.numberOfGuests }} guest{{ checkin.numberOfGuests !== 1 ? 's' : '' }}</span>
+              </td>
+              <td>
+                <div class="special-requests" *ngIf="checkin.specialRequests">
+                  <i appFeatherIcon="info" class="text-info me-1" [ngbTooltip]="checkin.specialRequests"></i>
+                  <span class="text-truncate d-inline-block" style="max-width: 100px;">{{ checkin.specialRequests }}</span>
+                </div>
+                <span class="text-muted" *ngIf="!checkin.specialRequests">-</span>
+              </td>
+              <td>
+                <div class="btn-group" ngbDropdown>
+                  <button
+                    class="btn btn-sm btn-outline-success"
+                    (click)="updateStatus(checkin.id, 'completed', $event)"
+                    *ngIf="checkin.status !== 'completed' && checkin.status !== 'no-show'"
+                    ngbTooltip="Mark as Completed"
+                  >
+                    <i appFeatherIcon="check"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-info"
+                    (click)="updateStatus(checkin.id, 'in-progress', $event)"
+                    *ngIf="checkin.status === 'pending'"
+                    ngbTooltip="Start Check-in Process"
+                  >
+                    <i appFeatherIcon="clock"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="updateStatus(checkin.id, 'no-show', $event)"
+                    *ngIf="checkin.status === 'pending'"
+                    ngbTooltip="Mark as No Show"
+                  >
+                    <i appFeatherIcon="x"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="sendWelcomeMessage(checkin, $event)"
+                    *ngIf="checkin.status === 'completed'"
+                    ngbTooltip="Send Welcome Message"
+                  >
+                    <i appFeatherIcon="send"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredCheckins.length === 0" class="text-center py-5">
+        <i appFeatherIcon="calendar" class="text-muted mb-3" style="font-size: 3rem;"></i>
+        <h5 class="text-muted">No check-ins found</h5>
+        <p class="text-muted mb-0">
+          <span *ngIf="searchTerm || statusFilter !== 'all' || timeFilter !== 'today'">
+            Try adjusting your filters to see more results.
+          </span>
+          <span *ngIf="!searchTerm && statusFilter === 'all' && timeFilter === 'today'">
+            No check-ins scheduled for today.
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="card-footer" *ngIf="totalPages > 1">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="text-muted small">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }} check-ins
+        </div>
+        <ngb-pagination
+          [(page)]="currentPage"
+          [pageSize]="pageSize"
+          [collectionSize]="totalItems"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="onPageChange($event)"
+        ></ngb-pagination>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,552 @@
+{
+  "info": {
+    "name": "Hostr Backend API",
+    "description": "Complete API collection for Hostr multi-tenant WhatsApp concierge system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "tenant_subdomain",
+      "value": "testhotel",
+      "type": "string"
+    },
+    {
+      "key": "tenant_url",
+      "value": "http://{{tenant_subdomain}}.localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "phone_number_id",
+      "value": "123456789012345",
+      "type": "string"
+    },
+    {
+      "key": "guest_phone",
+      "value": "27123456789",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "WhatsApp Webhook",
+      "item": [
+        {
+          "name": "Test Webhook Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entry\": [{\n    \"changes\": [{\n      \"value\": {\n        \"metadata\": {\n          \"phone_number_id\": \"{{phone_number_id}}\"\n        },\n        \"messages\": [{\n          \"from\": \"{{guest_phone}}\",\n          \"text\": {\n            \"body\": \"I need fresh towels in room 205\"\n          },\n          \"timestamp\": \"1694234567\"\n        }]\n      }\n    }]\n  }]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["webhook"]
+            },
+            "description": "Test the complete WhatsApp message processing pipeline"
+          }
+        },
+        {
+          "name": "Webhook Verification",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/webhook?hub.mode=subscribe&hub.challenge=test_challenge&hub.verify_token=test_token",
+              "host": ["{{base_url}}"],
+              "path": ["webhook"],
+              "query": [
+                {
+                  "key": "hub.mode",
+                  "value": "subscribe"
+                },
+                {
+                  "key": "hub.challenge",
+                  "value": "test_challenge"
+                },
+                {
+                  "key": "hub.verify_token",
+                  "value": "test_token"
+                }
+              ]
+            },
+            "description": "WhatsApp webhook verification endpoint"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenants",
+      "item": [
+        {
+          "name": "Create Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Hotel\",\n  \"subdomain\": \"{{tenant_subdomain}}\",\n  \"whatsAppPhoneNumberId\": \"{{phone_number_id}}\",\n  \"planType\": \"Premium\"\n}"
+            },
+            "url": {
+              "raw": "{{tenant_url}}/api/tenants",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "tenants"]
+            }
+          }
+        },
+        {
+          "name": "Get All Tenants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/tenants",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "tenants"]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/tenants/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "tenants", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Tenant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"name\": \"Updated Hotel Name\",\n  \"subdomain\": \"{{tenant_subdomain}}\",\n  \"whatsAppPhoneNumberId\": \"{{phone_number_id}}\",\n  \"planType\": \"Premium\"\n}"
+            },
+            "url": {
+              "raw": "{{tenant_url}}/api/tenants/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "tenants", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/tenants/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "tenants", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FAQs",
+      "item": [
+        {
+          "name": "Get All FAQs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/faqs",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "faqs"]
+            }
+          }
+        },
+        {
+          "name": "Create FAQ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What time is check-in?\",\n  \"answer\": \"Check-in is from 3:00 PM to 11:00 PM. Early check-in may be available upon request.\",\n  \"category\": \"Check-in/Check-out\"\n}"
+            },
+            "url": {
+              "raw": "{{tenant_url}}/api/faqs",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "faqs"]
+            }
+          }
+        },
+        {
+          "name": "Get FAQ by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/faqs/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "faqs", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update FAQ",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"question\": \"What time is check-in and check-out?\",\n  \"answer\": \"Check-in: 3:00 PM - 11:00 PM. Check-out: 11:00 AM. Early/late options available upon request.\",\n  \"category\": \"Check-in/Check-out\"\n}"
+            },
+            "url": {
+              "raw": "{{tenant_url}}/api/faqs/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "faqs", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete FAQ",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/faqs/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "faqs", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Request Items",
+      "item": [
+        {
+          "name": "Get All Request Items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/request-items",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "request-items"]
+            }
+          }
+        },
+        {
+          "name": "Create Request Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fresh Towels\",\n  \"llmVisibleName\": \"towels\",\n  \"description\": \"Clean bathroom and pool towels delivered to guest room\",\n  \"category\": \"Housekeeping\",\n  \"isPremiumOnly\": false\n}"
+            },
+            "url": {
+              "raw": "{{tenant_url}}/api/request-items",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "request-items"]
+            }
+          }
+        },
+        {
+          "name": "Get Request Item by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/request-items/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "request-items", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Request Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"name\": \"Premium Fresh Towels\",\n  \"llmVisibleName\": \"towels\",\n  \"description\": \"Luxury Egyptian cotton towels delivered to guest room\",\n  \"category\": \"Premium Housekeeping\",\n  \"isPremiumOnly\": true\n}"
+            },
+            "url": {
+              "raw": "{{tenant_url}}/api/request-items/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "request-items", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Request Item",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/request-items/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "request-items", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "Get All Conversations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/conversations",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "conversations"]
+            }
+          }
+        },
+        {
+          "name": "Get Conversation by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/conversations/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "conversations", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Conversation Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/conversations/1/messages",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "conversations", "1", "messages"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get All Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/messages",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "messages"]
+            }
+          }
+        },
+        {
+          "name": "Get Message by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/messages/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "messages", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rules",
+      "item": [
+        {
+          "name": "Get All Rules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/rules",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "rules"]
+            }
+          }
+        },
+        {
+          "name": "Create Rule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Greeting Rule\",\n  \"condition\": \"greeting\",\n  \"action\": \"Welcome to our hotel! How can I assist you today?\",\n  \"priority\": 1,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{tenant_url}}/api/rules",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "rules"]
+            }
+          }
+        },
+        {
+          "name": "Update Rule",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"name\": \"Enhanced Greeting Rule\",\n  \"condition\": \"greeting\",\n  \"action\": \"Welcome to our premium hotel! I'm your AI concierge. How may I help you today?\",\n  \"priority\": 1,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{tenant_url}}/api/rules/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "rules", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Rule",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{tenant_url}}/api/rules/1",
+              "host": ["{{tenant_url}}"],
+              "path": ["api", "rules", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Test Scenarios",
+      "item": [
+        {
+          "name": "Complete Workflow Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entry\": [{\n    \"changes\": [{\n      \"value\": {\n        \"metadata\": {\n          \"phone_number_id\": \"{{phone_number_id}}\"\n        },\n        \"messages\": [{\n          \"from\": \"{{guest_phone}}\",\n          \"text\": {\n            \"body\": \"Hello, I need room service and fresh towels for room 205. Also, what time is breakfast?\"\n          },\n          \"timestamp\": \"{{$timestamp}}\"\n        }]\n      }\n    }]\n  }]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["webhook"]
+            },
+            "description": "Test complete message processing with multiple requests and FAQ"
+          }
+        },
+        {
+          "name": "Premium Feature Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entry\": [{\n    \"changes\": [{\n      \"value\": {\n        \"metadata\": {\n          \"phone_number_id\": \"{{phone_number_id}}\"\n        },\n        \"messages\": [{\n          \"from\": \"{{guest_phone}}\",\n          \"text\": {\n            \"body\": \"I would like to book a spa appointment and arrange airport transfer\"\n          },\n          \"timestamp\": \"{{$timestamp}}\"\n        }]\n      }\n    }]\n  }]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["webhook"]
+            },
+            "description": "Test premium-only features and plan gating"
+          }
+        },
+        {
+          "name": "FAQ Semantic Search Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entry\": [{\n    \"changes\": [{\n      \"value\": {\n        \"metadata\": {\n          \"phone_number_id\": \"{{phone_number_id}}\"\n        },\n        \"messages\": [{\n          \"from\": \"{{guest_phone}}\",\n          \"text\": {\n            \"body\": \"When can I arrive at the hotel?\"\n          },\n          \"timestamp\": \"{{$timestamp}}\"\n        }]\n      }\n    }]\n  }]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["webhook"]
+            },
+            "description": "Test pgvector semantic search on FAQs"
+          }
+        }
+      ]
+    }
+  ]
+}

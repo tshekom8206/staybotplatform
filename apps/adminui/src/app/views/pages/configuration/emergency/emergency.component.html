@@ -1,0 +1,639 @@
+<!-- Header -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+  <div class="d-block mb-4 mb-md-0">
+    <h2 class="h4">Emergency Management</h2>
+    <p class="mb-0">Configure emergency types, manage incidents, and maintain emergency contacts</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button
+      *ngIf="viewMode === 'types'"
+      type="button"
+      class="btn btn-sm btn-outline-primary"
+      (click)="loadData()">
+      <i [appFeatherIcon]="'refresh-cw'" class="feather-icon"></i>
+      Refresh
+    </button>
+    <button
+      *ngIf="viewMode === 'types'"
+      type="button"
+      class="btn btn-sm btn-success"
+      (click)="openCreateTypeModal()">
+      <i [appFeatherIcon]="'plus'" class="feather-icon"></i>
+      Add Emergency Type
+    </button>
+    <button
+      *ngIf="viewMode === 'contacts'"
+      type="button"
+      class="btn btn-sm btn-success"
+      (click)="openCreateContactModal()">
+      <i [appFeatherIcon]="'plus'" class="feather-icon"></i>
+      Add Emergency Contact
+    </button>
+  </div>
+</div>
+
+<!-- Success/Error Alerts -->
+<div class="row" *ngIf="success || error">
+  <div class="col-12">
+    <ngb-alert *ngIf="success" type="success" [dismissible]="true" (closed)="success = null">
+      {{ success }}
+    </ngb-alert>
+    <ngb-alert *ngIf="error" type="danger" [dismissible]="true" (closed)="error = null">
+      {{ error }}
+    </ngb-alert>
+  </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4" *ngIf="stats && !loading">
+  <div class="col-12 col-sm-6 col-xl-3 mb-4">
+    <div class="card border-0 shadow">
+      <div class="card-body">
+        <div class="row d-block d-xl-flex align-items-center">
+          <div class="col-12 col-xl-5 text-xl-center mb-3 mb-xl-0 d-flex align-items-center justify-content-xl-center">
+            <div class="icon-shape icon-shape-warning rounded me-4 me-sm-0">
+              <i [appFeatherIcon]="'alert-triangle'" class="text-white"></i>
+            </div>
+          </div>
+          <div class="col-12 col-xl-7 px-xl-0">
+            <div class="d-flex align-items-center">
+              <h2 class="h6 text-gray-400 mb-0">Emergency Types</h2>
+            </div>
+            <div class="d-flex align-items-center">
+              <h3 class="fw-extrabold mb-0">{{ stats.totalTypes || 0 }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-xl-3 mb-4">
+    <div class="card border-0 shadow">
+      <div class="card-body">
+        <div class="row d-block d-xl-flex align-items-center">
+          <div class="col-12 col-xl-5 text-xl-center mb-3 mb-xl-0 d-flex align-items-center justify-content-xl-center">
+            <div class="icon-shape icon-shape-danger rounded me-4 me-sm-0">
+              <i [appFeatherIcon]="'alert-circle'" class="text-white"></i>
+            </div>
+          </div>
+          <div class="col-12 col-xl-7 px-xl-0">
+            <div class="d-flex align-items-center">
+              <h2 class="h6 text-gray-400 mb-0">Active Incidents</h2>
+            </div>
+            <div class="d-flex align-items-center">
+              <h3 class="fw-extrabold mb-0 text-danger">{{ stats.activeIncidents || 0 }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-xl-3 mb-4">
+    <div class="card border-0 shadow">
+      <div class="card-body">
+        <div class="row d-block d-xl-flex align-items-center">
+          <div class="col-12 col-xl-5 text-xl-center mb-3 mb-xl-0 d-flex align-items-center justify-content-xl-center">
+            <div class="icon-shape icon-shape-success rounded me-4 me-sm-0">
+              <i [appFeatherIcon]="'check-circle'" class="text-white"></i>
+            </div>
+          </div>
+          <div class="col-12 col-xl-7 px-xl-0">
+            <div class="d-flex align-items-center">
+              <h2 class="h6 text-gray-400 mb-0">Resolved Incidents</h2>
+            </div>
+            <div class="d-flex align-items-center">
+              <h3 class="fw-extrabold mb-0 text-success">{{ stats.resolvedIncidents || 0 }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-xl-3 mb-4">
+    <div class="card border-0 shadow">
+      <div class="card-body">
+        <div class="row d-block d-xl-flex align-items-center">
+          <div class="col-12 col-xl-5 text-xl-center mb-3 mb-xl-0 d-flex align-items-center justify-content-xl-center">
+            <div class="icon-shape icon-shape-info rounded me-4 me-sm-0">
+              <i [appFeatherIcon]="'phone'" class="text-white"></i>
+            </div>
+          </div>
+          <div class="col-12 col-xl-7 px-xl-0">
+            <div class="d-flex align-items-center">
+              <h2 class="h6 text-gray-400 mb-0">Emergency Contacts</h2>
+            </div>
+            <div class="d-flex align-items-center">
+              <h3 class="fw-extrabold mb-0">{{ stats.totalContacts || 0 }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Navigation Tabs -->
+<div class="row">
+  <div class="col-12 mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex gap-2">
+        <button
+          type="button"
+          class="btn"
+          [class.btn-success]="viewMode === 'types'"
+          [class.btn-outline-success]="viewMode !== 'types'"
+          (click)="setViewMode('types')">
+          <i [appFeatherIcon]="'alert-triangle'" class="feather-icon"></i>
+          Emergency Types ({{ emergencyTypes.length || 0 }})
+        </button>
+        <button
+          type="button"
+          class="btn"
+          [class.btn-success]="viewMode === 'incidents'"
+          [class.btn-outline-success]="viewMode !== 'incidents'"
+          (click)="setViewMode('incidents')">
+          <i [appFeatherIcon]="'alert-circle'" class="feather-icon"></i>
+          Incidents ({{ incidents.length || 0 }})
+        </button>
+        <button
+          type="button"
+          class="btn"
+          [class.btn-success]="viewMode === 'contacts'"
+          [class.btn-outline-success]="viewMode !== 'contacts'"
+          (click)="setViewMode('contacts')">
+          <i [appFeatherIcon]="'phone'" class="feather-icon"></i>
+          Emergency Contacts ({{ contacts.length || 0 }})
+        </button>
+      </div>
+
+      <div class="d-flex gap-2 align-items-center">
+        <!-- Search -->
+        <div class="input-group" style="max-width: 300px;">
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Search..."
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="applyFilters()">
+          <span class="input-group-text">
+            <i [appFeatherIcon]="'search'" class="feather-icon-sm"></i>
+          </span>
+        </div>
+
+        <!-- Filters -->
+        <div class="dropdown" *ngIf="viewMode === 'types' || viewMode === 'incidents'">
+          <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            Severity
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" (click)="severityFilter = 'all'; applyFilters(); $event.preventDefault()">All Severities</a></li>
+            <li *ngFor="let level of severityLevels">
+              <a class="dropdown-item" href="#" (click)="severityFilter = level.value; applyFilters(); $event.preventDefault()">
+                {{ level.label }}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="dropdown" *ngIf="viewMode === 'incidents'">
+          <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            Status
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" (click)="statusFilter = 'all'; applyFilters(); $event.preventDefault()">All Status</a></li>
+            <li *ngFor="let status of statusTypes">
+              <a class="dropdown-item" href="#" (click)="statusFilter = status.value; applyFilters(); $event.preventDefault()">
+                {{ status.label }}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="dropdown" *ngIf="viewMode === 'contacts'">
+          <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            Contact Type
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" (click)="contactTypeFilter = 'all'; applyFilters(); $event.preventDefault()">All Types</a></li>
+            <li *ngFor="let type of contactTypes">
+              <a class="dropdown-item" href="#" (click)="contactTypeFilter = type.value; applyFilters(); $event.preventDefault()">
+                {{ type.label }}
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="row" *ngIf="loading">
+  <div class="col-12 text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading emergency data...</p>
+  </div>
+</div>
+
+<!-- Content Cards -->
+<div class="row" *ngIf="!loading">
+  <!-- Emergency Types View -->
+  <div *ngIf="viewMode === 'types'" class="col-12">
+    <div class="row">
+      <div *ngFor="let type of filteredData; trackBy: trackById" class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header border-0 pb-0">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1 me-2">
+                <h6 class="card-title mb-1 text-truncate">{{ type.name }}</h6>
+                <small class="text-muted">{{ type.description || 'No description' }}</small>
+              </div>
+              <div class="d-flex flex-column gap-1">
+                <span class="badge" [ngClass]="getSeverityBadgeClass(type.severityLevel)">
+                  {{ type.severityLevel }}
+                </span>
+                <span class="badge" [class.bg-success]="type.isActive" [class.bg-secondary]="!type.isActive">
+                  {{ type.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="card-body pt-2">
+            <div class="row g-2 small mb-3">
+              <div class="col-6">
+                <strong>Keywords:</strong> {{ type.detectionKeywords?.length || 0 }}
+              </div>
+              <div class="col-6">
+                <strong>Protocols:</strong> {{ type.protocolCount || 0 }}
+              </div>
+              <div class="col-12" *ngIf="type.detectionKeywords?.length">
+                <div class="d-flex flex-wrap gap-1">
+                  <span *ngFor="let keyword of type.detectionKeywords.slice(0, 3)" class="badge bg-light text-dark">
+                    {{ keyword }}
+                  </span>
+                  <span *ngIf="type.detectionKeywords.length > 3" class="badge bg-light text-dark">
+                    +{{ type.detectionKeywords.length - 3 }} more
+                  </span>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="d-flex gap-2">
+                  <span *ngIf="type.autoEscalate" class="badge bg-info">Auto Escalate</span>
+                  <span *ngIf="type.requiresEvacuation" class="badge bg-warning">Evacuation</span>
+                  <span *ngIf="type.contactEmergencyServices" class="badge bg-danger">Emergency Services</span>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+              <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1"
+                      (click)="openEditTypeModal(type)">
+                <i [appFeatherIcon]="'edit-2'" class="feather-icon"></i>
+                Edit
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger"
+                      (click)="deleteType(type)">
+                <i [appFeatherIcon]="'trash-2'" class="feather-icon"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Emergency Incidents View -->
+  <div *ngIf="viewMode === 'incidents'" class="col-12">
+    <div class="row">
+      <div *ngFor="let incident of filteredData; trackBy: trackById" class="col-lg-6 col-md-12 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header border-0 pb-0">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1 me-2">
+                <h6 class="card-title mb-1 text-truncate">{{ incident.title }}</h6>
+                <small class="text-muted">{{ incident.emergencyType.name }}</small>
+              </div>
+              <div class="d-flex flex-column gap-1">
+                <span class="badge" [ngClass]="getSeverityBadgeClass(incident.severityLevel)">
+                  {{ incident.severityLevel }}
+                </span>
+                <span class="badge" [ngClass]="getStatusBadgeClass(incident.status)">
+                  {{ incident.status }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="card-body pt-2">
+            <p class="text-muted small mb-2">{{ incident.description }}</p>
+            <div class="row g-2 small mb-3">
+              <div class="col-6" *ngIf="incident.reportedBy">
+                <strong>Reported By:</strong> {{ incident.reportedBy }}
+              </div>
+              <div class="col-6" *ngIf="incident.location">
+                <strong>Location:</strong> {{ incident.location }}
+              </div>
+              <div class="col-12">
+                <strong>Reported:</strong> {{ incident.reportedAt | date:'short' }}
+              </div>
+              <div class="col-12" *ngIf="incident.resolvedAt">
+                <strong>Resolved:</strong> {{ incident.resolvedAt | date:'short' }}
+              </div>
+              <div class="col-12" *ngIf="incident.resolutionNotes">
+                <strong>Resolution:</strong> {{ incident.resolutionNotes }}
+              </div>
+            </div>
+            <div class="mt-3 d-flex gap-2" *ngIf="incident.status === 'ACTIVE'">
+              <button type="button" class="btn btn-sm btn-success flex-grow-1"
+                      (click)="openResolveIncidentModal(incident)">
+                <i [appFeatherIcon]="'check-circle'" class="feather-icon"></i>
+                Resolve
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Emergency Contacts View -->
+  <div *ngIf="viewMode === 'contacts'" class="col-12">
+    <div class="row">
+      <div *ngFor="let contact of filteredData; trackBy: trackById" class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header border-0 pb-0">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1 me-2">
+                <h6 class="card-title mb-1 text-truncate">{{ contact.name }}</h6>
+                <small class="text-muted">{{ contact.contactType }}</small>
+              </div>
+              <div class="d-flex flex-column gap-1">
+                <span *ngIf="contact.isPrimary" class="badge bg-primary">Primary</span>
+                <span class="badge" [class.bg-success]="contact.isActive" [class.bg-secondary]="!contact.isActive">
+                  {{ contact.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="card-body pt-2">
+            <div class="row g-2 small mb-3">
+              <div class="col-12">
+                <strong>Phone:</strong>
+                <a [href]="'tel:' + contact.phoneNumber" class="text-decoration-none">{{ contact.phoneNumber }}</a>
+              </div>
+              <div class="col-12" *ngIf="contact.email">
+                <strong>Email:</strong>
+                <a [href]="'mailto:' + contact.email" class="text-decoration-none">{{ contact.email }}</a>
+              </div>
+              <div class="col-12" *ngIf="contact.address">
+                <strong>Address:</strong> {{ contact.address }}
+              </div>
+              <div class="col-12" *ngIf="contact.notes">
+                <strong>Notes:</strong> {{ contact.notes }}
+              </div>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+              <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1"
+                      (click)="openEditContactModal(contact)">
+                <i [appFeatherIcon]="'edit-2'" class="feather-icon"></i>
+                Edit
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger"
+                      (click)="deleteContact(contact)">
+                <i [appFeatherIcon]="'trash-2'" class="feather-icon"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredData.length === 0" class="col-12 text-center py-5">
+    <i [appFeatherIcon]="'alert-triangle'" class="feather-icon-xl text-muted mb-3"></i>
+    <h5 class="text-muted">No {{ viewMode }} found</h5>
+    <p class="text-muted mb-4">
+      <span *ngIf="viewMode === 'types'">Start by creating your first emergency type.</span>
+      <span *ngIf="viewMode === 'incidents'">No emergency incidents have been reported yet.</span>
+      <span *ngIf="viewMode === 'contacts'">Add emergency contacts to get started.</span>
+    </p>
+    <button
+      *ngIf="viewMode === 'types'"
+      type="button"
+      class="btn btn-primary"
+      (click)="openCreateTypeModal()">
+      <i [appFeatherIcon]="'plus'" class="feather-icon"></i>
+      Add Emergency Type
+    </button>
+    <button
+      *ngIf="viewMode === 'contacts'"
+      type="button"
+      class="btn btn-primary"
+      (click)="openCreateContactModal()">
+      <i [appFeatherIcon]="'plus'" class="feather-icon"></i>
+      Add Emergency Contact
+    </button>
+  </div>
+</div>
+
+<!-- Emergency Type Modal -->
+<ng-template #typeModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ isEditMode ? 'Edit Emergency Type' : 'Add Emergency Type' }}</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <form [formGroup]="typeForm" (ngSubmit)="saveType()">
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <h6 class="text-primary">Emergency Type Information</h6>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Emergency Type Name *</label>
+          <input type="text" class="form-control" formControlName="name"
+                 [class.is-invalid]="typeForm.get('name')?.invalid && typeForm.get('name')?.touched">
+          <div class="invalid-feedback">Please enter an emergency type name (max 100 characters).</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Severity Level</label>
+          <select class="form-select" formControlName="severityLevel">
+            <option *ngFor="let level of severityLevels" [value]="level.value">{{ level.label }}</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Auto Escalate</label>
+          <div class="form-check form-switch mt-2">
+            <input class="form-check-input" type="checkbox" formControlName="autoEscalate">
+            <label class="form-check-label">Auto create incident</label>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Status</label>
+          <div class="form-check form-switch mt-2">
+            <input class="form-check-input" type="checkbox" formControlName="isActive">
+            <label class="form-check-label">Active</label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="requiresEvacuation">
+            <label class="form-check-label">Requires Evacuation</label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="contactEmergencyServices">
+            <label class="form-check-label">Contact Emergency Services</label>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" formControlName="description" rows="3"
+                    placeholder="Describe this emergency type"></textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Detection Keywords</label>
+          <div class="d-flex flex-wrap gap-2 mb-2">
+            <span *ngFor="let keyword of typeForm.get('detectionKeywords')?.value || []"
+                  class="badge bg-primary">
+              {{ keyword }}
+              <button type="button" class="btn-close btn-close-white ms-1"
+                      (click)="removeKeyword(keyword, typeForm.get('detectionKeywords'))"></button>
+            </span>
+          </div>
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Enter keyword and press Enter"
+                   #keywordInput (keyup.enter)="addKeyword(keywordInput.value, typeForm.get('detectionKeywords')); keywordInput.value = ''">
+            <button class="btn btn-outline-secondary" type="button"
+                    (click)="addKeyword(keywordInput.value, typeForm.get('detectionKeywords')); keywordInput.value = ''">
+              Add
+            </button>
+          </div>
+          <div class="form-text">Keywords that will trigger this emergency type (e.g., "fire", "medical emergency")</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving || typeForm.invalid">
+        <span class="spinner-border spinner-border-sm me-2" *ngIf="saving"></span>
+        {{ saving ? 'Saving...' : (isEditMode ? 'Update Emergency Type' : 'Create Emergency Type') }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<!-- Emergency Contact Modal -->
+<ng-template #contactModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ isEditMode ? 'Edit Emergency Contact' : 'Add Emergency Contact' }}</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <form [formGroup]="contactForm" (ngSubmit)="saveContact()">
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <h6 class="text-primary">Contact Information</h6>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Contact Name *</label>
+          <input type="text" class="form-control" formControlName="name"
+                 [class.is-invalid]="contactForm.get('name')?.invalid && contactForm.get('name')?.touched">
+          <div class="invalid-feedback">Please enter a contact name (max 100 characters).</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Contact Type *</label>
+          <select class="form-select" formControlName="contactType"
+                  [class.is-invalid]="contactForm.get('contactType')?.invalid && contactForm.get('contactType')?.touched">
+            <option value="">Select contact type</option>
+            <option *ngFor="let type of contactTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+          <div class="invalid-feedback">Please select a contact type.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Phone Number *</label>
+          <input type="tel" class="form-control" formControlName="phoneNumber"
+                 [class.is-invalid]="contactForm.get('phoneNumber')?.invalid && contactForm.get('phoneNumber')?.touched">
+          <div class="invalid-feedback">Please enter a valid phone number.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" formControlName="email"
+                 [class.is-invalid]="contactForm.get('email')?.invalid && contactForm.get('email')?.touched">
+          <div class="invalid-feedback">Please enter a valid email address.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Address</label>
+          <input type="text" class="form-control" formControlName="address">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Primary Contact</label>
+          <div class="form-check form-switch mt-2">
+            <input class="form-check-input" type="checkbox" formControlName="isPrimary">
+            <label class="form-check-label">Primary for this type</label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Status</label>
+          <div class="form-check form-switch mt-2">
+            <input class="form-check-input" type="checkbox" formControlName="isActive">
+            <label class="form-check-label">Active</label>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Notes</label>
+          <textarea class="form-control" formControlName="notes" rows="3"
+                    placeholder="Additional notes about this contact"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving || contactForm.invalid">
+        <span class="spinner-border spinner-border-sm me-2" *ngIf="saving"></span>
+        {{ saving ? 'Saving...' : (isEditMode ? 'Update Contact' : 'Create Contact') }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<!-- Resolve Incident Modal -->
+<ng-template #incidentModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Resolve Emergency Incident</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <form [formGroup]="incidentForm" (ngSubmit)="resolveIncident()">
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-12" *ngIf="selectedIncident">
+          <h6>{{ selectedIncident.title }}</h6>
+          <p class="text-muted">{{ selectedIncident.description }}</p>
+          <div class="row">
+            <div class="col-6">
+              <strong>Type:</strong> {{ selectedIncident.emergencyType.name }}
+            </div>
+            <div class="col-6">
+              <strong>Severity:</strong> {{ selectedIncident.severityLevel }}
+            </div>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Resolution Notes *</label>
+          <textarea class="form-control" formControlName="resolutionNotes" rows="4"
+                    [class.is-invalid]="incidentForm.get('resolutionNotes')?.invalid && incidentForm.get('resolutionNotes')?.touched"
+                    placeholder="Describe how this incident was resolved..."></textarea>
+          <div class="invalid-feedback">Please provide resolution notes.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-success" [disabled]="saving || incidentForm.invalid">
+        <span class="spinner-border spinner-border-sm me-2" *ngIf="saving"></span>
+        {{ saving ? 'Resolving...' : 'Resolve Incident' }}
+      </button>
+    </div>
+  </form>
+</ng-template>

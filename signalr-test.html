@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Notification Test</title>
+    <script src="https://unpkg.com/@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
+</head>
+<body>
+    <h1>Hostr SignalR Notification Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="notifications"></div>
+
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("http://localhost:5000/hubs/stafftask")
+            .build();
+
+        // Connection status
+        connection.start().then(function () {
+            document.getElementById("status").innerHTML = "✅ Connected to SignalR Hub";
+            console.log("Connected to SignalR Hub");
+            
+            // Join tenant group (replace 1 with actual tenant ID)
+            connection.invoke("JoinTenantGroup", 1).then(function() {
+                console.log("Joined Tenant 1 group");
+                document.getElementById("status").innerHTML += "<br>✅ Joined Tenant 1 group";
+            });
+            
+        }).catch(function (err) {
+            document.getElementById("status").innerHTML = "❌ Connection failed: " + err.toString();
+            console.error(err.toString());
+        });
+
+        // Listen for task notifications
+        connection.on("TaskCreated", function (notification) {
+            console.log("Task Created Notification:", notification);
+            addNotification("🔧 Task Created", notification);
+        });
+
+        connection.on("TaskUpdated", function (notification) {
+            console.log("Task Updated Notification:", notification);
+            addNotification("🔄 Task Updated", notification);
+        });
+
+        connection.on("TaskCompleted", function (notification) {
+            console.log("Task Completed Notification:", notification);
+            addNotification("✅ Task Completed", notification);
+        });
+
+        // Listen for emergency notifications
+        connection.on("EmergencyAlert", function (notification) {
+            console.log("Emergency Alert:", notification);
+            addNotification("🚨 EMERGENCY ALERT", notification);
+        });
+
+        // Listen for maintenance notifications
+        connection.on("MaintenanceRequest", function (notification) {
+            console.log("Maintenance Request:", notification);
+            addNotification("🔧 Maintenance Request", notification);
+        });
+
+        // Listen for generic notifications
+        connection.on("Notification", function (payload) {
+            console.log("Generic Notification:", payload);
+            addNotification("📢 " + payload.type.toUpperCase(), payload.data);
+        });
+
+        function addNotification(type, data) {
+            const div = document.createElement("div");
+            div.style.cssText = "border: 1px solid #ccc; margin: 10px; padding: 10px; background: #f9f9f9;";
+            div.innerHTML = `
+                <strong>${type}</strong><br>
+                <strong>Time:</strong> ${new Date().toLocaleString()}<br>
+                <strong>Data:</strong> <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            document.getElementById("notifications").appendChild(div);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<div class="page-content">
+  <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+      <h4 class="mb-3 mb-md-0">Bookings Management</h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+      <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" (click)="openCreateModal()">
+        <i class="btn-icon-prepend" icon-feather="plus-circle"></i>
+        New Booking
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <ngb-alert *ngIf="error" type="danger" (closed)="dismissAlert()">{{ error }}</ngb-alert>
+  <ngb-alert *ngIf="success" type="success" (closed)="dismissAlert()">{{ success }}</ngb-alert>
+
+  <!-- Filters -->
+  <div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-3 mb-md-0">
+              <input type="text" class="form-control" placeholder="Search by guest name, phone, room..."
+                     [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()">
+            </div>
+            <div class="col-md-3 mb-3 mb-md-0">
+              <select class="form-select" [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange()">
+                <option value="all">All Statuses</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="CheckedIn">Checked In</option>
+                <option value="CheckedOut">Checked Out</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div class="col-md-3 mb-3 mb-md-0">
+              <select class="form-select" [(ngModel)]="sourceFilter" (ngModelChange)="onFilterChange()">
+                <option value="all">All Sources</option>
+                <option *ngFor="let source of sourceOptions" [value]="source">{{ source }}</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button type="button" class="btn btn-light w-100" (click)="clearFilters()">
+                <i icon-feather="x"></i> Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookings Table -->
+  <div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline mb-3">
+            <h6 class="card-title">All Bookings</h6>
+            <p class="text-muted mb-0">{{ totalCount }} total</p>
+          </div>
+
+          <div *ngIf="loading" class="text-center py-5">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
+          <div *ngIf="!loading" class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Guest</th>
+                  <th>Phone</th>
+                  <th>Room</th>
+                  <th>Check-in</th>
+                  <th>Check-out</th>
+                  <th>Status</th>
+                  <th>Source</th>
+                  <th>Guests</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let booking of filteredBookings">
+                  <td>
+                    <div class="fw-bold">{{ booking.guestName }}</div>
+                    <small class="text-muted" *ngIf="booking.email">{{ booking.email }}</small>
+                  </td>
+                  <td>{{ booking.phone }}</td>
+                  <td><span class="badge bg-info">{{ booking.roomNumber }}</span></td>
+                  <td>{{ booking.checkinDate }}</td>
+                  <td>{{ booking.checkoutDate }}</td>
+                  <td><span [ngClass]="getStatusBadgeClass(booking.status)">{{ booking.status }}</span></td>
+                  <td>{{ booking.source }}</td>
+                  <td>{{ booking.numberOfGuests }}</td>
+                  <td>
+                    <div ngbDropdown container="body">
+                      <button class="btn btn-sm btn-light" ngbDropdownToggle>
+                        Actions <i icon-feather="chevron-down"></i>
+                      </button>
+                      <div ngbDropdownMenu>
+                        <button ngbDropdownItem (click)="openEditModal(booking)">
+                          <i icon-feather="edit"></i> Edit
+                        </button>
+                        <button ngbDropdownItem (click)="cancelBooking(booking)"
+                                [disabled]="booking.status === 'Cancelled'">
+                          <i icon-feather="x-circle"></i> Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div *ngIf="filteredBookings.length === 0" class="text-center py-5">
+              <i icon-feather="inbox" class="icon-lg text-muted mb-3"></i>
+              <p class="text-muted">No bookings found</p>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div *ngIf="totalPages > 1" class="d-flex justify-content-between align-items-center mt-3">
+            <p class="text-muted mb-0">Showing page {{ currentPage }} of {{ totalPages }}</p>
+            <ngb-pagination [collectionSize]="totalCount" [(page)]="currentPage" [pageSize]="pageSize"
+                            [maxSize]="5" [rotate]="true" [boundaryLinks]="true"
+                            (pageChange)="onPageChange($event)"></ngb-pagination>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Booking Modal -->
+<ng-template #bookingModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">{{ isEditMode ? 'Edit Booking' : 'New Booking' }}</h5>
+    <button type="button" class="btn-close" (click)="closeModal()"></button>
+  </div>
+  <form [formGroup]="bookingForm" (ngSubmit)="saveBooking()">
+    <div class="modal-body">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Guest Name *</label>
+          <input type="text" class="form-control" formControlName="guestName"
+                 [class.is-invalid]="bookingForm.get('guestName')?.invalid && bookingForm.get('guestName')?.touched">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Phone *</label>
+          <input type="text" class="form-control" formControlName="phone" placeholder="+27821234567"
+                 [class.is-invalid]="bookingForm.get('phone')?.invalid && bookingForm.get('phone')?.touched">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" formControlName="email"
+                 [class.is-invalid]="bookingForm.get('email')?.invalid && bookingForm.get('email')?.touched">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Room Number *</label>
+          <input type="text" class="form-control" formControlName="roomNumber" placeholder="101"
+                 [class.is-invalid]="bookingForm.get('roomNumber')?.invalid && bookingForm.get('roomNumber')?.touched">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Check-in Date *</label>
+          <input type="date" class="form-control" formControlName="checkinDate"
+                 [class.is-invalid]="bookingForm.get('checkinDate')?.invalid && bookingForm.get('checkinDate')?.touched">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Check-out Date *</label>
+          <input type="date" class="form-control" formControlName="checkoutDate"
+                 [class.is-invalid]="bookingForm.get('checkoutDate')?.invalid && bookingForm.get('checkoutDate')?.touched">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Status *</label>
+          <select class="form-select" formControlName="status">
+            <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Source *</label>
+          <select class="form-select" formControlName="source">
+            <option *ngFor="let source of sourceOptions" [value]="source">{{ source }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Number of Guests *</label>
+          <input type="number" class="form-control" formControlName="numberOfGuests" min="1" max="10"
+                 [class.is-invalid]="bookingForm.get('numberOfGuests')?.invalid && bookingForm.get('numberOfGuests')?.touched">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Room Rate (per night)</label>
+          <input type="number" class="form-control" formControlName="roomRate" min="0" placeholder="0.00">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Special Requests</label>
+        <textarea class="form-control" formControlName="specialRequests" rows="3"></textarea>
+      </div>
+
+      <div class="form-check" *ngIf="!isEditMode">
+        <input type="checkbox" class="form-check-input" formControlName="isRepeatGuest" id="repeatGuest">
+        <label class="form-check-label" for="repeatGuest">Repeat Guest</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving || bookingForm.invalid">
+        <span *ngIf="saving" class="spinner-border spinner-border-sm me-1"></span>
+        {{ isEditMode ? 'Update' : 'Create' }} Booking
+      </button>
+    </div>
+  </form>
+</ng-template>

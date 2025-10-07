@@ -1,0 +1,890 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h4 class="page-title mb-0">All Tasks</h4>
+    <p class="text-muted mb-0">Comprehensive task management across all departments</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openCreateTaskModal()">
+    <i data-feather="plus" class="feather-icon" appFeatherIcon></i>
+    Create Task
+  </button>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4" *ngIf="statistics">
+  <div class="col-xl-3 col-md-6 col-12 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon bg-primary bg-opacity-10 rounded-circle me-3">
+            <i data-feather="clipboard" class="feather-icon text-primary" appFeatherIcon></i>
+          </div>
+          <div>
+            <h6 class="stats-title text-muted mb-1">Total Tasks</h6>
+            <h4 class="mb-0 text-primary">{{ statistics.totalTasks }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 col-12 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon bg-warning bg-opacity-10 rounded-circle me-3">
+            <i data-feather="clock" class="feather-icon text-warning" appFeatherIcon></i>
+          </div>
+          <div>
+            <h6 class="stats-title text-muted mb-1">Pending</h6>
+            <h4 class="mb-0 text-warning">{{ statistics.pendingTasks }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 col-12 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon bg-info bg-opacity-10 rounded-circle me-3">
+            <i data-feather="play-circle" class="feather-icon text-info" appFeatherIcon></i>
+          </div>
+          <div>
+            <h6 class="stats-title text-muted mb-1">In Progress</h6>
+            <h4 class="mb-0 text-info">{{ statistics.inProgressTasks }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 col-12 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="stats-icon bg-success bg-opacity-10 rounded-circle me-3">
+            <i data-feather="check-circle" class="feather-icon text-success" appFeatherIcon></i>
+          </div>
+          <div>
+            <h6 class="stats-title text-muted mb-1">Completed</h6>
+            <h4 class="mb-0 text-success">{{ statistics.completedTasks }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="row g-3 align-items-end">
+      <!-- Search -->
+      <div class="col-lg-3 col-md-6">
+        <label for="search" class="form-label">Search</label>
+        <input
+          type="text"
+          id="search"
+          class="form-control"
+          placeholder="Search tasks..."
+          [(ngModel)]="searchTerm"
+          (input)="applyFilters()"
+        >
+      </div>
+
+      <!-- Department Filter -->
+      <div class="col-lg-2 col-md-6">
+        <label for="department" class="form-label">Department</label>
+        <select
+          id="department"
+          class="form-select"
+          [(ngModel)]="departmentFilter"
+          (change)="applyFilters()"
+        >
+          <option value="all">All Departments</option>
+          <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="col-lg-2 col-md-6">
+        <label for="status" class="form-label">Status</label>
+        <select
+          id="status"
+          class="form-select"
+          [(ngModel)]="statusFilter"
+          (change)="applyFilters()"
+        >
+          <option value="all">All Statuses</option>
+          <option *ngFor="let status of statuses" [value]="status">{{ status }}</option>
+        </select>
+      </div>
+
+      <!-- Priority Filter -->
+      <div class="col-lg-2 col-md-6">
+        <label for="priority" class="form-label">Priority</label>
+        <select
+          id="priority"
+          class="form-select"
+          [(ngModel)]="priorityFilter"
+          (change)="applyFilters()"
+        >
+          <option value="all">All Priorities</option>
+          <option *ngFor="let priority of priorities" [value]="priority">{{ priority }}</option>
+        </select>
+      </div>
+
+      <!-- Time Filter -->
+      <div class="col-lg-2 col-md-6">
+        <label for="time" class="form-label">Time</label>
+        <select
+          id="time"
+          class="form-select"
+          [(ngModel)]="timeFilter"
+          (change)="applyFilters()"
+        >
+          <option value="all">All Time</option>
+          <option value="today">Today</option>
+          <option value="this-week">This Week</option>
+          <option value="overdue">Overdue</option>
+        </select>
+      </div>
+
+      <!-- Actions -->
+      <div class="col-lg-1 col-md-6">
+        <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()">
+          <i data-feather="x" class="feather-icon" appFeatherIcon></i>
+          Clear
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="card mb-3" *ngIf="selectedTasks.size > 0">
+  <div class="card-body py-2">
+    <div class="d-flex align-items-center justify-content-between">
+      <span class="text-muted">{{ selectedTasks.size }} tasks selected</span>
+      <div class="btn-group" ngbDropdown>
+        <button type="button" class="btn btn-sm btn-primary">
+          Bulk Actions
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split"
+          ngbDropdownToggle
+        ></button>
+        <div class="dropdown-menu" ngbDropdownMenu>
+          <h6 class="dropdown-header">Update Status</h6>
+          <button class="dropdown-item" (click)="performBulkStatusUpdate('Pending')">
+            <i data-feather="clock" class="feather-icon me-2" appFeatherIcon></i>
+            Mark as Pending
+          </button>
+          <button class="dropdown-item" (click)="performBulkStatusUpdate('InProgress')">
+            <i data-feather="play-circle" class="feather-icon me-2" appFeatherIcon></i>
+            Mark as In Progress
+          </button>
+          <button class="dropdown-item" (click)="performBulkStatusUpdate('Completed')">
+            <i data-feather="check-circle" class="feather-icon me-2" appFeatherIcon></i>
+            Mark as Completed
+          </button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item text-danger" (click)="performBulkDelete()">
+            <i data-feather="trash-2" class="feather-icon me-2" appFeatherIcon></i>
+            Delete Selected
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tasks Table -->
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-striped mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 40px;">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  [checked]="selectAll"
+                  (change)="toggleSelectAll()"
+                >
+              </div>
+            </th>
+            <th class="sortable" (click)="sort('title')">
+              Task
+              <i *ngIf="sortField === 'title'"
+                 [attr.data-feather]="sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'"
+                 class="feather-icon ms-1" appFeatherIcon></i>
+            </th>
+            <th class="sortable" (click)="sort('department')">
+              Department
+              <i *ngIf="sortField === 'department'"
+                 [attr.data-feather]="sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'"
+                 class="feather-icon ms-1" appFeatherIcon></i>
+            </th>
+            <th class="sortable" (click)="sort('priority')">
+              Priority
+              <i *ngIf="sortField === 'priority'"
+                 [attr.data-feather]="sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'"
+                 class="feather-icon ms-1" appFeatherIcon></i>
+            </th>
+            <th class="sortable" (click)="sort('status')">
+              Status
+              <i *ngIf="sortField === 'status'"
+                 [attr.data-feather]="sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'"
+                 class="feather-icon ms-1" appFeatherIcon></i>
+            </th>
+            <th>Room/Guest</th>
+            <th>Assigned To</th>
+            <th class="sortable" (click)="sort('createdAt')">
+              Created
+              <i *ngIf="sortField === 'createdAt'"
+                 [attr.data-feather]="sortDirection === 'asc' ? 'chevron-up' : 'chevron-down'"
+                 class="feather-icon ms-1" appFeatherIcon></i>
+            </th>
+            <th>Due Time</th>
+            <th style="width: 120px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading">
+            <td colspan="10" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mb-0 mt-2 text-muted">Loading tasks...</p>
+            </td>
+          </tr>
+          <tr *ngIf="!loading && paginatedTasks.length === 0">
+            <td colspan="10" class="text-center py-4">
+              <i data-feather="inbox" class="feather-icon text-muted mb-2" appFeatherIcon style="width: 48px; height: 48px;"></i>
+              <p class="mb-0 text-muted">No tasks found</p>
+            </td>
+          </tr>
+          <tr *ngFor="let task of paginatedTasks; trackBy: taskTrackBy"
+              [class.table-warning]="isOverdue(task)"
+              style="cursor: pointer;"
+              (click)="openTaskDetailModal(task)">
+            <td (click)="$event.stopPropagation();">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  [checked]="selectedTasks.has(task.id)"
+                  (change)="toggleTaskSelection(task.id)"
+                >
+              </div>
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="task-icon me-2">
+                  <i [attr.data-feather]="getDepartmentIcon(task.department)"
+                     class="feather-icon text-muted" appFeatherIcon></i>
+                </div>
+                <div>
+                  <div class="fw-semibold">{{ task.title }}</div>
+                  <div class="text-muted small text-truncate" style="max-width: 200px;">
+                    {{ task.description }}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark">{{ task.department }}</span>
+            </td>
+            <td>
+              <span [class]="getPriorityClass(task.priority)">{{ task.priority }}</span>
+            </td>
+            <td>
+              <span [class]="getStatusClass(task.status)">{{ task.status }}</span>
+            </td>
+            <td>
+              <div *ngIf="task.roomNumber || task.guestName">
+                <div *ngIf="task.roomNumber" class="small">
+                  <i data-feather="map-pin" class="feather-icon me-1" appFeatherIcon></i>
+                  Room {{ task.roomNumber }}
+                </div>
+                <div *ngIf="task.guestName" class="small text-muted">
+                  {{ task.guestName }}
+                </div>
+              </div>
+              <span *ngIf="!task.roomNumber && !task.guestName" class="text-muted">-</span>
+            </td>
+            <td>
+              <div *ngIf="task.assignedTo; else unassigned">
+                <div class="small">{{ task.assignedTo.userName }}</div>
+              </div>
+              <ng-template #unassigned>
+                <span class="text-muted small">Unassigned</span>
+              </ng-template>
+            </td>
+            <td>
+              <div class="small">{{ task.createdAt | date:'MMM dd, HH:mm' }}</div>
+            </td>
+            <td>
+              <div *ngIf="task.estimatedCompletionTime" class="small">
+                <div>{{ task.estimatedCompletionTime | date:'MMM dd, HH:mm' }}</div>
+                <div [class]="isOverdue(task) ? 'text-danger' : 'text-muted'">
+                  {{ getTimeRemaining(task) }}
+                </div>
+              </div>
+              <span *ngIf="!task.estimatedCompletionTime" class="text-muted small">-</span>
+            </td>
+            <td (click)="$event.stopPropagation();">
+              <div class="btn-group" ngbDropdown>
+                <button type="button" class="btn btn-sm btn-outline-secondary" ngbDropdownToggle>
+                  <i data-feather="more-horizontal" class="feather-icon" appFeatherIcon></i>
+                </button>
+                <div class="dropdown-menu" ngbDropdownMenu>
+                  <button class="dropdown-item" (click)="viewTaskDetails(task)">
+                    <i data-feather="eye" class="feather-icon me-2" appFeatherIcon></i>
+                    View Details
+                  </button>
+                  <button class="dropdown-item" *ngIf="task.status === 'Pending'" (click)="startTask(task)">
+                    <i data-feather="play-circle" class="feather-icon me-2" appFeatherIcon></i>
+                    Start Task
+                  </button>
+                  <button class="dropdown-item" *ngIf="task.status === 'InProgress'" (click)="completeTask(task)">
+                    <i data-feather="check-circle" class="feather-icon me-2" appFeatherIcon></i>
+                    Complete Task
+                  </button>
+                  <div class="dropdown-divider" *ngIf="task.guestPhone"></div>
+                  <button class="dropdown-item" *ngIf="task.guestPhone" (click)="callGuest(task)">
+                    <i data-feather="phone" class="feather-icon me-2" appFeatherIcon></i>
+                    Call Guest
+                  </button>
+                  <button class="dropdown-item" *ngIf="task.guestPhone" (click)="sendMessage(task)">
+                    <i data-feather="message-square" class="feather-icon me-2" appFeatherIcon></i>
+                    Send Message
+                  </button>
+                  <button class="dropdown-item" *ngIf="task.guestPhone && task.status === 'Completed'" (click)="requestRating(task)">
+                    <i data-feather="star" class="feather-icon me-2" appFeatherIcon></i>
+                    Request Rating
+                  </button>
+                  <div class="dropdown-divider"></div>
+                  <button class="dropdown-item" (click)="editTask(task)">
+                    <i data-feather="edit-3" class="feather-icon me-2" appFeatherIcon></i>
+                    Edit Task
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-between align-items-center p-3 border-top" *ngIf="totalItems > 0">
+      <div class="text-muted">
+        Showing {{ (currentPage - 1) * pageSize + 1 }} to
+        {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }} tasks
+      </div>
+      <ngb-pagination
+        [(page)]="currentPage"
+        [pageSize]="pageSize"
+        [collectionSize]="totalItems"
+        [maxSize]="5"
+        [rotate]="true"
+        [boundaryLinks]="true"
+        (pageChange)="onPageChange($event)">
+      </ngb-pagination>
+    </div>
+  </div>
+</div>
+
+<!-- Create Task Modal -->
+<ng-template #createTaskModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Create New Task</h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <form [formGroup]="createTaskForm" (ngSubmit)="createTask()">
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-12">
+          <label for="title" class="form-label">Task Title *</label>
+          <input
+            type="text"
+            id="title"
+            class="form-control"
+            formControlName="title"
+            placeholder="Enter task title"
+          >
+          <div *ngIf="createTaskForm.get('title')?.invalid && createTaskForm.get('title')?.touched"
+               class="text-danger small mt-1">
+            Title is required (minimum 3 characters)
+          </div>
+        </div>
+
+        <div class="col-12">
+          <label for="description" class="form-label">Description *</label>
+          <textarea
+            id="description"
+            class="form-control"
+            rows="3"
+            formControlName="description"
+            placeholder="Enter task description"
+          ></textarea>
+          <div *ngIf="createTaskForm.get('description')?.invalid && createTaskForm.get('description')?.touched"
+               class="text-danger small mt-1">
+            Description is required (minimum 5 characters)
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="department" class="form-label">Department *</label>
+          <select id="department" class="form-select" formControlName="department">
+            <option value="">Select department</option>
+            <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+          </select>
+          <div *ngIf="createTaskForm.get('department')?.invalid && createTaskForm.get('department')?.touched"
+               class="text-danger small mt-1">
+            Department is required
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="priority" class="form-label">Priority *</label>
+          <select id="priority" class="form-select" formControlName="priority">
+            <option *ngFor="let priority of priorities" [value]="priority">{{ priority }}</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="roomNumber" class="form-label">Room Number</label>
+          <input
+            type="text"
+            id="roomNumber"
+            class="form-control"
+            formControlName="roomNumber"
+            placeholder="e.g., 205"
+          >
+        </div>
+
+        <div class="col-md-6">
+          <label for="guestName" class="form-label">Guest Name</label>
+          <input
+            type="text"
+            id="guestName"
+            class="form-control"
+            formControlName="guestName"
+            placeholder="Enter guest name"
+          >
+        </div>
+
+        <div class="col-md-6">
+          <label for="assignedToId" class="form-label">Assign To</label>
+          <select id="assignedToId" class="form-select" formControlName="assignedToId">
+            <option value="">Unassigned</option>
+            <option *ngFor="let user of staffUsers" [value]="user.id">{{ user.displayName }}</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="estimatedCompletionTime" class="form-label">Due Date/Time</label>
+          <input
+            type="datetime-local"
+            id="estimatedCompletionTime"
+            class="form-control"
+            formControlName="estimatedCompletionTime"
+          >
+        </div>
+
+        <div class="col-12">
+          <label for="notes" class="form-label">Notes</label>
+          <textarea
+            id="notes"
+            class="form-control"
+            rows="2"
+            formControlName="notes"
+            placeholder="Additional notes or instructions"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="createTaskForm.invalid">
+        Create Task
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<!-- Task Detail Modal -->
+<ng-template #taskDetailModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Task Details</h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body" *ngIf="selectedTask">
+    <div class="row g-3 mb-4">
+      <div class="col-12">
+        <h6 class="mb-2">{{ selectedTask.title }}</h6>
+        <p class="text-muted mb-3">{{ selectedTask.description }}</p>
+
+        <div class="row g-2 mb-3">
+          <div class="col-auto">
+            <span class="badge bg-light text-dark">{{ selectedTask.department }}</span>
+          </div>
+          <div class="col-auto">
+            <span [class]="getStatusClass(selectedTask.status)">{{ selectedTask.status }}</span>
+          </div>
+          <div class="col-auto">
+            <span [class]="getPriorityClass(selectedTask.priority) + ' badge bg-light'">
+              {{ selectedTask.priority }}
+            </span>
+          </div>
+          <div class="col-auto" *ngIf="isOverdue(selectedTask)">
+            <span class="badge bg-danger">Overdue</span>
+          </div>
+        </div>
+
+        <div class="row g-3 small text-muted mb-3">
+          <div class="col-6" *ngIf="selectedTask.roomNumber">
+            <strong>Room:</strong> {{ selectedTask.roomNumber }}
+          </div>
+          <div class="col-6" *ngIf="selectedTask.guestName">
+            <strong>Guest:</strong> {{ selectedTask.guestName }}
+          </div>
+          <div class="col-6" *ngIf="selectedTask.assignedTo">
+            <strong>Assigned To:</strong> {{ selectedTask.assignedTo.userName }}
+          </div>
+          <div class="col-6">
+            <strong>Created:</strong> {{ selectedTask.createdAt | date:'MMM dd, yyyy HH:mm' }}
+          </div>
+          <div class="col-6" *ngIf="selectedTask.estimatedCompletionTime">
+            <strong>Due:</strong> {{ selectedTask.estimatedCompletionTime | date:'MMM dd, yyyy HH:mm' }}
+          </div>
+          <div class="col-6" *ngIf="selectedTask.completedAt">
+            <strong>Completed:</strong> {{ selectedTask.completedAt | date:'MMM dd, yyyy HH:mm' }}
+          </div>
+        </div>
+
+        <div *ngIf="selectedTask.notes" class="mb-3">
+          <strong class="small">Notes:</strong>
+          <p class="mb-0 small">{{ selectedTask.notes }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Form -->
+    <form [formGroup]="editTaskForm" (ngSubmit)="updateTask(selectedTask)">
+      <h6 class="mb-3">Update Task</h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="editStatus" class="form-label">Status</label>
+          <select id="editStatus" class="form-select" formControlName="status">
+            <option *ngFor="let status of statuses" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="editPriority" class="form-label">Priority</label>
+          <select id="editPriority" class="form-select" formControlName="priority">
+            <option *ngFor="let priority of priorities" [value]="priority">{{ priority }}</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="editAssignedToId" class="form-label">Assign To</label>
+          <select id="editAssignedToId" class="form-select" formControlName="assignedToId">
+            <option value="">Unassigned</option>
+            <!-- TODO: Load staff members from service -->
+            <option value="1">John Doe</option>
+            <option value="2">Jane Smith</option>
+            <option value="3">Mike Johnson</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="editEstimatedCompletionTime" class="form-label">Due Date/Time</label>
+          <input
+            type="datetime-local"
+            id="editEstimatedCompletionTime"
+            class="form-control"
+            formControlName="estimatedCompletionTime"
+          >
+        </div>
+
+        <div class="col-12">
+          <label for="editNotes" class="form-label">Notes</label>
+          <textarea
+            id="editNotes"
+            class="form-control"
+            rows="3"
+            formControlName="notes"
+            placeholder="Add notes or completion details"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+        <button type="button" class="btn btn-danger me-auto" (click)="deleteTask(selectedTask.id); modal.dismiss()">
+          Delete Task
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="editTaskForm.invalid">
+          Update Task
+        </button>
+      </div>
+    </form>
+  </div>
+</ng-template>
+
+<!-- Task Details Modal -->
+<ng-template #taskDetailsModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" *ngIf="selectedTask">
+      <i [attr.data-feather]="getDepartmentIcon(selectedTask.department)" class="feather-icon me-2" appFeatherIcon></i>
+      {{ selectedTask.title }}
+    </h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-body" *ngIf="selectedTask">
+    <div class="row">
+      <!-- Left Column - Task Details -->
+      <div class="col-md-8">
+        <div class="row mb-3">
+          <div class="col-sm-4"><strong>Task ID:</strong></div>
+          <div class="col-sm-8">#{{ selectedTask.id }}</div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-sm-4"><strong>Description:</strong></div>
+          <div class="col-sm-8">{{ selectedTask.description || 'No description provided' }}</div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-sm-4"><strong>Department:</strong></div>
+          <div class="col-sm-8">
+            <span class="badge bg-light text-dark">
+              <i [attr.data-feather]="getDepartmentIcon(selectedTask.department)" class="feather-icon me-1" appFeatherIcon></i>
+              {{ selectedTask.department }}
+            </span>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-sm-4"><strong>Created:</strong></div>
+          <div class="col-sm-8">{{ selectedTask.createdAt | date:'medium' }}</div>
+        </div>
+
+        <div class="row mb-3" *ngIf="selectedTask.updatedAt">
+          <div class="col-sm-4"><strong>Last Updated:</strong></div>
+          <div class="col-sm-8">{{ selectedTask.updatedAt | date:'medium' }}</div>
+        </div>
+
+        <div class="row mb-3" *ngIf="selectedTask.estimatedCompletionTime">
+          <div class="col-sm-4"><strong>Due Date:</strong></div>
+          <div class="col-sm-8">
+            {{ selectedTask.estimatedCompletionTime | date:'medium' }}
+            <span *ngIf="isOverdue(selectedTask)" class="badge bg-danger ms-2">
+              {{ getTimeRemaining(selectedTask) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="row mb-3" *ngIf="selectedTask.notes">
+          <div class="col-sm-4"><strong>Notes:</strong></div>
+          <div class="col-sm-8">{{ selectedTask.notes }}</div>
+        </div>
+      </div>
+
+      <!-- Right Column - Status & Guest Info -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-title">Status Information</h6>
+
+            <div class="mb-3">
+              <label class="form-label">Priority:</label>
+              <div>
+                <span [class]="getPriorityClass(selectedTask.priority)" class="fw-bold">
+                  {{ selectedTask.priority }}
+                </span>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Status:</label>
+              <div>
+                <span [class]="getStatusClass(selectedTask.status)">
+                  {{ selectedTask.status }}
+                </span>
+              </div>
+            </div>
+
+            <div class="mb-3" *ngIf="selectedTask.assignedTo">
+              <label class="form-label">Assigned To:</label>
+              <div>{{ selectedTask.assignedTo.userName }}</div>
+            </div>
+
+            <div *ngIf="!selectedTask.assignedTo" class="mb-3">
+              <span class="text-muted">Unassigned</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guest Information Card -->
+        <div class="card mt-3" *ngIf="selectedTask.guestName || selectedTask.guestPhone || selectedTask.roomNumber">
+          <div class="card-body">
+            <h6 class="card-title">Guest Information</h6>
+
+            <div class="mb-2" *ngIf="selectedTask.guestName">
+              <label class="form-label">Guest Name:</label>
+              <div>{{ selectedTask.guestName }}</div>
+            </div>
+
+            <div class="mb-2" *ngIf="selectedTask.guestPhone">
+              <label class="form-label">Phone:</label>
+              <div>
+                <a href="tel:{{ selectedTask.guestPhone }}" class="text-decoration-none">
+                  {{ selectedTask.guestPhone }}
+                </a>
+                <button class="btn btn-sm btn-outline-secondary ms-2"
+                        (click)="callGuest(selectedTask)"
+                        title="Copy to clipboard">
+                  <i data-feather="copy" class="feather-icon" appFeatherIcon></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="mb-2" *ngIf="selectedTask.roomNumber">
+              <label class="form-label">Room:</label>
+              <div>
+                <span class="badge bg-light text-dark">
+                  Room {{ selectedTask.roomNumber }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer" *ngIf="selectedTask">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+      Close
+    </button>
+
+    <button type="button"
+            class="btn btn-primary"
+            *ngIf="selectedTask.status === 'Pending'"
+            (click)="startTask(selectedTask); modal.dismiss()">
+      <i data-feather="play-circle" class="feather-icon me-1" appFeatherIcon></i>
+      Start Task
+    </button>
+
+    <button type="button"
+            class="btn btn-success"
+            *ngIf="selectedTask.status === 'InProgress'"
+            (click)="completeTask(selectedTask); modal.dismiss()">
+      <i data-feather="check-circle" class="feather-icon me-1" appFeatherIcon></i>
+      Complete Task
+    </button>
+
+    <button type="button"
+            class="btn btn-outline-primary"
+            *ngIf="selectedTask.guestPhone"
+            (click)="sendMessage(selectedTask)">
+      <i data-feather="message-square" class="feather-icon me-1" appFeatherIcon></i>
+      Send Message
+    </button>
+  </div>
+</ng-template>
+
+<!-- Rating Modal -->
+<ng-template #ratingModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <i data-feather="star" class="feather-icon me-2" appFeatherIcon></i>
+      Submit Guest Rating
+    </h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <form [formGroup]="ratingForm" (ngSubmit)="submitRating()">
+    <div class="modal-body">
+      <div class="mb-3" *ngIf="currentRatingTask">
+        <div class="alert alert-info">
+          <strong>Task:</strong> {{ currentRatingTask.title }}<br>
+          <strong>Guest:</strong> {{ currentRatingTask.guestName || 'Unknown' }}<br>
+          <strong>Room:</strong> {{ currentRatingTask.roomNumber || 'N/A' }}<br>
+          <strong>Department:</strong> {{ currentRatingTask.department }}
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="rating" class="form-label">Rating <span class="text-danger">*</span></label>
+        <div class="rating-container">
+          <div class="btn-group" role="group">
+            <input type="radio" class="btn-check" name="rating" id="rating1" formControlName="rating" [value]="1">
+            <label class="btn btn-outline-warning" for="rating1">
+              <i data-feather="star" class="feather-icon" appFeatherIcon></i> 1
+            </label>
+
+            <input type="radio" class="btn-check" name="rating" id="rating2" formControlName="rating" [value]="2">
+            <label class="btn btn-outline-warning" for="rating2">
+              <i data-feather="star" class="feather-icon" appFeatherIcon></i> 2
+            </label>
+
+            <input type="radio" class="btn-check" name="rating" id="rating3" formControlName="rating" [value]="3">
+            <label class="btn btn-outline-warning" for="rating3">
+              <i data-feather="star" class="feather-icon" appFeatherIcon></i> 3
+            </label>
+
+            <input type="radio" class="btn-check" name="rating" id="rating4" formControlName="rating" [value]="4">
+            <label class="btn btn-outline-warning" for="rating4">
+              <i data-feather="star" class="feather-icon" appFeatherIcon></i> 4
+            </label>
+
+            <input type="radio" class="btn-check" name="rating" id="rating5" formControlName="rating" [value]="5">
+            <label class="btn btn-outline-warning" for="rating5">
+              <i data-feather="star" class="feather-icon" appFeatherIcon></i> 5
+            </label>
+          </div>
+        </div>
+        <div class="form-text">1 = Poor, 5 = Excellent</div>
+        <div class="invalid-feedback" *ngIf="ratingForm.get('rating')?.invalid && ratingForm.get('rating')?.touched">
+          Please select a rating
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="comment" class="form-label">Comment</label>
+        <textarea
+          class="form-control"
+          id="comment"
+          formControlName="comment"
+          rows="3"
+          placeholder="Optional comment about the service..."></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+        Cancel
+      </button>
+      <button type="submit"
+              class="btn btn-primary"
+              [disabled]="!ratingForm.valid">
+        <i data-feather="send" class="feather-icon me-1" appFeatherIcon></i>
+        Submit Rating & Notify Guest
+      </button>
+    </div>
+  </form>
+</ng-template>

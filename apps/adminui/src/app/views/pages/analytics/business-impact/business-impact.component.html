@@ -1,0 +1,698 @@
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+  <div>
+    <h4 class="mb-3 mb-md-0">Business Impact Dashboard</h4>
+    <p class="text-muted mb-0">Revenue correlation, guest segmentation, and ROI analysis</p>
+  </div>
+  <div class="d-flex align-items-center flex-wrap text-nowrap">
+    <button type="button" class="btn btn-outline-primary btn-icon-text me-2 mb-2 mb-md-0" (click)="refresh()">
+      <i class="btn-icon-prepend" data-feather="refresh-cw" appFeatherIcon></i>
+      Refresh
+    </button>
+    <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" (click)="exportPdfReport()" [disabled]="loading">
+      <i class="btn-icon-prepend" data-feather="download" appFeatherIcon></i>
+      Export Report
+    </button>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
+<!-- Dashboard Content -->
+<div *ngIf="!loading">
+  <!-- Hotel Performance KPIs -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-2">Hotel Performance Metrics</h5>
+          <p class="text-muted small mb-4">Track key operational indicators to measure hotel efficiency, revenue performance, and guest satisfaction trends. Use these metrics to identify areas for improvement and monitor business health.</p>
+          <div class="row">
+            <div class="col-md-3 col-sm-6 mb-4 mb-md-0">
+              <div class="text-center">
+                <h3 [ngClass]="getPerformanceClass(hotelPerformance?.occupancyRate, 'occupancy')">
+                  {{ formatPercentage(hotelPerformance?.occupancyRate) }}
+                </h3>
+                <p class="text-muted mb-1">Occupancy Rate</p>
+                <small class="text-muted">{{ hotelPerformance?.currentOccupiedRooms }} / {{ hotelPerformance?.totalRooms }} rooms</small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4 mb-md-0">
+              <div class="text-center">
+                <h3 class="text-primary">{{ formatCurrency(hotelPerformance?.averageDailyRate) }}</h3>
+                <p class="text-muted mb-1">ADR</p>
+                <small class="text-muted">Average Daily Rate</small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4 mb-md-0">
+              <div class="text-center">
+                <h3 [ngClass]="getPerformanceClass(hotelPerformance?.guestSatisfactionScore, 'satisfaction')">
+                  {{ hotelPerformance?.guestSatisfactionScore?.toFixed(1) }}
+                </h3>
+                <p class="text-muted mb-1">Guest Satisfaction</p>
+                <small class="text-muted">Out of 5.0</small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center">
+                <h3 [ngClass]="getPerformanceClass(hotelPerformance?.netPromoterScore, 'nps')">
+                  {{ hotelPerformance?.netPromoterScore }}
+                </h3>
+                <p class="text-muted mb-1">Net Promoter Score</p>
+                <small class="text-muted">{{ formatPercentage(hotelPerformance?.repeatGuestPercentage) }} repeat</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level 2: Immediate Actions Required -->
+  <div class="row mb-4" *ngIf="immediateActions">
+    <div class="col-12">
+      <div class="card border-warning">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5 class="card-title mb-1 d-flex align-items-center">
+                <i class="me-2 text-warning" data-feather="alert-triangle" appFeatherIcon></i>
+                Immediate Actions Required
+              </h5>
+              <p class="text-muted small mb-0">Critical issues requiring immediate management attention</p>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-danger me-2">{{ immediateActions?.criticalCount }} Critical</span>
+              <span class="badge bg-secondary">{{ immediateActions?.totalActions }} Total</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-12">
+              <div class="list-group">
+                <div *ngFor="let action of immediateActions.actions"
+                     class="list-group-item list-group-item-action mb-2 border rounded"
+                     [ngClass]="{
+                       'border-danger bg-danger bg-opacity-10': action.severity === 'critical',
+                       'border-warning bg-warning bg-opacity-10': action.severity === 'high',
+                       'border-info bg-info bg-opacity-10': action.severity === 'medium'
+                     }">
+                  <div class="d-flex w-100 justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="badge me-2"
+                              [ngClass]="{
+                                'bg-danger': action.severity === 'critical',
+                                'bg-warning': action.severity === 'high',
+                                'bg-info': action.severity === 'medium'
+                              }">
+                          {{ action.severity | uppercase }}
+                        </span>
+                        <h6 class="mb-0">{{ action.title }}</h6>
+                        <span class="badge bg-secondary ms-auto" *ngIf="action.department">
+                          {{ action.department }}
+                        </span>
+                      </div>
+                      <p class="mb-2 text-muted">
+                        <small>{{ action.description }}</small>
+                      </p>
+                      <div class="d-flex align-items-center">
+                        <i class="me-1" data-feather="check-circle" appFeatherIcon style="width: 14px; height: 14px;"></i>
+                        <small class="text-success fw-bold">{{ action.recommendation }}</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3 text-center" *ngIf="!immediateActions?.actions || immediateActions.actions.length === 0">
+            <i class="text-success mb-2" data-feather="check-circle" appFeatherIcon style="width: 48px; height: 48px;"></i>
+            <p class="text-muted">No immediate actions required. All operations running smoothly.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level 4: Operational Performance -->
+  <div class="row mb-4" *ngIf="operationalPerformance">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-2">Operational Performance by Department</h5>
+          <p class="text-muted small mb-3">Track task completion rates across departments to identify high-performing teams and areas needing support. Departments below 70% completion may require additional resources or process improvements.</p>
+
+          <!-- Summary Cards -->
+          <div class="row mb-4" *ngIf="operationalPerformance?.summary">
+            <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+              <div class="text-center">
+                <h4 [ngClass]="getPerformanceClass(operationalPerformance.summary.overallCompletionRate, 'completion')">
+                  {{ formatPercentage(operationalPerformance.summary.overallCompletionRate) }}
+                </h4>
+                <p class="text-muted mb-0">Overall Completion</p>
+                <small class="text-muted">{{ operationalPerformance.summary.totalCompleted }} / {{ operationalPerformance.summary.totalTasks }}</small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+              <div class="text-center">
+                <h4 class="text-info">{{ formatPercentage(operationalPerformance.summary.avgResponseTime) }}</h4>
+                <p class="text-muted mb-0">Avg Response Time</p>
+                <small class="text-muted">Minutes to first response</small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center">
+                <h4 class="text-warning">{{ operationalPerformance.summary.openTasks }}</h4>
+                <p class="text-muted mb-0">Open Tasks</p>
+                <small class="text-muted">Currently pending</small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center">
+                <h4 class="text-danger">{{ operationalPerformance.summary.overdueTasks }}</h4>
+                <p class="text-muted mb-0">Overdue Tasks</p>
+                <small class="text-muted">Require immediate attention</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Department Completion Chart -->
+          <div class="mt-4" *ngIf="operationalChart.series">
+            <h6 class="mb-3">Department Completion Rates</h6>
+            <apx-chart
+              [series]="operationalChart.series!"
+              [chart]="operationalChart.chart!"
+              [xaxis]="operationalChart.xaxis!"
+              [colors]="operationalChart.colors!"
+              [plotOptions]="operationalChart.plotOptions!"
+              [dataLabels]="operationalChart.dataLabels!">
+            </apx-chart>
+          </div>
+
+          <!-- Department Details Table -->
+          <div class="mt-4" *ngIf="operationalPerformance?.departments?.length > 0">
+            <h6 class="mb-3">Department Details</h6>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Department</th>
+                    <th>Completion Rate</th>
+                    <th>Open Tasks</th>
+                    <th>Avg Response Time</th>
+                    <th>Performance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let dept of operationalPerformance.departments">
+                    <td><strong>{{ dept.name }}</strong></td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="flex-grow-1 me-2">
+                          <ngb-progressbar
+                            [value]="dept.completionRate"
+                            [type]="dept.completionRate >= 90 ? 'success' : dept.completionRate >= 70 ? 'info' : 'danger'"
+                            height="8px">
+                          </ngb-progressbar>
+                        </div>
+                        <span [ngClass]="getPerformanceClass(dept.completionRate, 'completion')">
+                          {{ formatPercentage(dept.completionRate) }}
+                        </span>
+                      </div>
+                    </td>
+                    <td>{{ dept.openTasks }}</td>
+                    <td>{{ dept.avgResponseTime?.toFixed(1) }} min</td>
+                    <td>
+                      <span class="badge" [ngClass]="dept.completionRate >= 90 ? 'bg-success' : dept.completionRate >= 70 ? 'bg-info' : dept.completionRate >= 50 ? 'bg-warning' : 'bg-danger'">
+                        {{ dept.completionRate >= 90 ? 'Excellent' : dept.completionRate >= 70 ? 'Good' : dept.completionRate >= 50 ? 'Fair' : 'Needs Attention' }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level 5: Revenue Intelligence -->
+  <div class="row mb-4" *ngIf="revenueInsights">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-2">Revenue Intelligence & Guest Segmentation</h5>
+          <p class="text-muted small mb-3">Understand the direct correlation between guest satisfaction and revenue generation. Use these insights to prioritize service improvements with the highest ROI potential.</p>
+
+          <!-- Revenue KPIs -->
+          <div class="row mb-4" *ngIf="revenueInsights?.summary">
+            <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+              <div class="text-center">
+                <h4 class="text-success">{{ formatCurrency(revenueInsights.summary.totalRevenue) }}</h4>
+                <p class="text-muted mb-0">Total Revenue</p>
+                <small class="text-muted" *ngIf="revenueInsights.summary.revenueGrowth">
+                  <i class="me-1" [attr.data-feather]="getTrendIcon(revenueInsights.summary.revenueGrowth > 0 ? 'up' : 'down')" appFeatherIcon></i>
+                  {{ formatPercentage(Math.abs(revenueInsights.summary.revenueGrowth)) }}
+                </small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+              <div class="text-center">
+                <h4 class="text-primary">{{ formatCurrency(revenueInsights.summary.avgRevenuePerGuest) }}</h4>
+                <p class="text-muted mb-0">Avg Revenue/Guest</p>
+                <small class="text-muted">{{ revenueInsights.summary.totalGuests }} guests</small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center">
+                <h4 class="text-info">{{ revenueInsights.summary.correlationScore?.toFixed(2) }}</h4>
+                <p class="text-muted mb-0">Satisfaction-Revenue Correlation</p>
+                <small class="text-muted">{{ revenueInsights.summary.correlationScore >= 0.7 ? 'Strong' : revenueInsights.summary.correlationScore >= 0.4 ? 'Moderate' : 'Weak' }} relationship</small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center">
+                <h4 class="text-warning">{{ formatCurrency(revenueInsights.summary.highSatisfactionRevenue) }}</h4>
+                <p class="text-muted mb-0">High Satisfaction Revenue</p>
+                <small class="text-muted">From 4.5+ rated guests</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Revenue by Satisfaction Chart -->
+            <div class="col-md-6 mb-4">
+              <h6 class="mb-3">Revenue by Satisfaction Level</h6>
+              <p class="text-muted small mb-3">Satisfied guests (4.5+) generate significantly more revenue. Focus on improving low-satisfaction segments to unlock revenue potential.</p>
+              <div *ngIf="revenueSegmentChart.series">
+                <apx-chart
+                  [series]="revenueSegmentChart.series!"
+                  [chart]="revenueSegmentChart.chart!"
+                  [xaxis]="revenueSegmentChart.xaxis!"
+                  [colors]="revenueSegmentChart.colors!"
+                  [plotOptions]="revenueSegmentChart.plotOptions!"
+                  [dataLabels]="revenueSegmentChart.dataLabels!"
+                  [legend]="revenueSegmentChart.legend!">
+                </apx-chart>
+              </div>
+            </div>
+
+            <!-- Guest Segmentation Table -->
+            <div class="col-md-6 mb-4">
+              <h6 class="mb-3">Guest Segmentation Analysis</h6>
+              <p class="text-muted small mb-3">Revenue and volume breakdown by satisfaction level. Target the "Fair" and "Poor" segments for quick wins.</p>
+              <div class="table-responsive" *ngIf="revenueInsights?.satisfactionRevenueCorrelation?.segments">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Segment</th>
+                      <th>Guests</th>
+                      <th>Avg Revenue</th>
+                      <th>Total Revenue</th>
+                      <th>Opportunity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let segment of revenueInsights.satisfactionRevenueCorrelation.segments">
+                      <td>
+                        <span class="badge"
+                              [ngClass]="segment.satisfactionLevel === 'Excellent' ? 'bg-success' :
+                                         segment.satisfactionLevel === 'Good' ? 'bg-info' :
+                                         segment.satisfactionLevel === 'Fair' ? 'bg-warning' : 'bg-danger'">
+                          {{ segment.satisfactionLevel }}
+                        </span>
+                      </td>
+                      <td>{{ segment.guestCount }}</td>
+                      <td>{{ formatCurrency(segment.avgRevenue) }}</td>
+                      <td><strong>{{ formatCurrency(segment.totalRevenue) }}</strong></td>
+                      <td>
+                        <small class="text-muted" *ngIf="segment.revenueOpportunity">
+                          +{{ formatCurrency(segment.revenueOpportunity) }}
+                        </small>
+                        <small class="text-success" *ngIf="!segment.revenueOpportunity">
+                          Benchmark
+                        </small>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ROI Insights -->
+          <div class="mt-4 p-3 bg-light rounded" *ngIf="revenueInsights?.roiInsights">
+            <h6 class="mb-3">ROI Insights & Recommendations</h6>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-2"><strong>Revenue at Risk:</strong> {{ formatCurrency(revenueInsights.roiInsights.revenueAtRisk) }}</p>
+                <p class="text-muted small">Potential lost revenue from low-satisfaction guests (below 3.5 rating)</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-2"><strong>Improvement Potential:</strong> {{ formatCurrency(revenueInsights.roiInsights.improvementPotential) }}</p>
+                <p class="text-muted small">Estimated revenue gain if all guests reach "Good" satisfaction (4.0+)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upselling ROI Section -->
+  <div class="row mb-4" *ngIf="upsellingRoi">
+    <div class="col-12">
+      <div class="card border-success">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+              <h5 class="card-title mb-1 d-flex align-items-center">
+                <i class="me-2 text-success" data-feather="trending-up" appFeatherIcon></i>
+                Upselling ROI Tracking
+              </h5>
+              <p class="text-muted small mb-0">Revenue generated through intelligent service recommendations</p>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-success">ROI USP</span>
+            </div>
+          </div>
+
+          <!-- Overview Metrics -->
+          <div class="row mb-4 mt-3" *ngIf="upsellingRoi?.overview">
+            <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+              <div class="text-center">
+                <h3 class="text-success">{{ formatCurrency(upsellingRoi.overview.totalRevenue) }}</h3>
+                <p class="text-muted mb-1">Total Upsell Revenue</p>
+                <small class="text-muted">Chatbot-generated revenue</small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+              <div class="text-center">
+                <h3 class="text-primary">{{ upsellingRoi.overview.totalSuggestions }}</h3>
+                <p class="text-muted mb-1">Total Suggestions</p>
+                <small class="text-muted">Upsells offered to guests</small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+              <div class="text-center">
+                <h3 class="text-info">{{ upsellingRoi.overview.totalAccepted }}</h3>
+                <p class="text-muted mb-1">Conversions</p>
+                <small class="text-muted">Accepted by guests</small>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center">
+                <h3 [ngClass]="upsellingRoi.overview.conversionRate >= 20 ? 'text-success' : upsellingRoi.overview.conversionRate >= 10 ? 'text-warning' : 'text-secondary'">
+                  {{ formatPercentage(upsellingRoi.overview.conversionRate) }}
+                </h3>
+                <p class="text-muted mb-1">Conversion Rate</p>
+                <small class="text-muted">Acceptance rate</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Top Performing Services -->
+            <div class="col-md-6 mb-4">
+              <h6 class="mb-3">Top Upsell Services</h6>
+              <p class="text-muted small mb-3">Services generating the most revenue through upselling</p>
+              <div class="table-responsive" *ngIf="upsellingRoi?.topServices?.length">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Service</th>
+                      <th class="text-end">Suggestions</th>
+                      <th class="text-end">Conv Rate</th>
+                      <th class="text-end">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let service of upsellingRoi.topServices.slice(0, 5)">
+                      <td>
+                        <strong>{{ service.serviceName }}</strong>
+                        <br><small class="text-muted">{{ service.category }}</small>
+                      </td>
+                      <td class="text-end">{{ service.suggestions }}</td>
+                      <td class="text-end">
+                        <span class="badge"
+                              [ngClass]="service.conversionRate >= 20 ? 'bg-success' :
+                                         service.conversionRate >= 10 ? 'bg-info' : 'bg-secondary'">
+                          {{ formatPercentage(service.conversionRate) }}
+                        </span>
+                      </td>
+                      <td class="text-end"><strong>{{ formatCurrency(service.revenue) }}</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="!upsellingRoi?.topServices?.length" class="text-center py-4 text-muted">
+                <i data-feather="inbox" appFeatherIcon class="mb-2"></i>
+                <p>No upselling data available yet</p>
+              </div>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="col-md-6 mb-4">
+              <h6 class="mb-3">Performance by Category</h6>
+              <p class="text-muted small mb-3">Which service categories convert best</p>
+              <div class="table-responsive" *ngIf="upsellingRoi?.categoryBreakdown?.length">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th class="text-end">Suggestions</th>
+                      <th class="text-end">Conversions</th>
+                      <th class="text-end">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let category of upsellingRoi.categoryBreakdown">
+                      <td><strong>{{ category.category }}</strong></td>
+                      <td class="text-end">{{ category.suggestions }}</td>
+                      <td class="text-end">
+                        <span class="badge bg-info">{{ category.conversions }}</span>
+                        <small class="text-muted ms-1">({{ formatPercentage(category.conversionRate) }})</small>
+                      </td>
+                      <td class="text-end"><strong>{{ formatCurrency(category.revenue) }}</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="!upsellingRoi?.categoryBreakdown?.length" class="text-center py-4 text-muted">
+                <i data-feather="inbox" appFeatherIcon class="mb-2"></i>
+                <p>No category data available yet</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ROI Value Proposition -->
+          <div class="mt-3 p-3 bg-success bg-opacity-10 rounded border border-success">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <h6 class="text-success mb-2">
+                  <i class="me-1" data-feather="check-circle" appFeatherIcon></i>
+                  Chatbot ROI Demonstration
+                </h6>
+                <p class="mb-0 small">The chatbot has generated <strong>{{ formatCurrency(upsellingRoi?.overview?.totalRevenue || 0) }}</strong> in additional revenue through intelligent upselling, demonstrating clear ROI and helping pay for itself through increased service bookings.</p>
+              </div>
+              <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="text-success">
+                  <h4 class="mb-0">{{ formatCurrency(upsellingRoi?.overview?.totalRevenue || 0) }}</h4>
+                  <small>Revenue Generated</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level 3: Satisfaction Trend -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-2">Guest Satisfaction Trend</h5>
+          <p class="text-muted small mb-3">Monitor daily satisfaction score changes to detect emerging issues early. Rising trends indicate improving service quality, while declining trends require immediate attention.</p>
+          <div *ngIf="satisfactionTrendChart.series">
+            <apx-chart
+              [series]="satisfactionTrendChart.series!"
+              [chart]="satisfactionTrendChart.chart!"
+              [xaxis]="satisfactionTrendChart.xaxis!"
+              [yaxis]="satisfactionTrendChart.yaxis!"
+              [colors]="satisfactionTrendChart.colors!"
+              [stroke]="satisfactionTrendChart.stroke!"
+              [fill]="satisfactionTrendChart.fill!"
+              [dataLabels]="satisfactionTrendChart.dataLabels!">
+            </apx-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Critical Alerts -->
+  <div class="row">
+    <div class="col-12 grid-margin">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-2">Critical Guest Alerts</h5>
+          <p class="text-muted small mb-3">Guests with low satisfaction ratings (3/5 or below) who need immediate follow-up. Prioritize high-priority alerts to prevent negative reviews and recover guest satisfaction before checkout.</p>
+          <div class="alert alert-info py-2 mb-3" *ngIf="satisfactionTrends?.criticalAlerts?.length > 0 && satisfactionTrends?.npsBreakdown">
+            <small>
+              <i data-feather="info" appFeatherIcon style="width: 14px; height: 14px;"></i>
+              <strong>Note:</strong> This table shows only problematic ratings requiring attention.
+              {{ satisfactionTrends.criticalAlerts.length }} of {{ (satisfactionTrends.npsBreakdown.promoters + satisfactionTrends.npsBreakdown.passives + satisfactionTrends.npsBreakdown.detractors) }} total ratings need follow-up
+              ({{ ((satisfactionTrends.criticalAlerts.length / (satisfactionTrends.npsBreakdown.promoters + satisfactionTrends.npsBreakdown.passives + satisfactionTrends.npsBreakdown.detractors)) * 100).toFixed(0) }}%).
+            </small>
+          </div>
+          <div class="table-responsive mt-3">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Guest</th>
+                  <th>Room</th>
+                  <th>Rating</th>
+                  <th>Comment</th>
+                  <th>Priority</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let alert of satisfactionTrends?.criticalAlerts?.slice(0, 10)">
+                  <td><small>{{ alert.guestPhone }}</small></td>
+                  <td>{{ alert.roomNumber }}</td>
+                  <td [ngClass]="getPerformanceClass(alert.rating, 'satisfaction')">
+                    {{ alert.rating }}/5
+                  </td>
+                  <td><small>{{ alert.comment?.substring(0, 40) }}{{ alert.comment?.length > 40 ? '...' : '' }}</small></td>
+                  <td><span class="badge" [ngClass]="getPriorityBadgeClass(alert.priority)">{{ alert.priority }}</span></td>
+                  <td><small>{{ alert.dateRated | date:'short' }}</small></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level 6: Strategic Recommendations -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-primary">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5 class="card-title mb-1 d-flex align-items-center">
+                <i class="me-2 text-primary" data-feather="compass" appFeatherIcon></i>
+                Strategic Recommendations
+              </h5>
+              <p class="text-muted small mb-0">Data-driven action plan to optimize operations, boost revenue, and improve guest satisfaction</p>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-primary">AI-Powered Insights</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-12">
+              <div *ngFor="let rec of getStrategicRecommendations(); let i = index"
+                   class="mb-3 p-3 border rounded"
+                   [ngClass]="{
+                     'border-danger bg-danger bg-opacity-10': rec.priority === 'critical',
+                     'border-warning bg-warning bg-opacity-10': rec.priority === 'high',
+                     'border-info bg-info bg-opacity-10': rec.priority === 'medium',
+                     'border-secondary bg-secondary bg-opacity-10': rec.priority === 'low'
+                   }">
+                <div class="d-flex align-items-start">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="rounded-circle p-3"
+                         [ngClass]="{
+                           'bg-danger text-white': rec.priority === 'critical',
+                           'bg-warning text-white': rec.priority === 'high',
+                           'bg-info text-white': rec.priority === 'medium',
+                           'bg-secondary text-white': rec.priority === 'low'
+                         }">
+                      <i [attr.data-feather]="rec.icon" appFeatherIcon style="width: 24px; height: 24px;"></i>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <span class="badge me-2"
+                              [ngClass]="{
+                                'bg-danger': rec.priority === 'critical',
+                                'bg-warning': rec.priority === 'high',
+                                'bg-info': rec.priority === 'medium',
+                                'bg-secondary': rec.priority === 'low'
+                              }">
+                          {{ rec.priority | uppercase }}
+                        </span>
+                        <span class="badge bg-secondary">{{ rec.category }}</span>
+                      </div>
+                      <div class="text-end">
+                        <small class="text-muted">
+                          <i data-feather="clock" appFeatherIcon style="width: 14px; height: 14px;"></i>
+                          {{ rec.timeframe }}
+                        </small>
+                      </div>
+                    </div>
+                    <h6 class="mb-2">{{ rec.title }}</h6>
+                    <p class="mb-2 text-muted">
+                      <strong>Insight:</strong> {{ rec.insight }}
+                    </p>
+                    <p class="mb-2">
+                      <strong>Recommended Action:</strong> {{ rec.action }}
+                    </p>
+                    <div class="d-flex align-items-center">
+                      <span class="badge me-2"
+                            [ngClass]="{
+                              'bg-danger': rec.impact === 'Critical',
+                              'bg-warning': rec.impact === 'High',
+                              'bg-info': rec.impact === 'Medium',
+                              'bg-secondary': rec.impact === 'Low'
+                            }">
+                        Impact: {{ rec.impact }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="getStrategicRecommendations().length === 0" class="text-center py-4">
+                <i data-feather="check-circle" appFeatherIcon class="text-success mb-2" style="width: 48px; height: 48px;"></i>
+                <h6 class="text-success">All Systems Operating Optimally</h6>
+                <p class="text-muted">No critical recommendations at this time. Continue monitoring key metrics.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 bg-light rounded">
+            <div class="d-flex align-items-start">
+              <i data-feather="info" appFeatherIcon class="text-primary me-2 mt-1"></i>
+              <div>
+                <p class="mb-1"><strong>How to Use Strategic Recommendations:</strong></p>
+                <ul class="mb-0 small text-muted">
+                  <li>Recommendations are prioritized by urgency and potential impact</li>
+                  <li>Critical items require immediate action (0-24 hours)</li>
+                  <li>High priority items should be addressed within 1-2 weeks</li>
+                  <li>Track progress on each recommendation and measure results against baseline metrics</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

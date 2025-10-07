@@ -1,0 +1,371 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="page-title">Service Usage Report</h2>
+    <p class="text-muted">Comprehensive analysis of hotel service utilization and performance</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button type="button" class="btn btn-outline-secondary" (click)="refresh()" [disabled]="loading">
+      <i featherIcon="refresh-cw" class="icon-sm me-2"></i>
+      Refresh
+    </button>
+    <button type="button" class="btn btn-primary" (click)="exportData()" [disabled]="loading || !data">
+      <i featherIcon="download" class="icon-sm me-2"></i>
+      Export
+    </button>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="text-muted mt-3">Loading service usage data...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error && !loading" class="alert alert-danger">
+  <i featherIcon="alert-triangle" class="icon-sm me-2"></i>
+  {{ error }}
+</div>
+
+<!-- Main Content -->
+<div *ngIf="data && !loading">
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="settings" class="icon-xl text-primary mb-2"></i>
+          <h3 class="mb-1">{{ data.totalServiceRequests | number }}</h3>
+          <p class="text-muted mb-0">Total Service Requests</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="users" class="icon-xl text-success mb-2"></i>
+          <h3 class="mb-1">{{ data.totalGuestRequests | number }}</h3>
+          <p class="text-muted mb-0">Guest Requests</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="trending-up" class="icon-xl mb-2" [style.color]="getServiceRequestRateColor()"></i>
+          <h3 class="mb-1">{{ data.serviceRequestRate | number:'1.1-1' }}%</h3>
+          <p class="text-muted mb-0">Service Request Rate</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="award" class="icon-xl text-warning mb-2"></i>
+          <h3 class="mb-1">{{ getServiceEfficiencyMetrics().highestCompletionRate | number:'1.1-1' }}%</h3>
+          <p class="text-muted mb-0">Highest Completion Rate</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Service Efficiency Metrics -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="zap" class="icon-sm me-2"></i>
+            Service Efficiency Metrics
+          </h5>
+          <div class="row">
+            <div class="col-12">
+              <div class="metric-item mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted">Fastest Service</span>
+                  <span class="fw-bold text-success">{{ getServiceEfficiencyMetrics().fastestService }}</span>
+                </div>
+              </div>
+              <div class="metric-item mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted">Most Requested</span>
+                  <span class="fw-bold text-primary">{{ getServiceEfficiencyMetrics().mostRequestedService }}</span>
+                </div>
+              </div>
+              <div class="metric-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted">Slowest Service</span>
+                  <span class="fw-bold text-warning">{{ getServiceEfficiencyMetrics().slowestService }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="activity" class="icon-sm me-2"></i>
+            Service Request Rate Progress
+          </h5>
+          <div class="py-3">
+            <ngb-progressbar
+              type="info"
+              [value]="data.serviceRequestRate"
+              [height]="'1.5rem'"
+              class="mb-2">
+              <span class="fw-bold">{{ data.serviceRequestRate | number:'1.1-1' }}%</span>
+            </ngb-progressbar>
+            <small class="text-muted">{{ data.totalServiceRequests }} service requests from {{ data.totalGuestRequests }} total guest interactions</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts and Analysis -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="bar-chart-2" class="icon-sm me-2"></i>
+            Top Requested Services
+          </h5>
+          <div class="chart-container">
+            <div *ngFor="let item of serviceChartData; trackBy: trackByLabel" class="d-flex align-items-center justify-content-between mb-2">
+              <div class="d-flex align-items-center">
+                <div class="legend-color me-2" [style.background-color]="item.color"></div>
+                <span>{{ item.label }}</span>
+              </div>
+              <div class="d-flex align-items-center">
+                <small class="text-muted me-2">{{ item.value }}</small>
+                <div class="mini-bar" [style.width.px]="(item.value / getMaxValue(serviceChartData)) * 100">
+                  <div class="mini-bar-fill" [style.background-color]="item.color"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="pie-chart" class="icon-sm me-2"></i>
+            Usage by Department
+          </h5>
+          <div class="chart-container">
+            <div *ngFor="let item of departmentChartData; trackBy: trackByLabel" class="d-flex align-items-center justify-content-between mb-2">
+              <div class="d-flex align-items-center">
+                <div class="legend-color me-2" [style.background-color]="item.color"></div>
+                <span>{{ item.label }}</span>
+              </div>
+              <div class="d-flex align-items-center">
+                <small class="text-muted me-2">{{ item.value }}</small>
+                <span class="badge me-2" [style.background-color]="getCompletionRateColor(item.completionRate)">
+                  {{ item.completionRate | number:'1.0-0' }}%
+                </span>
+                <div class="mini-bar" [style.width.px]="(item.value / getMaxValue(departmentChartData)) * 80">
+                  <div class="mini-bar-fill" [style.background-color]="item.color"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Service Performance Details -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="list" class="icon-sm me-2"></i>
+            Service Performance Details
+          </h5>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Requests</th>
+                  <th>Completion Rate</th>
+                  <th>Avg. Time</th>
+                  <th>Performance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let service of data.topRequestedServices; trackBy: trackByService">
+                  <td>
+                    <div class="fw-medium">{{ service.serviceName }}</div>
+                    <small class="text-muted">{{ service.category }}</small>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary">{{ service.requestCount }}</span>
+                  </td>
+                  <td>
+                    <span class="badge" [style.background-color]="getCompletionRateColor(service.requestCount > 0 ? (service.completedCount / service.requestCount) * 100 : 0)">
+                      {{ service.requestCount > 0 ? (((service.completedCount / service.requestCount) * 100) | number:'1.0-0') : '0' }}%
+                    </span>
+                  </td>
+                  <td>
+                    <span class="text-muted">{{ data.avgCompletionByCategory[service.category] ? formatCompletionTime(data.avgCompletionByCategory[service.category] / 60) : 'N/A' }}</span>
+                  </td>
+                  <td>
+                    <div class="progress" style="height: 6px;">
+                      <div
+                        class="progress-bar"
+                        [style.background-color]="getCompletionRateColor(service.requestCount > 0 ? (service.completedCount / service.requestCount) * 100 : 0)"
+                        role="progressbar"
+                        [style.width.%]="service.requestCount > 0 ? (service.completedCount / service.requestCount) * 100 : 0">
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="clock" class="icon-sm me-2"></i>
+            Average Completion Times by Category
+          </h5>
+          <div class="chart-container">
+            <div *ngFor="let item of categoryChartData; trackBy: trackByLabel" class="d-flex align-items-center justify-content-between mb-2">
+              <div class="d-flex align-items-center">
+                <div class="legend-color me-2" [style.background-color]="item.color"></div>
+                <span class="small">{{ item.label }}</span>
+              </div>
+              <div class="d-flex align-items-center">
+                <small class="text-muted me-2">{{ formatCompletionTime(item.value) }}</small>
+                <div class="mini-bar" [style.width.px]="(item.value / getMaxCategoryValue()) * 60">
+                  <div class="mini-bar-fill" [style.background-color]="item.color"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Temporal Analysis -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="trending-up" class="icon-sm me-2"></i>
+            Usage Trends (Last 7 Days)
+          </h5>
+          <div class="chart-container">
+            <div *ngFor="let day of getTrendsFromUsageData(); trackBy: trackByLabel" class="d-flex align-items-center justify-content-between mb-2">
+              <span class="text-muted">{{ day.label }}</span>
+              <div class="d-flex align-items-center">
+                <small class="text-muted me-2">{{ day.value }}</small>
+                <div class="mini-bar" [style.width.px]="(day.value / getMaxTrendValue()) * 80">
+                  <div class="mini-bar-fill bg-primary"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="sunrise" class="icon-sm me-2"></i>
+            Peak Usage Hours
+          </h5>
+          <div class="chart-container">
+            <div *ngFor="let hour of getPeakHours(); trackBy: trackByLabel" class="d-flex align-items-center justify-content-between mb-2">
+              <div class="d-flex align-items-center">
+                <span class="text-muted">{{ hour.label }}</span>
+              </div>
+              <div class="d-flex align-items-center">
+                <small class="text-muted me-2">{{ hour.value }} requests</small>
+                <div class="mini-bar" [style.width.px]="(hour.value / getMaxValue(getPeakHours())) * 60">
+                  <div class="mini-bar-fill bg-info"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Department Performance -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="briefcase" class="icon-sm me-2"></i>
+            Department Performance Analysis
+          </h5>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Department</th>
+                  <th>Total Requests</th>
+                  <th>Completed</th>
+                  <th>Completion Rate</th>
+                  <th>Avg. Completion Time</th>
+                  <th>Efficiency Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let dept of data.usageByDepartment; trackBy: trackByDepartment">
+                  <td>
+                    <div class="fw-medium">{{ dept.department }}</div>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary">{{ dept.requestCount }}</span>
+                  </td>
+                  <td>
+                    <span class="badge bg-success">{{ dept.completedCount }}</span>
+                  </td>
+                  <td>
+                    <span class="badge" [style.background-color]="getCompletionRateColor(dept.requestCount > 0 ? (dept.completedCount / dept.requestCount) * 100 : 0)">
+                      {{ dept.requestCount > 0 ? (((dept.completedCount / dept.requestCount) * 100) | number:'1.0-0') : '0' }}%
+                    </span>
+                  </td>
+                  <td>
+                    <span class="text-muted">N/A</span>
+                  </td>
+                  <td>
+                    <div class="progress" style="height: 8px;">
+                      <div
+                        class="progress-bar"
+                        [style.background-color]="getCompletionRateColor(dept.requestCount > 0 ? (dept.completedCount / dept.requestCount) * 100 : 0)"
+                        role="progressbar"
+                        [style.width.%]="dept.requestCount > 0 ? (dept.completedCount / dept.requestCount) * 100 : 0">
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

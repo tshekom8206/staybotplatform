@@ -1,0 +1,414 @@
+<div class="page-content">
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+      <h4 class="mb-3 mb-md-0">Message History & Analytics</h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+      <button type="button"
+              class="btn btn-outline-secondary btn-icon-text me-2"
+              (click)="refresh()"
+              [disabled]="loading">
+        <i appFeatherIcon="refresh-cw" featherIcon></i> Refresh
+      </button>
+      <button type="button"
+              class="btn btn-primary btn-icon-text"
+              (click)="exportHistory()">
+        <i appFeatherIcon="download" featherIcon></i> Export
+      </button>
+    </div>
+  </div>
+
+  <!-- Analytics Cards -->
+  <div class="row" *ngIf="analytics">
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h3 class="mb-2">{{ analytics.totalMessages }}</h3>
+              <p class="text-muted mb-0">Total Messages</p>
+            </div>
+            <i appFeatherIcon="message-square" featherIcon class="text-primary"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h3 class="mb-2">{{ analytics.totalRecipients | number }}</h3>
+              <p class="text-muted mb-0">Total Recipients</p>
+            </div>
+            <i appFeatherIcon="users" featherIcon class="text-success"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h3 class="mb-2">{{ analytics.averageDeliveryRate | number:'1.1-1' }}%</h3>
+              <p class="text-muted mb-0">Delivery Rate</p>
+            </div>
+            <i appFeatherIcon="check-circle" featherIcon class="text-info"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h3 class="mb-2">{{ analytics.averageReadRate | number:'1.1-1' }}%</h3>
+              <p class="text-muted mb-0">Read Rate</p>
+            </div>
+            <i appFeatherIcon="eye" featherIcon class="text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message History -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col-lg-6">
+              <h6 class="card-title mb-0">
+                <i appFeatherIcon="history" featherIcon class="me-2"></i>
+                Message History ({{ totalItems }})
+              </h6>
+            </div>
+            <div class="col-lg-6">
+              <div class="d-flex gap-2 align-items-center justify-content-lg-end">
+                <!-- Filters -->
+                <select class="form-select form-select-sm"
+                        [(ngModel)]="typeFilter"
+                        (ngModelChange)="applyFilters()">
+                  <option value="all">All Types</option>
+                  <option value="broadcast">Broadcast</option>
+                  <option value="emergency">Emergency</option>
+                  <option value="template">Template</option>
+                </select>
+
+                <select class="form-select form-select-sm"
+                        [(ngModel)]="statusFilter"
+                        (ngModelChange)="applyFilters()">
+                  <option value="all">All Status</option>
+                  <option value="sent">Sent</option>
+                  <option value="failed">Failed</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+
+                <select class="form-select form-select-sm"
+                        [(ngModel)]="dateRange"
+                        (ngModelChange)="applyFilters()">
+                  <option value="7">Last 7 days</option>
+                  <option value="30">Last 30 days</option>
+                  <option value="90">Last 90 days</option>
+                  <option value="all">All time</option>
+                </select>
+
+                <!-- Search -->
+                <div class="input-group input-group-sm">
+                  <input type="text"
+                         class="form-control"
+                         placeholder="Search messages..."
+                         [(ngModel)]="searchTerm"
+                         (ngModelChange)="applyFilters()">
+                  <span class="input-group-text">
+                    <i appFeatherIcon="search" featherIcon></i>
+                  </span>
+                </div>
+
+                <!-- Clear Filters -->
+                <button type="button"
+                        class="btn btn-outline-secondary btn-sm"
+                        (click)="clearFilters()"
+                        ngbTooltip="Clear all filters">
+                  <i appFeatherIcon="x" featherIcon></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          <!-- Loading State -->
+          <div class="text-center py-5" *ngIf="loading">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted mt-2">Loading message history...</p>
+          </div>
+
+          <!-- Empty State -->
+          <div class="text-center py-5" *ngIf="!loading && paginatedHistory.length === 0">
+            <i appFeatherIcon="inbox" featherIcon class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+            <h6 class="text-muted">No messages found</h6>
+            <p class="text-muted small">
+              {{ searchTerm || typeFilter !== 'all' || statusFilter !== 'all' ? 'Try adjusting your filters' : 'No message history available' }}
+            </p>
+          </div>
+
+          <!-- Messages Table -->
+          <div class="table-responsive" *ngIf="!loading && paginatedHistory.length > 0">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" class="sortable" (click)="sort('messageType')">
+                    Message
+                    <i [appFeatherIcon]="sortField === 'messageType' ? (sortDirection === 'asc' ? 'chevron-up' : 'chevron-down') : 'chevrons-up-down'"
+                       featherIcon class="sort-icon"></i>
+                  </th>
+                  <th scope="col" class="sortable" (click)="sort('messageType')">
+                    Type
+                    <i [appFeatherIcon]="sortField === 'messageType' ? (sortDirection === 'asc' ? 'chevron-up' : 'chevron-down') : 'chevrons-up-down'"
+                       featherIcon class="sort-icon"></i>
+                  </th>
+                  <th scope="col" class="sortable" (click)="sort('status')">
+                    Status
+                    <i [appFeatherIcon]="sortField === 'status' ? (sortDirection === 'asc' ? 'chevron-up' : 'chevron-down') : 'chevrons-up-down'"
+                       featherIcon class="sort-icon"></i>
+                  </th>
+                  <th scope="col" class="text-center">Recipients</th>
+                  <th scope="col" class="text-center">Delivery</th>
+                  <th scope="col" class="text-center">Read Rate</th>
+                  <th scope="col" class="sortable" (click)="sort('createdAt')">
+                    Sent
+                    <i [appFeatherIcon]="sortField === 'createdAt' ? (sortDirection === 'asc' ? 'chevron-up' : 'chevron-down') : 'chevrons-up-down'"
+                       featherIcon class="sort-icon"></i>
+                  </th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let message of paginatedHistory; trackBy: trackByMessageId">
+                  <td>
+                    <div class="d-flex align-items-start">
+                      <i [appFeatherIcon]="getTypeIcon(message.messageType)"
+                                                 class="me-2 mt-1 flex-shrink-0"
+                         [class]="message.messageType === 'emergency' ? 'text-danger' : (message.messageType === 'broadcast' ? 'text-primary' : 'text-info')"></i>
+                      <div class="flex-grow-1">
+                        <h6 class="mb-1 message-title">{{ message.messageType | titlecase }} Message</h6>
+                        <div class="small text-muted">{{ message.messageType }} broadcast to {{ message.totalRecipients }} recipients</div>
+                        <div class="small text-muted mt-1">
+                          <span class="me-2">
+                            <i appFeatherIcon="user" featherIcon class="me-1"></i>
+                            {{ message.createdBy }}
+                          </span>
+                          <span class="badge bg-secondary">
+                            Standard
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span [class]="getTypeClass(message.messageType)">
+                      <i [appFeatherIcon]="getTypeIcon(message.messageType)" featherIcon class="me-1"></i>
+                      {{ message.messageType | titlecase }}
+                    </span>
+                  </td>
+                  <td>
+                    <span [class]="getStatusClass(message.status)">
+                      <i [appFeatherIcon]="getStatusIcon(message.status)" featherIcon class="me-1"></i>
+                      {{ message.status | titlecase }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <div class="fw-medium">{{ message.totalRecipients }}</div>
+                    <div class="small text-muted" *ngIf="message.completedAt">
+                      {{ message.completedAt | date:'short' }}
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <div class="fw-medium"
+                         [class.text-success]="getDeliveryRate(message) > 95"
+                         [class.text-warning]="getDeliveryRate(message) >= 80 && getDeliveryRate(message) <= 95"
+                         [class.text-danger]="getDeliveryRate(message) < 80">
+                      {{ getDeliveryRate(message) }}%
+                    </div>
+                    <div class="small text-muted">{{ message.successfulDeliveries }}/{{ message.totalRecipients }}</div>
+                  </td>
+                  <td class="text-center">
+                    <div class="fw-medium"
+                         [class.text-success]="getReadRate(message) > 70"
+                         [class.text-warning]="getReadRate(message) >= 40 && getReadRate(message) <= 70"
+                         [class.text-muted]="getReadRate(message) < 40">
+                      {{ getReadRate(message) }}%
+                    </div>
+                    <div class="small text-muted">N/A</div>
+                  </td>
+                  <td>
+                    <div class="text-muted small">{{ getTimeAgo(message.createdAt) }}</div>
+                  </td>
+                  <td>
+                    <div ngbDropdown class="dropdown">
+                      <button class="btn btn-link btn-sm"
+                              ngbDropdownToggle
+                              id="message-actions-{{ message.id }}"
+                              data-bs-toggle="dropdown">
+                        <i appFeatherIcon="more-vertical" featherIcon></i>
+                      </button>
+                      <ul ngbDropdownMenu [attr.aria-labelledby]="'message-actions-' + message.id">
+                        <li>
+                          <button class="dropdown-item"
+                                  (click)="viewMessage(messageDetailModal, message)">
+                            <i appFeatherIcon="eye" featherIcon class="me-2"></i>
+                            View Details
+                          </button>
+                        </li>
+                        <li>
+                          <button class="dropdown-item">
+                            <i appFeatherIcon="copy" featherIcon class="me-2"></i>
+                            Use Template Again
+                          </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                          <button class="dropdown-item">
+                            <i appFeatherIcon="download" featherIcon class="me-2"></i>
+                            Export Report
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="d-flex justify-content-between align-items-center p-3 border-top"
+               *ngIf="!loading && paginatedHistory.length > 0">
+            <div class="text-muted small">
+              Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }} messages
+            </div>
+            <ngb-pagination
+              [(page)]="currentPage"
+              [pageSize]="pageSize"
+              [collectionSize]="totalItems"
+              [maxSize]="5"
+              [rotate]="true"
+              (pageChange)="onPageChange($event)">
+            </ngb-pagination>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Message Detail Modal -->
+<ng-template #messageDetailModal let-modal>
+  <div class="modal-header" *ngIf="selectedMessage">
+    <h4 class="modal-title">Message Details</h4>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body" *ngIf="selectedMessage">
+    <div class="row">
+      <div class="col-12">
+        <!-- Message Header -->
+        <div class="d-flex align-items-center mb-3">
+          <i [appFeatherIcon]="getTypeIcon(selectedMessage.messageType)"
+                         class="me-2"
+             [class]="selectedMessage.messageType === 'emergency' ? 'text-danger' : (selectedMessage.messageType === 'broadcast' ? 'text-primary' : 'text-info')"></i>
+          <div class="flex-grow-1">
+            <h5 class="mb-1">{{ selectedMessage.messageType | titlecase }} Message</h5>
+            <div class="d-flex align-items-center gap-2">
+              <span [class]="getTypeClass(selectedMessage.messageType)">
+                {{ selectedMessage.messageType | titlecase }}
+              </span>
+              <span class="badge bg-secondary">
+                Standard
+              </span>
+              <span [class]="getStatusClass(selectedMessage.status)">
+                {{ selectedMessage.status | titlecase }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message Content -->
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Message Content:</label>
+          <div class="p-3 bg-light rounded message-content">
+               {{ selectedMessage.messageType | titlecase }} broadcast sent to {{ selectedMessage.totalRecipients }} recipients
+          </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-3 col-6">
+            <div class="text-center">
+              <div class="h4 mb-1 text-primary">{{ selectedMessage.totalRecipients }}</div>
+              <div class="small text-muted">Total Recipients</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="text-center">
+              <div class="h4 mb-1 text-success">{{ getDeliveryRate(selectedMessage) }}%</div>
+              <div class="small text-muted">Delivered ({{ selectedMessage.successfulDeliveries }})</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="text-center">
+              <div class="h4 mb-1 text-info">{{ getReadRate(selectedMessage) }}%</div>
+              <div class="small text-muted">Read (N/A)</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="text-center">
+              <div class="h4 mb-1 text-warning">{{ selectedMessage.failedDeliveries }}</div>
+              <div class="small text-muted">Failed</div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Message Details -->
+        <div class="row g-3">
+          <div class="col-md-6">
+            <small class="text-muted d-block">Sent By</small>
+            <div class="fw-medium">{{ selectedMessage.createdBy }}</div>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted d-block">Sent At</small>
+            <div class="fw-medium">{{ selectedMessage.createdAt | date:'full' }}</div>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted d-block">Status</small>
+            <div class="fw-medium">{{ selectedMessage.status | titlecase }}</div>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted d-block">Recipients</small>
+            <div class="fw-medium">{{ selectedMessage.totalRecipients }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+      Close
+    </button>
+    <button type="button" class="btn btn-primary">
+      <i appFeatherIcon="download" featherIcon class="me-1"></i>
+      Export Report
+    </button>
+  </div>
+</ng-template>

@@ -1,0 +1,641 @@
+// Housekeeping Component Styles - Modern Professional Design
+
+// Design System Variables
+:root {
+  --hk-primary: #25D466;
+  --hk-primary-hover: #20c05a;
+  --hk-secondary: #6c757d;
+  --hk-success: #198754;
+  --hk-info: #0dcaf0;
+  --hk-warning: #fd7e14;
+  --hk-danger: #dc3545;
+  --hk-light: #f8f9fa;
+  --hk-dark: #212529;
+  --hk-border: rgba(0, 0, 0, 0.125);
+  --hk-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --hk-shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  --hk-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+  --hk-border-radius: 0.5rem;
+  --hk-border-radius-sm: 0.375rem;
+  --hk-spacing-xs: 0.25rem;
+  --hk-spacing-sm: 0.5rem;
+  --hk-spacing-md: 1rem;
+  --hk-spacing-lg: 1.5rem;
+  --hk-spacing-xl: 2rem;
+}
+
+// Page Header
+.page-header {
+  margin-bottom: var(--hk-spacing-xl);
+
+  .page-title {
+    color: var(--hk-dark);
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: var(--hk-spacing-xs);
+    letter-spacing: -0.025em;
+  }
+
+  .page-subtitle {
+    color: var(--hk-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+    font-weight: 400;
+  }
+}
+
+// Statistics Cards - Enhanced Design
+.stats-container {
+  margin-bottom: var(--hk-spacing-xl);
+
+  .stats-card {
+    border: 1px solid var(--hk-border);
+    border-radius: var(--hk-border-radius);
+    background: white;
+    box-shadow: var(--hk-shadow-sm);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: relative;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--hk-shadow-md);
+      border-color: var(--hk-primary);
+    }
+
+    .card-body {
+      padding: var(--hk-spacing-lg);
+      text-align: center;
+      position: relative;
+    }
+
+    .stats-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--hk-spacing-md);
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, transparent 30%, currentColor 100%);
+        opacity: 0.1;
+        z-index: -1;
+      }
+
+      .feather-icon {
+        width: 24px;
+        height: 24px;
+        stroke-width: 2.5;
+      }
+    }
+
+    .stats-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: var(--hk-spacing-xs);
+      letter-spacing: -0.02em;
+    }
+
+    .stats-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--hk-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+}
+
+// View Toggle - Modern Design
+.view-toggle {
+  .btn-group {
+    border-radius: var(--hk-border-radius-sm);
+    overflow: hidden;
+    box-shadow: var(--hk-shadow-sm);
+
+    .btn {
+      border-radius: 0;
+      padding: 0.625rem 1.25rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.25s ease;
+
+      .feather-icon {
+        width: 16px;
+        height: 16px;
+        margin-right: var(--hk-spacing-xs);
+      }
+    }
+
+    .btn-check:checked + .btn-outline-primary {
+      background-color: var(--hk-primary);
+      border-color: var(--hk-primary);
+      color: white;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+// Room Cards - Enhanced Professional Design
+.room-card {
+  cursor: pointer;
+  border: 1px solid var(--hk-border);
+  border-radius: var(--hk-border-radius);
+  background: white;
+  box-shadow: var(--hk-shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--hk-shadow-lg);
+    border-color: var(--hk-primary);
+
+    .card-header {
+      &::after {
+        opacity: 0.15;
+      }
+    }
+  }
+
+  .card-header {
+    border-bottom: none;
+    padding: var(--hk-spacing-md) var(--hk-spacing-lg);
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      transform: translate(30px, -30px);
+      transition: opacity 0.3s ease;
+      opacity: 0;
+    }
+
+    &.bg-success,
+    &.bg-info,
+    &.bg-warning,
+    &.bg-secondary,
+    &.bg-danger {
+      border-bottom: none;
+    }
+
+    .room-header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .room-number {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0;
+      letter-spacing: -0.01em;
+    }
+
+    .room-status-text {
+      font-size: 0.75rem;
+      font-weight: 500;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-icon {
+      width: 24px;
+      height: 24px;
+      opacity: 0.8;
+    }
+  }
+
+  .card-body {
+    padding: var(--hk-spacing-lg);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .priority-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--hk-spacing-md);
+    }
+
+    .priority-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.35rem 0.75rem;
+      border-radius: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 1px solid currentColor;
+    }
+
+    .estimated-time {
+      font-size: 0.8rem;
+      color: var(--hk-secondary);
+      font-weight: 500;
+    }
+
+    .room-info {
+      margin-bottom: var(--hk-spacing-md);
+
+      .info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: var(--hk-spacing-xs);
+        font-size: 0.85rem;
+        color: var(--hk-secondary);
+
+        .feather-icon {
+          width: 14px;
+          height: 14px;
+          margin-right: var(--hk-spacing-xs);
+          opacity: 0.7;
+        }
+      }
+    }
+
+    .task-list {
+      margin-bottom: var(--hk-spacing-md);
+      flex: 1;
+
+      .task-list-header {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--hk-secondary);
+        margin-bottom: var(--hk-spacing-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .task-items {
+        max-height: 80px;
+        overflow: hidden;
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 20px;
+          background: linear-gradient(transparent, white);
+          pointer-events: none;
+        }
+      }
+
+      .task-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: var(--hk-spacing-xs);
+        font-size: 0.8rem;
+        color: var(--hk-secondary);
+
+        .feather-icon {
+          width: 12px;
+          height: 12px;
+          margin-right: var(--hk-spacing-xs);
+          opacity: 0.6;
+        }
+      }
+    }
+
+    .room-notes {
+      font-size: 0.8rem;
+      color: var(--hk-secondary);
+      font-style: italic;
+
+      .feather-icon {
+        width: 12px;
+        height: 12px;
+        margin-right: var(--hk-spacing-xs);
+        opacity: 0.6;
+      }
+    }
+  }
+
+  .card-footer {
+    background: var(--hk-light);
+    border-top: 1px solid var(--hk-border);
+    padding: var(--hk-spacing-md) var(--hk-spacing-lg);
+
+    .action-buttons {
+      display: flex;
+      gap: var(--hk-spacing-xs);
+
+      .btn {
+        flex: 1;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--hk-border-radius-sm);
+        transition: all 0.2s ease;
+
+        &:not(.disabled):hover {
+          transform: translateY(-1px);
+          box-shadow: var(--hk-shadow-sm);
+        }
+      }
+    }
+  }
+}
+
+// Room Status Colors
+.bg-success {
+  background-color: #25D466 !important;
+}
+
+// Priority Classes
+.text-danger.fw-bold {
+  color: #dc3545 !important;
+}
+
+.text-warning.fw-bold {
+  color: #fd7e14 !important;
+}
+
+.text-primary {
+  color: #25D466 !important;
+}
+
+.text-secondary {
+  color: #6c757d !important;
+}
+
+// Table Styles
+.table {
+  .feather-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  td {
+    vertical-align: middle;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+
+    &.bg-light {
+      color: var(--bs-gray-700) !important;
+      border: 1px solid var(--bs-gray-300);
+    }
+  }
+}
+
+// Button Styles
+.btn {
+  font-weight: 500;
+  border-radius: 0.375rem;
+
+  &.btn-primary {
+    background-color: #25D466;
+    border-color: #25D466;
+
+    &:hover {
+      background-color: #20c05a;
+      border-color: #20c05a;
+    }
+  }
+
+  .feather-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 0.25rem;
+
+    &:only-child {
+      margin: 0;
+    }
+  }
+}
+
+// Dropdown Styles
+.dropdown-menu {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+
+  .dropdown-item {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+
+    .feather-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      background-color: var(--bs-light);
+    }
+  }
+}
+
+// Modal Styles
+.modal {
+  .modal-header {
+    border-bottom: 1px solid var(--bs-gray-300);
+
+    .modal-title {
+      font-weight: 600;
+      color: var(--bs-dark);
+    }
+  }
+
+  .modal-body {
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--bs-gray-700);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.875rem;
+      border: 1px solid var(--bs-gray-400);
+
+      &:focus {
+        border-color: #25D466;
+        box-shadow: 0 0 0 0.2rem rgba(37, 212, 102, 0.25);
+      }
+    }
+  }
+
+  .modal-footer {
+    border-top: 1px solid var(--bs-gray-300);
+  }
+}
+
+// Card Styles
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+// Loading & Empty States
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+}
+
+.feather-icon {
+  stroke-width: 2;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .room-card {
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .stats-icon {
+    width: 36px;
+    height: 36px;
+
+    .feather-icon {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .btn-group {
+    .btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .table {
+    font-size: 0.8rem;
+
+    th,
+    td {
+      padding: 0.5rem 0.25rem;
+    }
+  }
+}
+
+// Animation
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.room-card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+// Print Styles
+@media print {
+  .btn,
+  .pagination,
+  .modal {
+    display: none !important;
+  }
+
+  .room-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+}
+// Modal-specific content styles
+.info-grid {
+  display: grid;
+  gap: var(--hk-spacing-sm);
+
+  .info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--hk-spacing-sm) 0;
+    border-bottom: 1px solid var(--hk-border);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    label {
+      font-weight: 600;
+      color: var(--hk-secondary);
+      margin-bottom: 0;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+    }
+
+    span {
+      font-weight: 500;
+
+      &.badge {
+        font-size: 0.7rem;
+      }
+    }
+  }
+}
+
+.task-item-detail {
+  .task-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--hk-primary) 0%, var(--hk-primary-hover) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--hk-shadow-sm);
+
+    .feather-icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  h6 {
+    color: var(--hk-dark);
+    font-weight: 600;
+    font-size: 1rem;
+  }
+}

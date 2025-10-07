@@ -1,0 +1,537 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h4 class="page-title mb-0">Front Desk Tasks</h4>
+    <p class="text-muted mb-0">Guest services and front office operations</p>
+  </div>
+  <button type="button" class="btn btn-outline-primary" (click)="refresh()">
+    <i data-feather="refresh-cw" class="feather-icon" appFeatherIcon></i>
+    Refresh
+  </button>
+</div>
+
+<!-- Front Desk Statistics -->
+<div class="row mb-4">
+  <div class="col-lg-2 col-md-4 col-6 mb-3">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <div class="stats-icon bg-primary bg-opacity-10 rounded-circle mx-auto mb-2">
+          <i data-feather="user" class="feather-icon text-primary" appFeatherIcon></i>
+        </div>
+        <h5 class="mb-1 text-primary">{{ frontdeskStats.totalTasks }}</h5>
+        <small class="text-muted">Total Tasks</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-2 col-md-4 col-6 mb-3">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <div class="stats-icon bg-warning bg-opacity-10 rounded-circle mx-auto mb-2">
+          <i data-feather="clock" class="feather-icon text-warning" appFeatherIcon></i>
+        </div>
+        <h5 class="mb-1 text-warning">{{ frontdeskStats.pendingTasks }}</h5>
+        <small class="text-muted">Pending</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-2 col-md-4 col-6 mb-3">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <div class="stats-icon bg-success bg-opacity-10 rounded-circle mx-auto mb-2">
+          <i data-feather="check-circle" class="feather-icon text-success" appFeatherIcon></i>
+        </div>
+        <h5 class="mb-1 text-success">{{ frontdeskStats.completedTasks }}</h5>
+        <small class="text-muted">Completed</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-2 col-md-4 col-6 mb-3">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <div class="stats-icon bg-info bg-opacity-10 rounded-circle mx-auto mb-2">
+          <i data-feather="bell" class="feather-icon text-info" appFeatherIcon></i>
+        </div>
+        <h5 class="mb-1 text-info">{{ frontdeskStats.guestRequests }}</h5>
+        <small class="text-muted">Guest Requests</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-2 col-md-4 col-6 mb-3">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <div class="stats-icon bg-secondary bg-opacity-10 rounded-circle mx-auto mb-2">
+          <i data-feather="log-in" class="feather-icon text-secondary" appFeatherIcon></i>
+        </div>
+        <h5 class="mb-1 text-secondary">{{ frontdeskStats.checkInTasks }}</h5>
+        <small class="text-muted">Check-Ins</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-2 col-md-4 col-6 mb-3">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <div class="stats-icon bg-dark bg-opacity-10 rounded-circle mx-auto mb-2">
+          <i data-feather="log-out" class="feather-icon text-dark" appFeatherIcon></i>
+        </div>
+        <h5 class="mb-1 text-dark">{{ frontdeskStats.checkOutTasks }}</h5>
+        <small class="text-muted">Check-Outs</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+  <div class="card-body py-3">
+    <div class="row g-3 align-items-end">
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label">Search</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search tasks or guests..."
+          [(ngModel)]="searchTerm"
+          (input)="applyFilters()"
+        >
+      </div>
+
+      <div class="col-lg-2 col-md-6">
+        <label class="form-label">Service Type</label>
+        <select class="form-select" [(ngModel)]="serviceTypeFilter" (change)="applyFilters()">
+          <option value="all">All Services</option>
+          <option *ngFor="let type of serviceTypes" [value]="type.value">
+            {{ type.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-lg-2 col-md-6">
+        <label class="form-label">Status</label>
+        <select class="form-select" [(ngModel)]="statusFilter" (change)="applyFilters()">
+          <option value="all">All Statuses</option>
+          <option *ngFor="let status of statuses" [value]="status">{{ status }}</option>
+        </select>
+      </div>
+
+      <div class="col-lg-2 col-md-6">
+        <label class="form-label">Priority</label>
+        <select class="form-select" [(ngModel)]="priorityFilter" (change)="applyFilters()">
+          <option value="all">All Priorities</option>
+          <option *ngFor="let priority of priorities" [value]="priority">{{ priority }}</option>
+        </select>
+      </div>
+
+      <div class="col-lg-1 col-md-6">
+        <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()">
+          <i data-feather="x" class="feather-icon" appFeatherIcon></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tasks Table -->
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-striped mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Task</th>
+            <th>Service Type</th>
+            <th>Guest</th>
+            <th>Room</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+            <th>Created</th>
+            <th width="120px">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading">
+            <td colspan="9" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mb-0 mt-2 text-muted">Loading front desk tasks...</p>
+            </td>
+          </tr>
+          <tr *ngIf="!loading && paginatedTasks.length === 0">
+            <td colspan="9" class="text-center py-4">
+              <i data-feather="user" class="feather-icon text-muted mb-2" appFeatherIcon style="width: 48px; height: 48px;"></i>
+              <p class="mb-0 text-muted">No front desk tasks found</p>
+            </td>
+          </tr>
+          <tr *ngFor="let task of paginatedTasks; trackBy: taskTrackBy">
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="task-icon me-2">
+                  <i [attr.data-feather]="getServiceIcon(task)" class="feather-icon text-muted" appFeatherIcon></i>
+                </div>
+                <div>
+                  <div class="fw-semibold">{{ task.title }}</div>
+                  <div class="text-muted small text-truncate" style="max-width: 200px;">
+                    {{ task.description }}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark">{{ getServiceType(task) }}</span>
+            </td>
+            <td>
+              <div *ngIf="task.guestName">
+                <div class="fw-semibold">{{ task.guestName }}</div>
+                <div *ngIf="task.guestPhone" class="text-muted small">{{ task.guestPhone }}</div>
+              </div>
+              <span *ngIf="!task.guestName" class="text-muted">-</span>
+            </td>
+            <td>
+              <span *ngIf="task.roomNumber" class="badge bg-light text-dark">
+                Room {{ task.roomNumber }}
+              </span>
+              <span *ngIf="!task.roomNumber" class="text-muted">-</span>
+            </td>
+            <td>
+              <span [class]="getPriorityClass(task.priority)">{{ task.priority }}</span>
+            </td>
+            <td>
+              <span [class]="getStatusClass(task.status)">{{ task.status }}</span>
+            </td>
+            <td>
+              <div *ngIf="task.assignedTo; else unassigned">
+                <div class="small">{{ task.assignedTo.userName }}</div>
+              </div>
+              <ng-template #unassigned>
+                <span class="text-muted small">Unassigned</span>
+              </ng-template>
+            </td>
+            <td>
+              <div class="small">{{ task.createdAt | date:'MMM dd, HH:mm' }}</div>
+            </td>
+            <td>
+              <div class="btn-group" ngbDropdown>
+                <button type="button" class="btn btn-sm btn-outline-secondary" ngbDropdownToggle>
+                  <i data-feather="more-horizontal" class="feather-icon" appFeatherIcon></i>
+                </button>
+                <div class="dropdown-menu" ngbDropdownMenu>
+                  <button class="dropdown-item" (click)="viewTaskDetails(task)">
+                    <i data-feather="eye" class="feather-icon me-2" appFeatherIcon></i>
+                    View Details
+                  </button>
+                  <button class="dropdown-item" *ngIf="task.status === 'Pending'" (click)="startTask(task)">
+                    <i data-feather="play-circle" class="feather-icon me-2" appFeatherIcon></i>
+                    Start Task
+                  </button>
+                  <button class="dropdown-item" *ngIf="task.status === 'InProgress'" (click)="completeTask(task)">
+                    <i data-feather="check-circle" class="feather-icon me-2" appFeatherIcon></i>
+                    Complete Task
+                  </button>
+                  <div class="dropdown-divider"></div>
+                  <button class="dropdown-item" *ngIf="task.guestPhone" (click)="callGuest(task)">
+                    <i data-feather="phone" class="feather-icon me-2" appFeatherIcon></i>
+                    Call Guest
+                  </button>
+                  <button class="dropdown-item" *ngIf="task.guestPhone" (click)="sendMessage(task)">
+                    <i data-feather="message-square" class="feather-icon me-2" appFeatherIcon></i>
+                    Send Message
+                  </button>
+                  <div class="dropdown-divider"></div>
+                  <button class="dropdown-item" (click)="editTask(task)">
+                    <i data-feather="edit-3" class="feather-icon me-2" appFeatherIcon></i>
+                    Edit Task
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-between align-items-center p-3 border-top" *ngIf="totalItems > 0">
+      <div class="text-muted">
+        Showing {{ (currentPage - 1) * pageSize + 1 }} to
+        {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }} tasks
+      </div>
+      <ngb-pagination
+        [(page)]="currentPage"
+        [pageSize]="pageSize"
+        [collectionSize]="totalItems"
+        [maxSize]="5"
+        [rotate]="true"
+        [boundaryLinks]="true"
+        (pageChange)="onPageChange($event)">
+      </ngb-pagination>
+    </div>
+  </div>
+</div>
+
+<!-- Task Details Modal -->
+<ng-template #taskDetailsModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" *ngIf="selectedTask">
+      <i [attr.data-feather]="getServiceIcon(selectedTask)" class="feather-icon me-2" appFeatherIcon></i>
+      {{ selectedTask.title }}
+    </h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-body" *ngIf="selectedTask">
+    <div class="row">
+      <!-- Left Column - Task Details -->
+      <div class="col-md-8">
+        <div class="row mb-3">
+          <div class="col-sm-4"><strong>Task ID:</strong></div>
+          <div class="col-sm-8">#{{ selectedTask.id }}</div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-sm-4"><strong>Description:</strong></div>
+          <div class="col-sm-8">{{ selectedTask.description || 'No description provided' }}</div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-sm-4"><strong>Service Type:</strong></div>
+          <div class="col-sm-8">
+            <span class="badge bg-light text-dark">{{ getServiceType(selectedTask) }}</span>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-sm-4"><strong>Department:</strong></div>
+          <div class="col-sm-8">{{ selectedTask.department }}</div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-sm-4"><strong>Created:</strong></div>
+          <div class="col-sm-8">{{ selectedTask.createdAt | date:'medium' }}</div>
+        </div>
+
+        <div class="row mb-3" *ngIf="selectedTask.updatedAt">
+          <div class="col-sm-4"><strong>Last Updated:</strong></div>
+          <div class="col-sm-8">{{ selectedTask.updatedAt | date:'medium' }}</div>
+        </div>
+
+        <div class="row mb-3" *ngIf="selectedTask.notes">
+          <div class="col-sm-4"><strong>Notes:</strong></div>
+          <div class="col-sm-8">{{ selectedTask.notes }}</div>
+        </div>
+      </div>
+
+      <!-- Right Column - Status & Guest Info -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-title">Status Information</h6>
+
+            <div class="mb-3">
+              <label class="form-label">Priority:</label>
+              <div>
+                <span [class]="getPriorityClass(selectedTask.priority)">
+                  {{ selectedTask.priority }}
+                </span>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Status:</label>
+              <div>
+                <span [class]="getStatusClass(selectedTask.status)">
+                  {{ selectedTask.status }}
+                </span>
+              </div>
+            </div>
+
+            <div class="mb-3" *ngIf="selectedTask.assignedTo">
+              <label class="form-label">Assigned To:</label>
+              <div>{{ selectedTask.assignedTo.userName }}</div>
+            </div>
+
+            <div *ngIf="!selectedTask.assignedTo" class="mb-3">
+              <span class="text-muted">Unassigned</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guest Information Card -->
+        <div class="card mt-3" *ngIf="selectedTask.guestName || selectedTask.guestPhone || selectedTask.roomNumber">
+          <div class="card-body">
+            <h6 class="card-title">Guest Information</h6>
+
+            <div class="mb-2" *ngIf="selectedTask.guestName">
+              <label class="form-label">Guest Name:</label>
+              <div>{{ selectedTask.guestName }}</div>
+            </div>
+
+            <div class="mb-2" *ngIf="selectedTask.guestPhone">
+              <label class="form-label">Phone:</label>
+              <div>
+                <a href="tel:{{ selectedTask.guestPhone }}" class="text-decoration-none">
+                  {{ selectedTask.guestPhone }}
+                </a>
+                <button class="btn btn-sm btn-outline-secondary ms-2"
+                        (click)="callGuest(selectedTask)"
+                        title="Copy to clipboard">
+                  <i data-feather="copy" class="feather-icon" appFeatherIcon></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="mb-2" *ngIf="selectedTask.roomNumber">
+              <label class="form-label">Room:</label>
+              <div>
+                <span class="badge bg-light text-dark">
+                  Room {{ selectedTask.roomNumber }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer" *ngIf="selectedTask">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+      Close
+    </button>
+
+    <button type="button"
+            class="btn btn-primary"
+            *ngIf="selectedTask.status === 'Pending'"
+            (click)="startTask(selectedTask); modal.dismiss()">
+      <i data-feather="play-circle" class="feather-icon me-1" appFeatherIcon></i>
+      Start Task
+    </button>
+
+    <button type="button"
+            class="btn btn-success"
+            *ngIf="selectedTask.status === 'InProgress'"
+            (click)="completeTask(selectedTask); modal.dismiss()">
+      <i data-feather="check-circle" class="feather-icon me-1" appFeatherIcon></i>
+      Complete Task
+    </button>
+
+    <button type="button"
+            class="btn btn-outline-primary"
+            *ngIf="selectedTask.guestPhone"
+            (click)="sendMessage(selectedTask)">
+      <i data-feather="message-square" class="feather-icon me-1" appFeatherIcon></i>
+      Send Message
+    </button>
+  </div>
+</ng-template>
+
+<!-- Send Message Modal -->
+<ng-template #sendMessageModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" *ngIf="selectedTask">
+      <i data-feather="message-square" class="feather-icon me-2" appFeatherIcon></i>
+      Send Message to {{ selectedTask.guestName || selectedTask.guestPhone }}
+    </h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-body" *ngIf="selectedTask">
+    <!-- Guest Info -->
+    <div class="card mb-3">
+      <div class="card-body py-2">
+        <div class="row">
+          <div class="col-md-6">
+            <strong>Guest:</strong> {{ selectedTask.guestName || 'Unknown Guest' }}
+          </div>
+          <div class="col-md-6">
+            <strong>Phone:</strong> {{ selectedTask.guestPhone }}
+          </div>
+        </div>
+        <div class="row mt-1">
+          <div class="col-md-6">
+            <strong>Room:</strong> {{ selectedTask.roomNumber || 'N/A' }}
+          </div>
+          <div class="col-md-6">
+            <strong>Task:</strong> {{ selectedTask.title }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message Templates -->
+    <div class="mb-3">
+      <label class="form-label">Quick Templates:</label>
+      <div class="d-flex flex-wrap gap-1">
+        <button
+          *ngFor="let template of messageTemplates"
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          (click)="useTemplate(template)"
+          [title]="template">
+          {{ template.substring(0, 30) }}{{ template.length > 30 ? '...' : '' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Message Text Area -->
+    <div class="mb-3">
+      <label for="messageText" class="form-label">Message:</label>
+      <textarea
+        id="messageText"
+        class="form-control"
+        rows="4"
+        [(ngModel)]="messageText"
+        placeholder="Type your message here..."
+        maxlength="500">
+      </textarea>
+      <div class="form-text">
+        {{ messageText.length }}/500 characters
+      </div>
+    </div>
+
+    <!-- Message Preview -->
+    <div class="card bg-light" *ngIf="messageText.trim()">
+      <div class="card-header py-2">
+        <small class="text-muted">Message Preview:</small>
+      </div>
+      <div class="card-body py-2">
+        <div class="d-flex">
+          <div class="flex-shrink-0">
+            <div class="bg-success text-white rounded-pill px-2 py-1 small">
+              Hotel Staff
+            </div>
+          </div>
+          <div class="flex-grow-1 ms-2">
+            <div class="bg-white border rounded p-2 small">
+              {{ messageText }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer" *ngIf="selectedTask">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+      Cancel
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-success"
+      [disabled]="!messageText.trim() || sendingMessage"
+      (click)="sendWhatsAppMessage(); modal.dismiss()">
+      <span *ngIf="sendingMessage" class="spinner-border spinner-border-sm me-1" role="status"></span>
+      <i *ngIf="!sendingMessage" data-feather="send" class="feather-icon me-1" appFeatherIcon></i>
+      {{ sendingMessage ? 'Sending...' : 'Send WhatsApp Message' }}
+    </button>
+  </div>
+</ng-template>

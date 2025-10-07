@@ -1,0 +1,360 @@
+<!-- Header Section -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h4 class="fw-bold mb-1">Roles & Permissions</h4>
+    <p class="text-muted mb-0">Manage user roles and their access permissions</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-primary" (click)="exportRoleDefinitions()">
+      <i data-feather="download" featherIcon class="me-2"></i>
+      Export
+    </button>
+  </div>
+</div>
+
+<!-- Alert Messages -->
+<div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+  {{ error }}
+  <button type="button" class="btn-close" (click)="dismissError()"></button>
+</div>
+
+<div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+  {{ successMessage }}
+  <button type="button" class="btn-close" (click)="dismissSuccess()"></button>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4" *ngIf="stats">
+  <div class="col-lg-3 col-sm-6">
+    <div class="card h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+            <i data-feather="shield" featherIcon class="text-white"></i>
+          </div>
+        </div>
+        <div>
+          <h4 class="fw-bold mb-0">{{ stats.totalRoles }}</h4>
+          <p class="text-muted mb-0">Total Roles</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-sm-6">
+    <div class="card h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+            <i data-feather="check-circle" featherIcon class="text-white"></i>
+          </div>
+        </div>
+        <div>
+          <h4 class="fw-bold mb-0">{{ stats.builtInRoles }}</h4>
+          <p class="text-muted mb-0">Built-in Roles</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-sm-6">
+    <div class="card h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <div class="bg-info rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+            <i data-feather="settings" featherIcon class="text-white"></i>
+          </div>
+        </div>
+        <div>
+          <h4 class="fw-bold mb-0">{{ stats.customRoles }}</h4>
+          <p class="text-muted mb-0">Custom Roles</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-sm-6">
+    <div class="card h-100">
+      <div class="card-body d-flex align-items-center">
+        <div class="me-3">
+          <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+            <i data-feather="users" featherIcon class="text-white"></i>
+          </div>
+        </div>
+        <div>
+          <h4 class="fw-bold mb-0">{{ getActiveRolesCount() }}</h4>
+          <p class="text-muted mb-0">Active Roles</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="input-group">
+          <span class="input-group-text">
+            <i data-feather="search" featherIcon></i>
+          </span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search roles..."
+            [(ngModel)]="searchTerm"
+            (input)="onSearch()">
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <select class="form-select" [(ngModel)]="selectedRoleType" (change)="onFilterChange()">
+          <option value="">All Types</option>
+          <option value="builtin">Built-in Roles</option>
+          <option value="custom">Custom Roles</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <button class="btn btn-outline-secondary w-100" (click)="clearFilters()">
+          <i data-feather="x" featherIcon class="me-1"></i>
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <ul class="nav nav-pills mt-3">
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'all'" (click)="setActiveTab('all')">
+          All Roles ({{ getTotalRolesCount() }})
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'builtin'" (click)="setActiveTab('builtin')">
+          Built-in ({{ getBuiltInRolesCount() }})
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'custom'" (click)="setActiveTab('custom')">
+          Custom ({{ getCustomRolesCount() }})
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'active'" (click)="setActiveTab('active')">
+          In Use ({{ getActiveRolesCount() }})
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="mt-3 text-muted">Loading roles and permissions...</p>
+</div>
+
+<!-- Roles Grid -->
+<div *ngIf="!loading" class="row">
+  <div class="col-lg-6 col-xl-4 mb-4" *ngFor="let role of filteredRoles">
+    <div class="card h-100 role-card">
+      <div class="card-header d-flex justify-content-between align-items-start">
+        <div class="d-flex align-items-center">
+          <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3"
+               style="width: 40px; height: 40px;">
+            <i data-feather="shield" featherIcon class="text-muted"></i>
+          </div>
+          <div>
+            <h6 class="mb-1">{{ role.displayName }}</h6>
+            <div class="d-flex gap-2">
+              <span class="badge" [class]="getRoleBadgeClass(role.name)">{{ role.name }}</span>
+              <span *ngIf="role.isBuiltIn" class="badge bg-secondary">Built-in</span>
+            </div>
+          </div>
+        </div>
+        <div class="dropdown" ngbDropdown>
+          <button class="btn btn-sm btn-outline-secondary" ngbDropdownToggle>
+            <i data-feather="more-vertical" featherIcon></i>
+          </button>
+          <div class="dropdown-menu" ngbDropdownMenu>
+            <a class="dropdown-item" (click)="openPermissionsModal(role)">
+              <i data-feather="eye" featherIcon class="me-2"></i>
+              View Permissions
+            </a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item disabled" *ngIf="role.isBuiltIn">
+              <i data-feather="lock" featherIcon class="me-2"></i>
+              Cannot Edit Built-in
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <p class="text-muted small mb-3">{{ role.description }}</p>
+
+        <div class="row mb-3">
+          <div class="col-6">
+            <small class="text-muted d-block">Permissions</small>
+            <strong>{{ formatPermissionCount(role.permissions.length) }}</strong>
+          </div>
+          <div class="col-6">
+            <small class="text-muted d-block">Users</small>
+            <strong>{{ formatUserCount(role.userCount) }}</strong>
+          </div>
+        </div>
+
+        <!-- Permission Categories Summary -->
+        <div class="permission-categories">
+          <small class="text-muted d-block mb-2">Access Overview</small>
+          <div class="row g-1">
+            <div class="col-6" *ngFor="let category of permissionCategories.slice(0, 4)">
+              <div class="d-flex align-items-center">
+                <div class="permission-indicator me-2"
+                     [class]="getCategoryBadgeClass(getCategoryAccessLevel(role.permissions, category))">
+                </div>
+                <small class="text-muted">{{ category.displayName }}</small>
+              </div>
+            </div>
+            <div class="col-12" *ngIf="permissionCategories.length > 4">
+              <small class="text-muted">+{{ permissionCategories.length - 4 }} more categories</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer bg-transparent">
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-muted">{{ role.isBuiltIn ? 'System Role' : 'Custom Role' }}</small>
+          <button class="btn btn-sm btn-outline-primary" (click)="openPermissionsModal(role)">
+            <i data-feather="shield" featherIcon class="me-1"></i>
+            View Permissions
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredRoles.length === 0" class="col-12">
+    <div class="card">
+      <div class="card-body text-center py-5">
+        <i data-feather="shield" featherIcon class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+        <h5 class="text-muted">No roles found</h5>
+        <p class="text-muted mb-0">
+          <span *ngIf="searchTerm || selectedRoleType">
+            Try adjusting your filters to find the roles you're looking for.
+          </span>
+          <span *ngIf="!searchTerm && !selectedRoleType">
+            Roles define what users can do in the system.
+          </span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Permissions Modal -->
+<ng-template #permissionsModal let-modal>
+  <div class="modal-header">
+    <div class="d-flex align-items-center">
+      <i data-feather="shield" featherIcon class="me-3"></i>
+      <div>
+        <h4 class="modal-title mb-0">{{ selectedRole?.displayName }} Permissions</h4>
+        <small class="text-light opacity-75">{{ selectedRole?.description }}</small>
+      </div>
+    </div>
+    <button type="button" class="btn-close" (click)="closeModal()"></button>
+  </div>
+
+  <div class="modal-body">
+    <div *ngIf="!rolePermissions" class="text-center py-4">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading permissions...</span>
+      </div>
+    </div>
+
+    <div *ngIf="rolePermissions">
+      <!-- Permission Statistics -->
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <div class="text-center p-3 bg-light rounded">
+            <h5 class="mb-1">{{ getTotalPermissionsCount() }}</h5>
+            <small class="text-muted">Total Permissions</small>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-center p-3 bg-light rounded">
+            <h5 class="mb-1">{{ rolePermissions.permissions.length }}</h5>
+            <small class="text-muted">Permission Categories</small>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-center p-3 bg-light rounded">
+            <h5 class="mb-1">{{ selectedRole?.userCount || 0 }}</h5>
+            <small class="text-muted">Users with Role</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Permission Categories -->
+      <div class="accordion" id="permissionsAccordion">
+        <div class="accordion-item" *ngFor="let category of rolePermissions.permissions; let i = index">
+          <h2 class="accordion-header" [id]="'heading' + i">
+            <button class="accordion-button collapsed d-flex align-items-center justify-content-between w-100"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    [attr.data-bs-target]="'#collapse' + i"
+                    [attr.aria-expanded]="false"
+                    [attr.aria-controls]="'collapse' + i">
+              <div class="d-flex align-items-center">
+                <i data-feather="lock" featherIcon class="me-3"></i>
+                <div>
+                  <div class="fw-semibold">{{ category.displayName }}</div>
+                  <small class="text-muted">{{ getCategorySummaryText(category) }}</small>
+                </div>
+              </div>
+              <span class="badge" [class]="getCategoryAccessClass(category)">
+                {{ category.permissions.length }} permissions
+              </span>
+            </button>
+          </h2>
+          <div [id]="'collapse' + i"
+               class="accordion-collapse collapse"
+               [attr.aria-labelledby]="'heading' + i"
+               data-bs-parent="#permissionsAccordion">
+            <div class="accordion-body">
+              <div class="row g-2">
+                <div class="col-md-6" *ngFor="let permission of category.permissions">
+                  <div class="d-flex align-items-start">
+                    <div class="me-3 mt-1">
+                      <i data-feather="check-circle" featherIcon *ngIf="permission.hasPermission" class="text-success"></i>
+                      <i data-feather="x-circle" featherIcon *ngIf="!permission.hasPermission" class="text-muted"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="fw-medium" [class]="permission.hasPermission ? 'text-dark' : 'text-muted'">
+                        {{ permission.displayName }}
+                      </div>
+                      <small class="text-muted">{{ permission.description }}</small>
+                      <div>
+                        <code class="small text-muted">{{ permission.name }}</code>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="closeModal()">Close</button>
+  </div>
+</ng-template>

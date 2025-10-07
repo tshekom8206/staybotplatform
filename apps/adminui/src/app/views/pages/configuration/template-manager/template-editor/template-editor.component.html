@@ -1,0 +1,440 @@
+<div class="card ">
+
+  <!-- Header -->
+  <div class="card-header bg-white border-bottom">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center">
+        <button type="button"
+                class="btn btn-outline-secondary me-3"
+                (click)="onCancel()">
+          <i data-feather="arrow-left" featherIcon class="me-2"></i>
+          Back to Templates
+        </button>
+        <div>
+          <h4 class="page-title mb-0">{{ pageTitle }}</h4>
+          <p class="text-muted mb-0">Configure your AI chatbot response template</p>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button"
+                class="btn btn-outline-info"
+                (click)="onToggleVariableHelper()"
+                [class.btn-info]="showVariableHelper"
+                [class.text-white]="showVariableHelper"
+                title="Toggle variable helper">
+          <i data-feather="layers" featherIcon class="me-2"></i>
+          Variables Helper
+        </button>
+        <button type="button"
+                class="btn btn-outline-success"
+                (click)="onTogglePreview()"
+                [class.btn-success]="showPreview"
+                [class.text-white]="showPreview"
+                title="Toggle preview">
+          <i data-feather="eye" featherIcon class="me-2"></i>
+          Live Preview
+        </button>
+        <button type="button"
+                class="btn btn-primary"
+                (click)="onSave()"
+                [disabled]="templateForm.invalid || saving">
+          <span *ngIf="saving" class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </span>
+          <i data-feather="save" featherIcon class="me-2" *ngIf="!saving"></i>
+          {{ saveButtonText }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Success/Error Messages -->
+    <div class="row" *ngIf="success || error">
+      <div class="col-12">
+        <div class="alert alert-success alert-dismissible fade show" *ngIf="success">
+          <i data-feather="check-circle" featherIcon class="me-2"></i>
+          {{ success }}
+        </div>
+        <div class="alert alert-danger alert-dismissible fade show" *ngIf="error">
+          <i data-feather="alert-triangle" featherIcon class="me-2"></i>
+          {{ error }}
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="templateForm">
+      <div class="row">
+
+        <!-- Main Form Column -->
+        <div class="col-lg-8">
+
+          <!-- Basic Information Card -->
+          <div class="card  mb-4">
+            <div class="card-header bg-white">
+              <h6>
+                <i data-feather="info" featherIcon class="me-2" style="width: 18px; height: 18px;"></i>
+                Template Information
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row mb-4">
+                <div class="col-md-6 mb-4">
+                  <label for="templateKey" class="form-label">
+                    <i data-feather="key" featherIcon class="me-2" style="width: 16px; height: 16px;"></i>
+                    Template Key <span class="text-danger">*</span>
+                  </label>
+                  <div class="input-group ">
+                    <input type="text"
+                           class="form-control "
+                           id="templateKey"
+                           formControlName="templateKey"
+                           placeholder="e.g., service_request_laundry"
+                           [class.is-invalid]="isFieldInvalid('templateKey')">
+                  </div>
+                  <select class="form-select mt-3"
+                          *ngIf="availableTemplateKeys.length > 0"
+                          (change)="onTemplateKeySelect($event)"
+                          title="Select from predefined keys">
+                    <option value="">💡 Select from predefined keys...</option>
+                    <option *ngFor="let key of availableTemplateKeys" [value]="key">
+                      {{ key }}
+                    </option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('templateKey')">
+                    <i data-feather="alert-triangle" featherIcon class="me-1"></i>
+                    {{ getFieldError('templateKey') }}
+                  </div>
+                  <div class="form-text mt-2">
+                    <i data-feather="info" featherIcon class="me-1" style="width: 14px; height: 14px;"></i>
+                    Unique identifier using lowercase letters and underscores
+                  </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                  <label for="category" class="form-label">
+                    <i data-feather="folder" featherIcon class="me-2" style="width: 16px; height: 16px;"></i>
+                    Category <span class="text-danger">*</span>
+                  </label>
+                  <div class="input-group ">
+                    <input type="text"
+                           class="form-control "
+                           id="category"
+                           formControlName="category"
+                           placeholder="e.g., Service Requests"
+                           [class.is-invalid]="isFieldInvalid('category')">
+                  </div>
+                  <select class="form-select mt-3"
+                          (change)="onCategorySelect($event)"
+                          title="Select category">
+                    <option value="">📂 Select existing category...</option>
+                    <option *ngFor="let category of categoryList" [value]="category">
+                      {{ category }}
+                    </option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('category')">
+                    <i data-feather="alert-triangle" featherIcon class="me-1"></i>
+                    {{ getFieldError('category') }}
+                  </div>
+                  <div class="form-text mt-2">
+                    <i data-feather="info" featherIcon class="me-1" style="width: 14px; height: 14px;"></i>
+                    Group related templates for better organization
+                  </div>
+                </div>
+              </div>
+
+              <div class="row g-4">
+                <div class="col-md-4">
+                  <label for="language" class="form-label">
+                    <i data-feather="globe" featherIcon class="me-2" style="width: 16px; height: 16px;"></i>
+                    Language <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select form-select"
+                          id="language"
+                          formControlName="language"
+                          [class.is-invalid]="isFieldInvalid('language')">
+                    <option *ngFor="let lang of availableLanguages" [value]="lang.code">
+                      🌐 {{ lang.name }}
+                    </option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('language')">
+                    <i data-feather="alert-triangle" featherIcon class="me-1"></i>
+                    {{ getFieldError('language') }}
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label for="priority" class="form-label">
+                    <i data-feather="flag" featherIcon class="me-2" style="width: 16px; height: 16px;"></i>
+                    Priority <span class="text-danger">*</span>
+                  </label>
+                  <input type="number"
+                         class="form-control form-control"
+                         id="priority"
+                         formControlName="priority"
+                         min="1"
+                         max="10"
+                         [class.is-invalid]="isFieldInvalid('priority')">
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('priority')">
+                    <i data-feather="alert-triangle" featherIcon class="me-1"></i>
+                    {{ getFieldError('priority') }}
+                  </div>
+                  <div class="form-text mt-2">
+                    <i data-feather="info" featherIcon class="me-1" style="width: 14px; height: 14px;"></i>
+                    1 = highest priority, 10 = lowest
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">
+                    <i data-feather="power" featherIcon class="me-2" style="width: 16px; height: 16px;"></i>
+                    Template Status
+                  </label>
+                  <div class="form-check form-switch py-2">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="isActive"
+                           formControlName="isActive">
+                    <label class="form-check-label ms-2" for="isActive">
+                      <span class="badge" [class.bg-success]="templateForm.get('isActive')?.value" [class.bg-secondary]="!templateForm.get('isActive')?.value">
+                        {{ templateForm.get('isActive')?.value ? '✓ Active' : '○ Inactive' }}
+                      </span>
+                    </label>
+                  </div>
+                  <div class="form-text">
+                    <i data-feather="info" featherIcon class="me-1" style="width: 14px; height: 14px;"></i>
+                    Only active templates are used by the AI
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Template Content Card -->
+          <div class="card  mb-4">
+            <div class="card-header bg-white">
+              <h6>
+                <i data-feather="file-text" featherIcon class="me-2" style="width: 18px; height: 18px;"></i>
+                Template Content
+              </h6>
+            </div>
+            <div class="card-body">
+              <label for="templateContent" class="form-label">
+                <i data-feather="edit-3" featherIcon class="me-2" style="width: 16px; height: 16px;"></i>
+                Response Template <span class="text-danger">*</span>
+              </label>
+              <div class="position-relative">
+                <textarea class="form-control template-editor"
+                          id="templateContent"
+                          formControlName="template"
+                          rows="10"
+                          placeholder="Start typing your template content here..."
+                          [class.is-invalid]="isFieldInvalid('template')"
+                          style="font-size: 1rem; line-height: 1.6;"></textarea>
+                <div class="position-absolute top-0 end-0 m-3">
+                  <small class="badge bg-light text-muted">{{ templateForm.get('template')?.value?.length || 0 }} characters</small>
+                </div>
+              </div>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('template')">
+                <i data-feather="alert-triangle" featherIcon class="me-1"></i>
+                {{ getFieldError('template') }}
+              </div>
+              <div class="form-text mt-3">
+                <div class="d-flex align-items-start">
+                  <i data-feather="lightbulb" featherIcon class="me-2 text-warning" style="width: 16px; height: 16px; margin-top: 2px;"></i>
+                  <div>
+                    <strong>Template Variables:</strong> Use <code class="bg-warning bg-opacity-25 text-dark px-2 py-1">{{ variableExampleText }}</code> to insert dynamic content.<br>
+                    <small class="text-muted">Variables will be automatically replaced with actual values when the template is used.</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preview Section -->
+          <div *ngIf="showPreview && previewContent" class="mb-4">
+            <div class="card ">
+              <div class="card-header bg-white">
+                <div class="d-flex align-items-center">
+                  <div class="p-2 rounded-circle bg-white bg-opacity-20 me-3">
+                    <i data-feather="eye" featherIcon style="width: 20px; height: 20px;"></i>
+                  </div>
+                  <div>
+                    <h5 class="mb-1 fw-bold">Live Template Preview</h5>
+                    <p class="mb-0 opacity-75">See how your template will appear to users</p>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="preview-content bg-light border rounded-3 p-4 mb-4" style="border-left: 4px solid var(--bs-success) !important;">
+                  <div class="d-flex align-items-start mb-3">
+                    <div class="p-2 rounded-circle bg-success bg-opacity-10 me-3 flex-shrink-0">
+                      <i data-feather="message-circle" featherIcon class="text-success" style="width: 18px; height: 18px;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                      <h6 class="mb-2 fw-bold text-dark">AI Assistant Response:</h6>
+                      <div class="preview-text" style="font-size: 1.05rem; line-height: 1.6; color: #2c3e50;">
+                        {{ previewContent.content }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Used Variables -->
+                <div *ngIf="Object.keys(previewContent.usedVariables).length > 0" class="mb-4">
+                  <div class="d-flex align-items-center mb-3">
+                    <i data-feather="check-circle" featherIcon class="text-success me-2"></i>
+                    <h6 class="mb-0 fw-bold text-success">Active Variables ({{ Object.keys(previewContent.usedVariables).length }})</h6>
+                  </div>
+                  <div class="row g-2">
+                    <div class="col-auto" *ngFor="let variable of Object.keys(previewContent.usedVariables)">
+                      <div class="card border-success border-opacity-25 bg-success bg-opacity-10">
+                        <div class="card-body px-3 py-2">
+                          <div class="d-flex align-items-center">
+                            <i data-feather="tag" featherIcon class="text-success me-2" style="width: 14px; height: 14px;"></i>
+                            <small class="fw-bold text-success me-2">{{variable}}:</small>
+                            <small class="text-dark">{{previewContent.usedVariables[variable]}}</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Missing Variables -->
+                <div *ngIf="hasMissingVariables" class="mb-3">
+                  <div class="d-flex align-items-center mb-3">
+                    <i data-feather="alert-triangle" featherIcon class="text-warning me-2"></i>
+                    <h6 class="mb-0 fw-bold text-warning">Missing Variables ({{ previewContent.missingVariables.length }})</h6>
+                  </div>
+                  <div class="row g-2 mb-3">
+                    <div class="col-auto" *ngFor="let variable of previewContent.missingVariables">
+                      <div class="card border-warning border-opacity-25 bg-warning bg-opacity-10">
+                        <div class="card-body px-3 py-2">
+                          <div class="d-flex align-items-center">
+                            <i data-feather="help-circle" featherIcon class="text-warning me-2" style="width: 14px; height: 14px;"></i>
+                            <small class="fw-bold text-warning">{{variable}}</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="alert alert-warning border-0 bg-warning bg-opacity-10">
+                    <div class="d-flex align-items-start">
+                      <i data-feather="info" featherIcon class="text-warning me-2 mt-1" style="width: 16px; height: 16px;"></i>
+                      <div>
+                        <strong>Action Required:</strong> These variables are referenced in your template but haven't been defined yet.<br>
+                        <small>Create them in the Variables tab or remove them from the template content.</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Variable Helper Sidebar -->
+        <div class="col-lg-4" *ngIf="showVariableHelper">
+          <div class="card  h-100">
+            <div class="card-header bg-white">
+              <div class="d-flex align-items-center">
+                <div class="p-2 rounded-circle bg-white bg-opacity-20 me-3">
+                  <i data-feather="layers" featherIcon style="width: 20px; height: 20px;"></i>
+                </div>
+                <div>
+                  <h5 class="mb-1 fw-bold">Variable Library</h5>
+                  <p class="mb-0 opacity-75">Click to insert into template</p>
+                </div>
+              </div>
+            </div>
+            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+
+              <!-- No Variables Message -->
+              <div *ngIf="!hasVariables && Object.keys(availableVariableNames).length === 0" class="text-center py-5">
+                <div class="p-4 rounded-circle bg-light mb-3 mx-auto" style="width: fit-content;">
+                  <i data-feather="inbox" featherIcon class="text-muted" style="width: 32px; height: 32px;"></i>
+                </div>
+                <h6 class="text-muted mb-2">No Variables Available</h6>
+                <p class="text-muted mb-3 small">
+                  Create custom variables in the Variables tab to use them here.
+                </p>
+                <button class="btn btn-outline-primary btn-sm" (click)="onToggleVariableHelper()">
+                  <i data-feather="plus" featherIcon class="me-1"></i>
+                  Go to Variables
+                </button>
+              </div>
+
+              <!-- Custom Variables by Category -->
+              <div *ngFor="let category of variableCategoryKeys" class="mb-4">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="p-2 rounded bg-primary bg-opacity-10 me-2">
+                    <i data-feather="folder" featherIcon class="text-primary" style="width: 14px; height: 14px;"></i>
+                  </div>
+                  <h6 class="mb-0 fw-bold text-primary">{{ category }}</h6>
+                  <span class="badge bg-primary bg-opacity-10 text-primary ms-auto">{{ variablesByCategory[category].length }}</span>
+                </div>
+                <div class="variable-list">
+                  <div class="d-grid gap-2">
+                    <button type="button"
+                            class="btn btn-outline-primary btn-sm text-start d-flex align-items-center justify-content-between"
+                            *ngFor="let variable of variablesByCategory[category]"
+                            (click)="onInsertVariable(variable.variableName)"
+                            title="{{ variable.variableValue }}">
+                      <div class="d-flex align-items-center">
+                        <i data-feather="tag" featherIcon class="me-2" style="width: 14px; height: 14px;"></i>
+                        <code class="text-primary">{{variable.variableName}}</code>
+                      </div>
+                      <i data-feather="plus-circle" featherIcon style="width: 14px; height: 14px;"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- System Variables -->
+              <div *ngFor="let category of Object.keys(availableVariableNames)" class="mb-4">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="p-2 rounded bg-secondary bg-opacity-10 me-2">
+                    <i data-feather="cpu" featherIcon class="text-secondary" style="width: 14px; height: 14px;"></i>
+                  </div>
+                  <h6 class="mb-0 fw-bold text-secondary">{{ category }}</h6>
+                  <span class="badge bg-secondary bg-opacity-10 text-secondary ms-auto">System</span>
+                </div>
+                <div class="variable-list">
+                  <div class="d-grid gap-2">
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-sm text-start d-flex align-items-center justify-content-between"
+                            *ngFor="let variableName of availableVariableNames[category]"
+                            (click)="onInsertVariable(variableName)">
+                      <div class="d-flex align-items-center">
+                        <i data-feather="settings" featherIcon class="me-2" style="width: 14px; height: 14px;"></i>
+                        <code class="text-secondary">{{variableName}}</code>
+                      </div>
+                      <i data-feather="plus-circle" featherIcon style="width: 14px; height: 14px;"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border-top pt-3">
+                <div class="alert alert-info border-0 bg-info bg-opacity-10">
+                  <div class="d-flex align-items-start">
+                    <i data-feather="lightbulb" featherIcon class="text-info me-2 mt-1" style="width: 16px; height: 16px;"></i>
+                    <div>
+                      <strong>Pro Tip:</strong> Click any variable to insert it at your cursor position in the template.<br>
+                      <small class="text-muted">Variables will be wrapped in double braces automatically.</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </form>
+
+  </div>
+</div>

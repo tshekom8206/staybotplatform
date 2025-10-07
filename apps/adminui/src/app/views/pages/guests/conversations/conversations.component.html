@@ -1,0 +1,349 @@
+<div class="page-content">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">Active Conversations</h4>
+      <p class="text-muted mb-0">Manage ongoing guest conversations and requests</p>
+    </div>
+    <button class="btn btn-primary" (click)="refresh()" [disabled]="loading">
+      <i appFeatherIcon="refresh-cw" [class.spin]="loading"></i>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Search -->
+        <div class="col-md-3">
+          <label class="form-label">Search</label>
+          <div class="position-relative">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search guests, rooms..."
+              [(ngModel)]="searchTerm"
+              (input)="applyFilters()"
+            >
+            <i appFeatherIcon="search" class="position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+          </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="pending">Pending</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+
+        <!-- Priority Filter -->
+        <div class="col-md-2">
+          <label class="form-label">Priority</label>
+          <select class="form-select" [(ngModel)]="priorityFilter" (change)="applyFilters()">
+            <option value="all">All Priority</option>
+            <option value="urgent">Urgent</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        <!-- Room Filter -->
+        <div class="col-md-2">
+          <label class="form-label">Room</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Room number"
+            [(ngModel)]="roomFilter"
+            (input)="applyFilters()"
+          >
+        </div>
+
+        <!-- Clear Filters -->
+        <div class="col-md-3 d-flex align-items-end">
+          <button class="btn btn-outline-secondary me-2" (click)="clearFilters()">
+            <i appFeatherIcon="x-circle"></i>
+            Clear Filters
+          </button>
+          <span class="text-muted small">{{ filteredConversations.length }} of {{ conversations.length }} conversations</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="text-muted mt-3">Loading conversations...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i appFeatherIcon="alert-triangle" class="me-2"></i>
+    {{ error }}
+    <button class="btn btn-sm btn-outline-danger ms-3" (click)="refresh()">
+      Try Again
+    </button>
+  </div>
+
+  <!-- Conversations Table -->
+  <div *ngIf="!loading && !error" class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="cursor: pointer" (click)="sort('guestName')">
+                <div class="d-flex align-items-center">
+                  Guest
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'guestName' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'guestName' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th style="cursor: pointer" (click)="sort('roomNumber')">
+                <div class="d-flex align-items-center">
+                  Room
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'roomNumber' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'roomNumber' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th>Last Message</th>
+              <th style="cursor: pointer" (click)="sort('lastMessageAt')">
+                <div class="d-flex align-items-center">
+                  Time
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'lastMessageAt' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'lastMessageAt' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th style="cursor: pointer" (click)="sort('status')">
+                <div class="d-flex align-items-center">
+                  Status
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'status' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'status' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th style="cursor: pointer" (click)="sort('priority')">
+                <div class="d-flex align-items-center">
+                  Priority
+                  <i
+                    appFeatherIcon="chevron-up"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'priority' && sortDirection === 'asc'"
+                  ></i>
+                  <i
+                    appFeatherIcon="chevron-down"
+                    class="ms-1"
+                    [class.text-primary]="sortField === 'priority' && sortDirection === 'desc'"
+                  ></i>
+                </div>
+              </th>
+              <th>Unread</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let conversation of paginatedConversations">
+              <tr
+                class="conversation-row"
+                (click)="openConversation(conversation)"
+                [class.table-warning]="conversation.priority === 'urgent'"
+              >
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar-sm me-3">
+                      <div class="avatar-title rounded-circle bg-primary-subtle text-primary">
+                        {{ conversation.guestName.charAt(0).toUpperCase() }}
+                      </div>
+                    </div>
+                    <div>
+                      <h6 class="mb-1">{{ conversation.guestName }}</h6>
+                      <p class="text-muted mb-0 small">{{ conversation.phoneNumber }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark" *ngIf="conversation.roomNumber">
+                    Room {{ conversation.roomNumber }}
+                  </span>
+                  <span class="text-muted" *ngIf="!conversation.roomNumber">-</span>
+                </td>
+                <td>
+                  <div class="message-preview">
+                    {{ conversation.lastMessage }}
+                  </div>
+                </td>
+                <td>
+                  <span class="text-muted small" [ngbTooltip]="conversation.lastMessageAt | date:'medium'">
+                    {{ getTimeAgo(conversation.lastMessageAt) }}
+                  </span>
+                </td>
+                <td>
+                  <span [class]="getStatusClass(conversation.status)">
+                    {{ conversation.status }}
+                  </span>
+                </td>
+                <td>
+                  <span [class]="getPriorityClass(conversation.priority)">
+                    {{ conversation.priority | titlecase }}
+                  </span>
+                </td>
+                <td>
+                  <span
+                    class="badge bg-danger rounded-pill"
+                    *ngIf="conversation.unreadCount > 0"
+                    [ngbTooltip]="conversation.unreadCount + ' unread messages'"
+                  >
+                    {{ conversation.unreadCount }}
+                  </span>
+                  <span class="text-muted" *ngIf="conversation.unreadCount === 0">-</span>
+                </td>
+                <td>
+                  <div class="btn-group" ngbDropdown>
+                    <button
+                      class="btn btn-sm btn-outline-primary"
+                      (click)="sendQuickReply(conversation, $event)"
+                      [disabled]="conversation.status === 'Closed'"
+                      ngbTooltip="Send Quick Reply"
+                    >
+                      <i appFeatherIcon="send"></i>
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline-success"
+                      (click)="markAsResolved(conversation.conversationId, $event)"
+                      *ngIf="conversation.status !== 'Closed'"
+                      ngbTooltip="Mark as Resolved"
+                    >
+                      <i appFeatherIcon="check"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Quick Reply Row -->
+              <tr *ngIf="quickReplyConversationId === conversation.conversationId" class="bg-light">
+                <td colspan="7" class="p-3">
+                  <div class="quick-reply-container">
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="flex-grow-1">
+                        <div class="input-group">
+                          <input
+                            type="text"
+                            class="form-control"
+                            placeholder="Type your reply..."
+                            [(ngModel)]="quickReplyMessage"
+                            (keyup.enter)="submitQuickReply(conversation)"
+                            (keyup.escape)="cancelQuickReply()"
+                            #quickReplyInput
+                          >
+                          <button
+                            class="btn btn-primary"
+                            type="button"
+                            (click)="submitQuickReply(conversation)"
+                            [disabled]="!quickReplyMessage.trim() || sendingQuickReply"
+                          >
+                            <span *ngIf="!sendingQuickReply">
+                              <i appFeatherIcon="send" class="me-1"></i>
+                              Send
+                            </span>
+                            <span *ngIf="sendingQuickReply">
+                              <div class="spinner-border spinner-border-sm me-1" role="status">
+                                <span class="visually-hidden">Sending...</span>
+                              </div>
+                              Sending...
+                            </span>
+                          </button>
+                          <button
+                            class="btn btn-outline-secondary"
+                            type="button"
+                            (click)="cancelQuickReply()"
+                          >
+                            <i appFeatherIcon="x"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="text-muted small mt-2">
+                      Press Enter to send, Escape to cancel
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredConversations.length === 0" class="text-center py-5">
+        <i appFeatherIcon="message-square" class="text-muted mb-3" style="font-size: 3rem;"></i>
+        <h5 class="text-muted">No conversations found</h5>
+        <p class="text-muted mb-0">
+          <span *ngIf="searchTerm || statusFilter !== 'all' || priorityFilter !== 'all' || roomFilter">
+            Try adjusting your filters to see more results.
+          </span>
+          <span *ngIf="!searchTerm && statusFilter === 'all' && priorityFilter === 'all' && !roomFilter">
+            No active conversations at the moment.
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="card-footer" *ngIf="totalPages > 1">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="text-muted small">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }} conversations
+        </div>
+        <ngb-pagination
+          [(page)]="currentPage"
+          [pageSize]="pageSize"
+          [collectionSize]="totalItems"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="onPageChange($event)"
+        ></ngb-pagination>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,435 @@
+<div class="page-content">
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+      <h4 class="mb-3 mb-md-0">Services & Amenities</h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+      <button type="button"
+              class="btn btn-primary btn-icon-text"
+              (click)="openCreateModal()"
+              [disabled]="loading">
+        <i data-feather="plus" featherIcon class="me-1"></i>
+        Add Service
+      </button>
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div class="row" *ngIf="success || error">
+    <div class="col-12">
+      <div class="alert alert-success alert-dismissible fade show" *ngIf="success">
+        <i data-feather="check-circle" featherIcon class="me-2"></i>
+        {{ success }}
+      </div>
+      <div class="alert alert-danger alert-dismissible fade show" *ngIf="error">
+        <i data-feather="alert-triangle" featherIcon class="me-2"></i>
+        {{ error }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Search Services</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i data-feather="search" featherIcon></i>
+                </span>
+                <input type="text"
+                       class="form-control"
+                       placeholder="Search by name, description, or category..."
+                       [(ngModel)]="searchTerm"
+                       (input)="applyFilters()">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Category</label>
+              <select class="form-select"
+                      [(ngModel)]="categoryFilter"
+                      (change)="applyFilters()">
+                <option value="all">All Categories</option>
+                <option *ngFor="let category of uniqueCategories" [value]="category">
+                  {{ getCategoryLabel(category) }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Availability</label>
+              <select class="form-select"
+                      [(ngModel)]="availabilityFilter"
+                      (change)="applyFilters()">
+                <option value="all">All Services</option>
+                <option value="available">Available Only</option>
+                <option value="unavailable">Unavailable Only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="row" *ngIf="loading">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="text-muted mt-2">Loading services...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Services Grid -->
+  <div class="row" *ngIf="!loading">
+    <div class="col-12" *ngIf="filteredServices.length === 0">
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <i data-feather="package" featherIcon class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+          <h5 class="text-muted">No services found</h5>
+          <p class="text-muted">
+            <span *ngIf="services.length === 0">Get started by adding your first service.</span>
+            <span *ngIf="services.length > 0">Try adjusting your search criteria.</span>
+          </p>
+          <button type="button"
+                  class="btn btn-primary"
+                  (click)="openCreateModal()"
+                  *ngIf="services.length === 0">
+            <i data-feather="plus" featherIcon class="me-1"></i>
+            Add Your First Service
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 col-xl-4 mb-4" *ngFor="let service of filteredServices">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-start">
+          <div class="d-flex align-items-center">
+            <i [attr.data-feather]="service.icon || 'package'" featherIcon class="me-2"></i>
+            <div>
+              <h6 class="card-title mb-0">{{ service.name }}</h6>
+              <small class="text-muted">{{ getCategoryLabel(service.category) }}</small>
+            </div>
+          </div>
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                    type="button"
+                    data-bs-toggle="dropdown">
+              <i data-feather="more-horizontal" featherIcon></i>
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <button class="dropdown-item" (click)="openEditModal(service)">
+                  <i data-feather="edit" featherIcon class="me-2"></i>
+                  Edit
+                </button>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <button class="dropdown-item text-danger" (click)="deleteService(service)">
+                  <i data-feather="trash-2" featherIcon class="me-2"></i>
+                  Delete
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <p class="card-text text-muted small" *ngIf="service.description">
+            {{ service.description }}
+          </p>
+
+          <div class="row g-2 small">
+            <div class="col-6">
+              <strong>Status:</strong>
+              <span [class]="service.isAvailable ? 'text-success' : 'text-danger'">
+                {{ service.isAvailable ? 'Available' : 'Unavailable' }}
+              </span>
+            </div>
+            <div class="col-6" *ngIf="service.isChargeable">
+              <strong>Price:</strong>
+              {{ service.price | currency:service.currency:'symbol':'1.2-2' }}
+              <span *ngIf="service.pricingUnit"> {{ service.pricingUnit }}</span>
+            </div>
+            <div class="col-6" *ngIf="!service.isChargeable">
+              <strong>Pricing:</strong>
+              <span class="text-success">Free</span>
+            </div>
+            <div class="col-6" *ngIf="service.availableHours">
+              <strong>Hours:</strong>
+              {{ service.availableHours }}
+            </div>
+            <div class="col-6" *ngIf="service.contactMethod">
+              <strong>Contact:</strong>
+              {{ service.contactMethod }}
+            </div>
+            <div class="col-6" *ngIf="service.contactInfo">
+              <strong>Info:</strong>
+              {{ service.contactInfo }}
+            </div>
+            <div class="col-12" *ngIf="service.requiresAdvanceBooking">
+              <small class="text-warning">
+                <i data-feather="clock" featherIcon class="me-1" style="width: 14px; height: 14px;"></i>
+                Requires {{ service.advanceBookingHours }}h advance booking
+              </small>
+            </div>
+          </div>
+
+          <div class="mt-2" *ngIf="service.specialInstructions">
+            <small class="text-info">
+              <i data-feather="info" featherIcon class="me-1" style="width: 14px; height: 14px;"></i>
+              {{ service.specialInstructions }}
+            </small>
+          </div>
+        </div>
+
+        <div class="card-footer bg-transparent">
+          <small class="text-muted">
+            Priority: {{ service.priority }}
+            <span class="float-end">
+              Updated {{ service.updatedAt | date:'short' }}
+            </span>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Service Modal -->
+<ng-template #serviceModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ isEditMode ? 'Edit Service' : 'Add New Service' }}</h4>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <form [formGroup]="serviceForm" (ngSubmit)="saveService()">
+    <div class="modal-body">
+      <div class="row g-3">
+
+        <!-- Basic Information -->
+        <div class="col-12">
+          <h6 class="text-primary">Basic Information</h6>
+        </div>
+
+        <div class="col-md-8">
+          <label class="form-label">Service Name *</label>
+          <input type="text"
+                 class="form-control"
+                 formControlName="name"
+                 placeholder="Enter service name"
+                 [class.is-invalid]="serviceForm.get('name')?.invalid && serviceForm.get('name')?.touched">
+          <div class="invalid-feedback">
+            <div *ngIf="serviceForm.get('name')?.errors?.['required']">Service name is required</div>
+            <div *ngIf="serviceForm.get('name')?.errors?.['maxlength']">Name must be less than 100 characters</div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Category *</label>
+          <select class="form-select"
+                  formControlName="category"
+                  [class.is-invalid]="serviceForm.get('category')?.invalid && serviceForm.get('category')?.touched">
+            <option value="">Select category...</option>
+            <option *ngFor="let category of serviceCategories" [value]="category.value">
+              {{ category.label }}
+            </option>
+          </select>
+          <div class="invalid-feedback">Category is required</div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Description</label>
+          <textarea class="form-control"
+                    formControlName="description"
+                    rows="3"
+                    placeholder="Describe the service..."
+                    [class.is-invalid]="serviceForm.get('description')?.invalid && serviceForm.get('description')?.touched"></textarea>
+          <div class="invalid-feedback">
+            <div *ngIf="serviceForm.get('description')?.errors?.['maxlength']">Description must be less than 500 characters</div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Icon</label>
+          <select class="form-select" formControlName="icon">
+            <option value="">No icon</option>
+            <option *ngFor="let icon of serviceIcons" [value]="icon.name">
+              {{ icon.label || icon.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Priority</label>
+          <input type="number"
+                 class="form-control"
+                 formControlName="priority"
+                 min="0"
+                 placeholder="0"
+                 [class.is-invalid]="serviceForm.get('priority')?.invalid && serviceForm.get('priority')?.touched">
+          <small class="text-muted">Lower numbers appear first</small>
+          <div class="invalid-feedback">Priority must be 0 or higher</div>
+        </div>
+
+        <!-- Availability & Pricing -->
+        <div class="col-12 mt-4">
+          <h6 class="text-primary">Availability & Pricing</h6>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" formControlName="isAvailable">
+            <label class="form-check-label">Service is available</label>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" formControlName="isChargeable">
+            <label class="form-check-label">This service has a charge</label>
+          </div>
+        </div>
+
+        <div class="col-md-4" *ngIf="serviceForm.get('isChargeable')?.value">
+          <label class="form-label">Price *</label>
+          <input type="number"
+                 class="form-control"
+                 formControlName="price"
+                 min="0"
+                 step="0.01"
+                 placeholder="0.00"
+                 [class.is-invalid]="serviceForm.get('price')?.invalid && serviceForm.get('price')?.touched">
+          <div class="invalid-feedback">
+            <div *ngIf="serviceForm.get('price')?.errors?.['required']">Price is required</div>
+            <div *ngIf="serviceForm.get('price')?.errors?.['min']">Price must be 0 or higher</div>
+          </div>
+        </div>
+
+        <div class="col-md-4" *ngIf="serviceForm.get('isChargeable')?.value">
+          <label class="form-label">Currency *</label>
+          <select class="form-select"
+                  formControlName="currency"
+                  [class.is-invalid]="serviceForm.get('currency')?.invalid && serviceForm.get('currency')?.touched">
+            <option *ngFor="let currency of currencies" [value]="currency.code">
+              {{ currency.code }} - {{ currency.name }}
+            </option>
+          </select>
+          <div class="invalid-feedback">Currency is required</div>
+        </div>
+
+        <div class="col-md-4" *ngIf="serviceForm.get('isChargeable')?.value">
+          <label class="form-label">Pricing Unit *</label>
+          <select class="form-select"
+                  formControlName="pricingUnit"
+                  [class.is-invalid]="serviceForm.get('pricingUnit')?.invalid && serviceForm.get('pricingUnit')?.touched">
+            <option value="">Select unit...</option>
+            <option *ngFor="let unit of pricingUnits" [value]="unit">{{ unit }}</option>
+          </select>
+          <div class="invalid-feedback">Pricing unit is required</div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Available Hours</label>
+          <input type="text"
+                 class="form-control"
+                 formControlName="availableHours"
+                 placeholder="e.g., 24/7, 8:00-20:00, Mon-Fri 9-17">
+          <small class="text-muted">When this service is available</small>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" formControlName="requiresAdvanceBooking">
+            <label class="form-check-label">Requires advance booking</label>
+          </div>
+          <div class="mt-2" *ngIf="serviceForm.get('requiresAdvanceBooking')?.value">
+            <input type="number"
+                   class="form-control"
+                   formControlName="advanceBookingHours"
+                   min="1"
+                   placeholder="Hours required"
+                   [class.is-invalid]="serviceForm.get('advanceBookingHours')?.invalid && serviceForm.get('advanceBookingHours')?.touched">
+            <div class="invalid-feedback">
+              <div *ngIf="serviceForm.get('advanceBookingHours')?.errors?.['required']">Advance booking hours required</div>
+              <div *ngIf="serviceForm.get('advanceBookingHours')?.errors?.['min']">Must be at least 1 hour</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="col-12 mt-4">
+          <h6 class="text-primary">Contact Information</h6>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Contact Method</label>
+          <select class="form-select" formControlName="contactMethod">
+            <option value="">Select method...</option>
+            <option *ngFor="let method of contactMethods" [value]="method">{{ method }}</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Contact Information</label>
+          <input type="text"
+                 class="form-control"
+                 formControlName="contactInfo"
+                 placeholder="Phone, extension, email, etc.">
+        </div>
+
+        <!-- Additional Information -->
+        <div class="col-12 mt-4">
+          <h6 class="text-primary">Additional Information</h6>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Special Instructions</label>
+          <textarea class="form-control"
+                    formControlName="specialInstructions"
+                    rows="3"
+                    placeholder="Any special instructions for guests or staff..."
+                    [class.is-invalid]="serviceForm.get('specialInstructions')?.invalid && serviceForm.get('specialInstructions')?.touched"></textarea>
+          <div class="invalid-feedback">
+            <div *ngIf="serviceForm.get('specialInstructions')?.errors?.['maxlength']">Instructions must be less than 1000 characters</div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Image URL</label>
+          <input type="url"
+                 class="form-control"
+                 formControlName="imageUrl"
+                 placeholder="https://example.com/image.jpg"
+                 [class.is-invalid]="serviceForm.get('imageUrl')?.invalid && serviceForm.get('imageUrl')?.touched">
+          <div class="invalid-feedback">
+            <div *ngIf="serviceForm.get('imageUrl')?.errors?.['maxlength']">URL must be less than 200 characters</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit"
+              class="btn btn-primary"
+              [disabled]="serviceForm.invalid || saving">
+        <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+        {{ saving ? 'Saving...' : (isEditMode ? 'Update Service' : 'Create Service') }}
+      </button>
+    </div>
+  </form>
+</ng-template>

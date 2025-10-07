@@ -1,0 +1,308 @@
+// Emergency Management Component Styles
+
+.feather-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+
+  &-sm {
+    width: 14px;
+    height: 14px;
+  }
+
+  &-xl {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+.icon-shape {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+
+  &-primary {
+    background-color: var(--bs-primary);
+  }
+
+  &-success {
+    background-color: var(--bs-success);
+  }
+
+  &-info {
+    background-color: var(--bs-info);
+  }
+
+  &-warning {
+    background-color: var(--bs-warning);
+  }
+
+  &-danger {
+    background-color: var(--bs-danger);
+  }
+
+  &-secondary {
+    background-color: var(--bs-secondary);
+  }
+}
+
+.card {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  }
+
+  .card-title {
+    font-weight: 600;
+    color: var(--bs-dark);
+  }
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  &.bg-light {
+    color: var(--bs-dark) !important;
+  }
+}
+
+.btn {
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.15s ease-in-out;
+
+  .feather-icon {
+    margin-right: 4px;
+  }
+
+  &-outline-primary:hover,
+  &-outline-success:hover,
+  &-outline-danger:hover,
+  &-outline-secondary:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.form-control {
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+  &:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+  }
+
+  &.is-invalid {
+    border-color: var(--bs-danger);
+  }
+}
+
+.form-select {
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+
+  &:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+  }
+
+  &.is-invalid {
+    border-color: var(--bs-danger);
+  }
+}
+
+.form-check-input {
+  border-radius: 4px;
+
+  &:focus {
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+  }
+}
+
+.input-group {
+  .input-group-text {
+    background-color: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-left: none;
+  }
+
+  .form-control {
+    border-right: none;
+
+    &:focus + .input-group-text {
+      border-color: var(--bs-primary);
+    }
+  }
+}
+
+// Statistics card specific styles
+.h6.text-gray-400 {
+  color: #9ca3af !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fw-extrabold {
+  font-weight: 800 !important;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+// Modal styles
+.modal-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  background-color: #f8f9fa;
+
+  .modal-title {
+    font-weight: 600;
+    color: var(--bs-dark);
+  }
+}
+
+.modal-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.125);
+  background-color: #f8f9fa;
+}
+
+// Empty state styles
+.text-muted {
+  color: #6b7280 !important;
+}
+
+// Loading spinner
+.spinner-border {
+  &.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .d-flex.gap-2 {
+    flex-direction: column;
+
+    .btn {
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .fw-extrabold {
+    font-size: 1.5rem;
+  }
+}
+
+// Alert styles
+ngb-alert {
+  border-radius: 8px;
+  border: none;
+
+  &[type="success"] {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #15803d;
+  }
+
+  &[type="danger"] {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+  }
+
+  &[type="warning"] {
+    background-color: rgba(251, 191, 36, 0.1);
+    color: #d97706;
+  }
+
+  &[type="info"] {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+  }
+}
+
+// Dropdown menu styles
+.dropdown-menu {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+
+  .dropdown-item {
+    border-radius: 4px;
+    margin: 2px 4px;
+    transition: all 0.15s ease-in-out;
+
+    &:hover {
+      background-color: var(--bs-primary);
+      color: white;
+    }
+
+    &:active {
+      background-color: var(--bs-primary);
+      color: white;
+    }
+  }
+}
+
+// Badge close button styles
+.badge .btn-close {
+  font-size: 0.6rem;
+  padding: 0;
+  margin: 0;
+  margin-left: 0.25rem;
+  opacity: 0.8;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Severity level specific badge colors
+.badge {
+  &.bg-critical {
+    background-color: #dc2626 !important;
+    color: white;
+  }
+
+  &.bg-high {
+    background-color: #f59e0b !important;
+    color: white;
+  }
+
+  &.bg-medium {
+    background-color: #3b82f6 !important;
+    color: white;
+  }
+
+  &.bg-low {
+    background-color: #6b7280 !important;
+    color: white;
+  }
+}
+
+// Contact link styles
+a.text-decoration-none {
+  color: var(--bs-primary);
+  transition: color 0.15s ease-in-out;
+
+  &:hover {
+    color: var(--bs-primary);
+    text-decoration: underline !important;
+  }
+}

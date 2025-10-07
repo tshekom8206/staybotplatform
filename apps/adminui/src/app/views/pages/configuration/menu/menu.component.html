@@ -1,0 +1,613 @@
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="page-title mb-0">Menu Management</h4>
+      <p class="text-muted mb-0">Manage your restaurant menu categories, items, and specials</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-primary" (click)="loadData()" [disabled]="loading">
+        <i [appFeatherIcon]="'refresh-cw'" class="feather-icon"></i>
+        Refresh
+      </button>
+      <div class="btn-group" *ngIf="viewMode === 'categories'">
+        <button type="button" class="btn btn-primary" (click)="openCreateCategoryModal()">
+          <i [appFeatherIcon]="'plus'" class="feather-icon"></i>
+          Add Category
+        </button>
+      </div>
+      <div class="btn-group" *ngIf="viewMode === 'items'">
+        <button type="button" class="btn btn-primary" (click)="openCreateItemModal()">
+          <i [appFeatherIcon]="'plus'" class="feather-icon"></i>
+          Add Item
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Messages -->
+  <div class="row" *ngIf="error || success">
+    <div class="col-12">
+      <div class="alert alert-danger alert-dismissible fade show" *ngIf="error">
+        <i [appFeatherIcon]="'alert-circle'" class="feather-icon me-2"></i>
+        {{ error }}
+        <button type="button" class="btn-close" (click)="error = null"></button>
+      </div>
+      <div class="alert alert-success alert-dismissible fade show" *ngIf="success">
+        <i [appFeatherIcon]="'check-circle'" class="feather-icon me-2"></i>
+        {{ success }}
+        <button type="button" class="btn-close" (click)="success = null"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="row mb-4" *ngIf="stats">
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-primary bg-opacity-10 rounded-circle mx-auto mb-2">
+            <i [appFeatherIcon]="'folder'" class="feather-icon text-primary"></i>
+          </div>
+          <h5 class="mb-1 text-primary">{{ stats.totalCategories || 0 }}</h5>
+          <small class="text-muted">Categories</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-info bg-opacity-10 rounded-circle mx-auto mb-2">
+            <i [appFeatherIcon]="'coffee'" class="feather-icon text-info"></i>
+          </div>
+          <h5 class="mb-1 text-info">{{ stats.totalItems || 0 }}</h5>
+          <small class="text-muted">Menu Items</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-warning bg-opacity-10 rounded-circle mx-auto mb-2">
+            <i [appFeatherIcon]="'star'" class="feather-icon text-warning"></i>
+          </div>
+          <h5 class="mb-1 text-warning">{{ stats.totalSpecials || 0 }}</h5>
+          <small class="text-muted">Specials</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-success bg-opacity-10 rounded-circle mx-auto mb-2">
+            <i [appFeatherIcon]="'dollar-sign'" class="feather-icon text-success"></i>
+          </div>
+          <h5 class="mb-1 text-success">{{ stats.currency || 'ZAR' }} {{ (stats.averagePrice || 0).toFixed(2) }}</h5>
+          <small class="text-muted">Avg Price</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-secondary bg-opacity-10 rounded-circle mx-auto mb-2">
+            <i [appFeatherIcon]="'trending-up'" class="feather-icon text-secondary"></i>
+          </div>
+          <h5 class="mb-1 text-secondary">{{ stats.currency || 'ZAR' }} {{ (stats.maxPrice || 0).toFixed(2) }}</h5>
+          <small class="text-muted">Max Price</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <div class="stats-icon bg-danger bg-opacity-10 rounded-circle mx-auto mb-2">
+            <i [appFeatherIcon]="'trending-down'" class="feather-icon text-danger"></i>
+          </div>
+          <h5 class="mb-1 text-danger">{{ stats.currency || 'ZAR' }} {{ (stats.minPrice || 0).toFixed(2) }}</h5>
+          <small class="text-muted">Min Price</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter/Tab Navigation -->
+  <div class="card mb-3">
+    <div class="card-body py-2">
+      <div class="d-flex align-items-center justify-content-between flex-wrap">
+        <ul class="nav nav-pills mb-0">
+          <li class="nav-item">
+            <button class="nav-link btn btn-sm" [class.active]="viewMode === 'categories'"
+                    (click)="setViewMode('categories')">
+              <i [appFeatherIcon]="'folder'" class="feather-icon me-1"></i>
+              Categories ({{ categories.length }})
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link btn btn-sm" [class.active]="viewMode === 'items'"
+                    (click)="setViewMode('items')">
+              <i [appFeatherIcon]="'coffee'" class="feather-icon me-1"></i>
+              Menu Items ({{ items.length }})
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link btn btn-sm" [class.active]="viewMode === 'specials'"
+                    (click)="setViewMode('specials')">
+              <i [appFeatherIcon]="'star'" class="feather-icon me-1"></i>
+              Specials ({{ specials.length }})
+            </button>
+          </li>
+        </ul>
+        <div class="d-flex gap-2 flex-wrap">
+          <input type="text" class="form-control form-control-sm" placeholder="Search..."
+                 [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()" style="min-width: 150px;">
+          <select class="form-select form-select-sm" [(ngModel)]="mealTypeFilter" (ngModelChange)="applyFilters()">
+            <option value="all">All Meals</option>
+            <option *ngFor="let type of mealTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+          <select class="form-select form-select-sm" [(ngModel)]="categoryFilter" (ngModelChange)="applyFilters()"
+                  *ngIf="viewMode === 'items'">
+            <option value="all">All Categories</option>
+            <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
+          </select>
+          <select class="form-select form-select-sm" [(ngModel)]="dietaryFilter" (ngModelChange)="applyFilters()"
+                  *ngIf="viewMode === 'items'">
+            <option value="all">All Items</option>
+            <option value="vegetarian">Vegetarian</option>
+            <option value="vegan">Vegan</option>
+            <option value="glutenFree">Gluten-Free</option>
+            <option value="spicy">Spicy</option>
+          </select>
+          <select class="form-select form-select-sm" [(ngModel)]="availabilityFilter" (ngModelChange)="applyFilters()"
+                  *ngIf="viewMode === 'items'">
+            <option value="all">All Items</option>
+            <option value="available">Available</option>
+            <option value="unavailable">Unavailable</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="row" *ngIf="loading">
+    <div class="col-12 text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="text-muted mt-2">Loading menu data...</p>
+    </div>
+  </div>
+
+  <!-- Categories View -->
+  <div class="row g-3" *ngIf="viewMode === 'categories' && !loading">
+    <div class="col-lg-6 col-xl-4 mb-3" *ngFor="let category of filteredData; trackBy: trackById">
+      <div class="card menu-item-card h-100" [class.border-success]="category.isActive">
+        <div class="card-header border-0 pb-0">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1 me-2">
+              <h6 class="card-title mb-1 text-truncate">{{ category.name }}</h6>
+              <small class="text-muted">{{ getMealTypeLabel(category.mealType) }}</small>
+            </div>
+            <div class="task-badges">
+              <span class="badge" [class.bg-success]="category.isActive" [class.bg-secondary]="!category.isActive">
+                {{ category.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pt-2">
+          <p class="text-muted small mb-2" *ngIf="category.description">{{ category.description }}</p>
+          <div class="row g-2 small">
+            <div class="col-6">
+              <strong>Items:</strong> {{ category.itemCount || 0 }}
+            </div>
+            <div class="col-6">
+              <strong>Order:</strong> {{ category.displayOrder }}
+            </div>
+          </div>
+          <div class="mt-3 d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1"
+                    (click)="openEditCategoryModal(category)">
+              <i [appFeatherIcon]="'edit-2'" class="feather-icon"></i>
+              Edit
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    (click)="deleteCategory(category)">
+              <i [appFeatherIcon]="'trash-2'" class="feather-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu Items View -->
+  <div class="row g-3" *ngIf="viewMode === 'items' && !loading">
+    <div class="col-lg-6 col-xl-4 mb-3" *ngFor="let item of filteredData; trackBy: trackById">
+      <div class="card menu-item-card h-100" [class.border-warning]="item.isSpecial" [class.border-success]="item.isAvailable && !item.isSpecial">
+        <div class="card-header border-0 pb-0">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1 me-2">
+              <h6 class="card-title mb-1 text-truncate">{{ item.name }}</h6>
+              <small class="text-muted">{{ getCategoryName(item.menuCategoryId) }}</small>
+            </div>
+            <div class="task-badges d-flex flex-column align-items-end gap-1">
+              <span class="badge bg-primary">{{ item.formattedPrice }}</span>
+              <span class="badge" [class.bg-success]="item.isAvailable" [class.bg-secondary]="!item.isAvailable">
+                {{ item.isAvailable ? 'Available' : 'Unavailable' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pt-2">
+          <p class="text-muted small mb-2">{{ item.description }}</p>
+          <div class="mb-2" *ngIf="getDietaryBadges(item).length > 0">
+            <span class="badge bg-light text-dark me-1" *ngFor="let badge of getDietaryBadges(item)">{{ badge }}</span>
+          </div>
+          <div class="row g-2 small">
+            <div class="col-6">
+              <strong>Meal:</strong> {{ getMealTypeLabel(item.mealType) }}
+            </div>
+            <div class="col-6" *ngIf="item.allergens">
+              <strong>Allergens:</strong> {{ item.allergens }}
+            </div>
+          </div>
+          <div class="mt-2" *ngIf="item.tags && item.tags.length > 0">
+            <small class="text-muted d-block mb-1">Tags:</small>
+            <span class="badge bg-light text-dark me-1" *ngFor="let tag of item.tags">{{ tag }}</span>
+          </div>
+          <div class="mt-3 d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1"
+                    (click)="openEditItemModal(item)">
+              <i [appFeatherIcon]="'edit-2'" class="feather-icon"></i>
+              Edit
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    (click)="deleteItem(item)">
+              <i [appFeatherIcon]="'trash-2'" class="feather-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Specials View -->
+  <div class="row g-3" *ngIf="viewMode === 'specials' && !loading">
+    <div class="col-lg-6 col-xl-4 mb-3" *ngFor="let special of filteredData; trackBy: trackById">
+      <div class="card menu-item-card h-100" [class.border-warning]="special.isActive">
+        <div class="card-header border-0 pb-0">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1 me-2">
+              <h6 class="card-title mb-1 text-truncate">{{ special.title }}</h6>
+              <small class="text-muted">{{ special.specialType | titlecase }} Special</small>
+            </div>
+            <div class="task-badges">
+              <span class="badge" [class.bg-warning]="special.isActive" [class.bg-secondary]="!special.isActive">
+                {{ special.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pt-2">
+          <p class="text-muted small mb-2">{{ special.description }}</p>
+          <div class="row g-2 small">
+            <div class="col-6">
+              <strong>Meal:</strong> {{ getMealTypeLabel(special.mealType) }}
+            </div>
+            <div class="col-6" *ngIf="special.formattedSpecialPrice">
+              <strong>Price:</strong> {{ special.formattedSpecialPrice }}
+            </div>
+            <div class="col-12" *ngIf="special.validFrom || special.validTo">
+              <strong>Valid:</strong>
+              {{ special.validFrom }} <span *ngIf="special.validTo">to {{ special.validTo }}</span>
+            </div>
+          </div>
+          <div class="mt-3 d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1"
+                    (click)="openEditSpecialModal(special)">
+              <i [appFeatherIcon]="'edit-2'" class="feather-icon"></i>
+              Edit
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    (click)="deleteSpecial(special)">
+              <i [appFeatherIcon]="'trash-2'" class="feather-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="row" *ngIf="!loading && filteredData.length === 0">
+    <div class="col-12 text-center py-5">
+      <div class="text-muted">
+        <i [appFeatherIcon]="viewMode === 'categories' ? 'folder' : viewMode === 'items' ? 'coffee' : 'star'"
+           class="feather-icon" style="width: 48px; height: 48px;"></i>
+        <h5 class="mt-3">No {{ viewMode }} found</h5>
+        <p>{{ searchTerm ? 'Try adjusting your search criteria.' : 'Get started by creating your first ' + viewMode.slice(0, -1) + '.' }}</p>
+        <button type="button" class="btn btn-primary"
+                (click)="viewMode === 'categories' ? openCreateCategoryModal() : openCreateItemModal()"
+                *ngIf="!searchTerm">
+          <i [appFeatherIcon]="'plus'" class="feather-icon me-1"></i>
+          Add {{ viewMode === 'categories' ? 'Category' : 'Menu Item' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Category Modal -->
+<ng-template #categoryModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ isEditMode ? 'Edit Category' : 'Add Category' }}</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-12">
+          <h6 class="text-primary">Category Information</h6>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Category Name *</label>
+          <input type="text" class="form-control" formControlName="name"
+                 [class.is-invalid]="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched">
+          <div class="invalid-feedback">Please enter a category name (max 100 characters).</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Display Order</label>
+          <input type="number" class="form-control" formControlName="displayOrder" min="0">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Meal Type</label>
+          <select class="form-select" formControlName="mealType">
+            <option *ngFor="let type of mealTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Status</label>
+          <div class="form-check form-switch mt-2">
+            <input class="form-check-input" type="checkbox" formControlName="isActive">
+            <label class="form-check-label">Active</label>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" formControlName="description" rows="3"
+                    placeholder="Optional description for this category"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving || categoryForm.invalid">
+        <span class="spinner-border spinner-border-sm me-2" *ngIf="saving"></span>
+        {{ saving ? 'Saving...' : (isEditMode ? 'Update Category' : 'Create Category') }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<!-- Item Modal -->
+<ng-template #itemModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ isEditMode ? 'Edit Menu Item' : 'Add Menu Item' }}</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <form [formGroup]="itemForm" (ngSubmit)="saveItem()">
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-12">
+          <h6 class="text-primary">Basic Information</h6>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Item Name *</label>
+          <input type="text" class="form-control" formControlName="name"
+                 [class.is-invalid]="itemForm.get('name')?.invalid && itemForm.get('name')?.touched">
+          <div class="invalid-feedback">Please enter an item name (max 200 characters).</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Category *</label>
+          <select class="form-select" formControlName="menuCategoryId"
+                  [class.is-invalid]="itemForm.get('menuCategoryId')?.invalid && itemForm.get('menuCategoryId')?.touched">
+            <option value="">Select Category</option>
+            <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
+          </select>
+          <div class="invalid-feedback">Please select a category.</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Description *</label>
+          <textarea class="form-control" formControlName="description" rows="3"
+                    [class.is-invalid]="itemForm.get('description')?.invalid && itemForm.get('description')?.touched"></textarea>
+          <div class="invalid-feedback">Please enter a description.</div>
+        </div>
+
+        <div class="col-12 mt-4">
+          <h6 class="text-primary">Pricing & Details</h6>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Price *</label>
+          <input type="number" class="form-control" formControlName="price" step="0.01" min="0"
+                 [class.is-invalid]="itemForm.get('price')?.invalid && itemForm.get('price')?.touched">
+          <div class="invalid-feedback">Please enter a valid price.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Currency</label>
+          <select class="form-select" formControlName="currency">
+            <option *ngFor="let currency of currencies" [value]="currency.value">{{ currency.label }}</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Meal Type</label>
+          <select class="form-select" formControlName="mealType">
+            <option *ngFor="let type of mealTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Allergens</label>
+          <input type="text" class="form-control" formControlName="allergens"
+                 placeholder="e.g., Nuts, Dairy, Gluten">
+        </div>
+
+        <div class="col-12 mt-4">
+          <h6 class="text-primary">Dietary Information</h6>
+        </div>
+        <div class="col-md-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="isVegetarian">
+            <label class="form-check-label">Vegetarian</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="isVegan">
+            <label class="form-check-label">Vegan</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="isGlutenFree">
+            <label class="form-check-label">Gluten-Free</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="isSpicy">
+            <label class="form-check-label">Spicy</label>
+          </div>
+        </div>
+
+        <div class="col-12 mt-4">
+          <h6 class="text-primary">Availability & Options</h6>
+        </div>
+        <div class="col-md-6">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" formControlName="isAvailable">
+            <label class="form-check-label">Available</label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" formControlName="isSpecial">
+            <label class="form-check-label">Featured Special</label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Tags</label>
+          <div class="d-flex flex-wrap gap-1 mb-2" *ngIf="itemForm.get('tags')?.value?.length > 0">
+            <span class="badge bg-secondary" *ngFor="let tag of itemForm.get('tags')?.value">
+              {{ tag }}
+              <button type="button" class="btn-close btn-close-white ms-1"
+                      (click)="removeTag(tag, itemForm.get('tags'))" style="font-size: 0.7em;"></button>
+            </span>
+          </div>
+          <div class="input-group">
+            <input type="text" class="form-control" #tagInput placeholder="Enter tag and press Enter"
+                   (keyup.enter)="addTag(tagInput.value, itemForm.get('tags')); tagInput.value = ''">
+            <button type="button" class="btn btn-outline-secondary"
+                    (click)="addTag(tagInput.value, itemForm.get('tags')); tagInput.value = ''">
+              Add Tag
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving || itemForm.invalid">
+        <span class="spinner-border spinner-border-sm me-2" *ngIf="saving"></span>
+        {{ saving ? 'Saving...' : (isEditMode ? 'Update Item' : 'Create Item') }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<!-- Special Modal -->
+<ng-template #specialModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ isEditMode ? 'Edit Special' : 'Add Special' }}</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <form [formGroup]="specialForm" (ngSubmit)="saveSpecial()">
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <h6 class="text-primary">Special Information</h6>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Special Title *</label>
+          <input type="text" class="form-control" formControlName="title"
+                 [class.is-invalid]="specialForm.get('title')?.invalid && specialForm.get('title')?.touched">
+          <div class="invalid-feedback">Please enter a special title (max 200 characters).</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Menu Item</label>
+          <select class="form-select" formControlName="menuItemId">
+            <option value="">No specific item</option>
+            <option *ngFor="let item of items" [value]="item.id">{{ item.name }}</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Special Type</label>
+          <select class="form-select" formControlName="specialType">
+            <option *ngFor="let type of specialTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Meal Type</label>
+          <select class="form-select" formControlName="mealType">
+            <option *ngFor="let type of mealTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Special Price</label>
+          <div class="input-group">
+            <span class="input-group-text">ZAR</span>
+            <input type="number" class="form-control" formControlName="specialPrice"
+                   min="0" step="0.01" placeholder="Optional special price">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Day of Week</label>
+          <select class="form-select" formControlName="dayOfWeek">
+            <option value="">Any day</option>
+            <option *ngFor="let day of daysOfWeek" [value]="day.value">{{ day.label }}</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Valid From</label>
+          <input type="date" class="form-control" formControlName="validFrom">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Valid To</label>
+          <input type="date" class="form-control" formControlName="validTo">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Status</label>
+          <div class="form-check form-switch mt-2">
+            <input class="form-check-input" type="checkbox" formControlName="isActive">
+            <label class="form-check-label">Active</label>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Description *</label>
+          <textarea class="form-control" formControlName="description" rows="3"
+                    [class.is-invalid]="specialForm.get('description')?.invalid && specialForm.get('description')?.touched"
+                    placeholder="Describe this special offer"></textarea>
+          <div class="invalid-feedback">Please enter a description for this special.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving || specialForm.invalid">
+        <span class="spinner-border spinner-border-sm me-2" *ngIf="saving"></span>
+        {{ saving ? 'Saving...' : (isEditMode ? 'Update Special' : 'Create Special') }}
+      </button>
+    </div>
+  </form>
+</ng-template>

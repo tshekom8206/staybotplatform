@@ -1,0 +1,431 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+  <div>
+    <h4 class="mb-3 mb-md-0">Hotel Operations Dashboard</h4>
+    <p class="text-muted mb-0" *ngIf="currentTenant">{{ currentTenant.name }}</p>
+  </div>
+  <div class="d-flex align-items-center flex-wrap text-nowrap">
+    <div class="input-group w-200px me-2 mb-2 mb-md-0">
+      <button class="btn btn-outline-primary btn-icon calendar" type="button" (click)="d.toggle()">
+        <i data-feather="calendar" appFeatherIcon></i>
+      </button>
+      <input class="form-control border-primary bg-transparent" placeholder="yyyy-mm-dd"
+          name="dp" [(ngModel)]="currentDate" ngbDatepicker #d="ngbDatepicker" (dateSelect)="onDateSelect($event)">
+    </div>
+    <div class="d-flex align-items-center me-2 mb-2 mb-md-0">
+      <span class="badge" [ngClass]="connectionState === 'Connected' ? 'bg-success' : 'bg-warning'">
+        <i data-feather="wifi" appFeatherIcon class="me-1"></i>
+        {{ connectionState === 'Connected' ? 'Live' : 'Connecting' }}
+      </span>
+    </div>
+    <button type="button" class="btn btn-outline-primary btn-icon-text me-2 mb-2 mb-md-0">
+      <i class="btn-icon-prepend" data-feather="printer" appFeatherIcon></i>
+      Print Report
+    </button>
+    <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+      <i class="btn-icon-prepend" data-feather="download-cloud" appFeatherIcon></i>
+      Export Data
+    </button>
+  </div>
+</div>
+
+
+<!-- Hotel Statistics Cards -->
+<div class="row">
+  <div class="col-md-6 col-xl-3 grid-margin stretch-card">
+    <app-stats-card
+      title="Active Guests"
+      [value]="stats.activeGuests"
+      icon="users"
+      iconClass="primary"
+      [trend]="activeGuestsTrendDirection"
+      [trendValue]="activeGuestsTrendValue"
+      trendSuffix="%"
+      [subtitle]="activeGuestsTrendValue === 0 ? 'no comparison data' : 'from last week'">
+    </app-stats-card>
+  </div>
+  <div class="col-md-6 col-xl-3 grid-margin stretch-card">
+    <app-stats-card
+      title="Pending Tasks"
+      [value]="stats.pendingTasks"
+      icon="clipboard"
+      iconClass="warning"
+      [trend]="pendingTasksTrendDirection"
+      [trendValue]="pendingTasksTrendValue"
+      trendSuffix="%"
+      [subtitle]="pendingTasksTrendValue === 0 ? 'no comparison data' : 'from last week'">
+    </app-stats-card>
+  </div>
+  <div class="col-md-6 col-xl-3 grid-margin stretch-card">
+    <app-stats-card
+      title="Today's Check-ins"
+      [value]="stats.todayCheckins"
+      icon="user-plus"
+      iconClass="success"
+      [trend]="checkinsTrendDirection"
+      [trendValue]="checkinsTrendValue"
+      trendSuffix="%"
+      [subtitle]="checkinsTrendValue === 0 ? 'no comparison data' : 'from last week'">
+    </app-stats-card>
+  </div>
+  <div class="col-md-6 col-xl-3 grid-margin stretch-card">
+    <app-stats-card
+      title="Avg Response Time"
+      [value]="stats.averageResponseTime"
+      icon="clock"
+      iconClass="info"
+      [trend]="responseTimeTrendDirection"
+      [trendValue]="responseTimeTrendValue"
+      trendSuffix="%"
+      [subtitle]="responseTimeTrendValue === 0 ? 'no comparison data' : 'from last week'">
+    </app-stats-card>
+  </div>
+</div>
+
+<!-- Emergency Alert Row -->
+<div class="row" *ngIf="stats.emergencyIncidents > 0">
+  <div class="col-12 grid-margin">
+    <div class="alert alert-danger d-flex align-items-center" role="alert">
+      <i data-feather="alert-triangle" appFeatherIcon class="me-2"></i>
+      <div>
+        <strong>Emergency Alert:</strong> {{ stats.emergencyIncidents }} active emergency incident(s) require immediate attention.
+        <a href="/broadcast/emergency" class="alert-link ms-2">View Details</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Secondary Statistics -->
+<div class="row">
+  <div class="col-md-6 col-xl-3 grid-margin stretch-card">
+    <app-stats-card
+      title="Today's Check-outs"
+      [value]="stats.todayCheckouts"
+      icon="user-minus"
+      iconClass="warning"
+      trend="neutral"
+      [trendValue]="stats.todayCheckouts"
+      trendSuffix=""
+      subtitle="departures">
+    </app-stats-card>
+  </div>
+  <div class="col-md-6 col-xl-3 grid-margin stretch-card">
+    <app-stats-card
+      title="Room Occupancy"
+      [value]="occupancyRate"
+      icon="home"
+      iconClass="primary"
+      [trend]="occupancyTrendDirection"
+      [trendValue]="occupancyTrendAbs"
+      trendSuffix="%"
+      [subtitle]="occupancyTrendAbs === 0 ? 'no comparison data' : 'vs last month'">
+    </app-stats-card>
+  </div>
+  <div class="col-md-6 col-xl-3 grid-margin stretch-card">
+    <app-stats-card
+      title="Completed Tasks"
+      [value]="completedTasksToday"
+      icon="check-circle"
+      iconClass="success"
+      [trend]="completedTasksTrendDirection"
+      [trendValue]="completedTasksTrendAbs + '%'"
+      trendSuffix=""
+      [subtitle]="completedTasksTrendAbs === 0 ? 'no comparison data' : 'vs last month'">
+    </app-stats-card>
+  </div>
+  <div class="col-md-6 col-xl-3 grid-margin stretch-card">
+    <app-stats-card
+      title="Guest Satisfaction"
+      [value]="guestSatisfactionScore"
+      icon="star"
+      iconClass="warning"
+      [trend]="guestSatisfactionTrendDirection"
+      [trendValue]="guestSatisfactionTrendAbs"
+      trendSuffix=""
+      [subtitle]="guestSatisfactionTrendAbs === 0 ? 'no comparison data' : 'vs last month'">
+    </app-stats-card>
+  </div>
+</div>
+
+<!-- Hotel Activity Tracking -->
+<div class="row">
+  <div class="col-12 col-xl-12 grid-margin stretch-card">
+    <div class="card overflow-hidden">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-4 mb-md-3">
+          <h6 class="card-title mb-0">Daily Activity Overview</h6>
+          <div ngbDropdown>
+            <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton3">
+              <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+            </a>
+            <div ngbDropdownMenu aria-labelledby="dropdownMenuButton3">
+              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false">
+                <i data-feather="eye" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">View Details</span>
+              </a>
+              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false">
+                <i data-feather="printer" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">Print Report</span>
+              </a>
+              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false">
+                <i data-feather="download" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">Export Data</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="row align-items-start">
+          <div class="col-md-7">
+            <p class="text-secondary fs-13px mb-3 mb-md-0">Track guest interactions, task completions, and staff activity throughout the day for operational insights.</p>
+          </div>
+          <div class="col-md-5 d-flex justify-content-md-end">
+            <div class="btn-group mb-3 mb-md-0" role="group" aria-label="Time period selection">
+              <button type="button" [class]="selectedActivityPeriod === 'day' ? 'btn btn-primary' : 'btn btn-outline-primary'" (click)="setActivityPeriod('day')">Today</button>
+              <button type="button" [class]="selectedActivityPeriod === 'week' ? 'btn btn-primary' : 'btn btn-outline-primary'" class="d-none d-md-block" (click)="setActivityPeriod('week')">Week</button>
+              <button type="button" [class]="selectedActivityPeriod === 'month' ? 'btn btn-primary' : 'btn btn-outline-primary'" (click)="setActivityPeriod('month')">Month</button>
+            </div>
+          </div>
+        </div>
+        <div class="flot-wrapper">
+          <apx-chart
+            *ngIf="activityChartOptions && activityChartOptions.series"
+            [series]="activityChartOptions.series"
+            [chart]="activityChartOptions.chart"
+            [colors]="activityChartOptions.colors"
+            [grid]="activityChartOptions.grid"
+            [xaxis]="activityChartOptions.xaxis"
+            [yaxis]="activityChartOptions.yaxis"
+            [markers]="activityChartOptions.markers"
+            [stroke]="activityChartOptions.stroke"
+            [legend]="activityChartOptions.legend"
+          ></apx-chart>
+          <div *ngIf="!activityChartOptions || !activityChartOptions.series" class="text-center text-muted p-4">
+            Loading chart data...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task Performance and Department Distribution -->
+<div class="row">
+  <div class="col-lg-7 col-xl-8 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-2">
+          <h6 class="card-title mb-0">Task Completion Trends</h6>
+          <div ngbDropdown class="mb-2">
+            <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton4">
+              <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+            </a>
+            <div ngbDropdownMenu aria-labelledby="dropdownMenuButton4">
+              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false">
+                <i data-feather="eye" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">View Details</span>
+              </a>
+              <a ngbDropdownItem class="d-flex align-items-center" routerLink="/tasks/all">
+                <i data-feather="clipboard" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">Manage Tasks</span>
+              </a>
+              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false">
+                <i data-feather="download" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">Export Report</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <p class="text-secondary">Track task creation vs completion rates across all departments for performance insights.</p>
+        <apx-chart
+          *ngIf="taskTrendChartOptions && taskTrendChartOptions.series"
+          [series]="taskTrendChartOptions.series"
+          [chart]="taskTrendChartOptions.chart"
+          [colors]="taskTrendChartOptions.colors"
+          [fill]="taskTrendChartOptions.fill"
+          [grid]="taskTrendChartOptions.grid"
+          [xaxis]="taskTrendChartOptions.xaxis"
+          [yaxis]="taskTrendChartOptions.yaxis"
+          [legend]="taskTrendChartOptions.legend"
+          [stroke]="taskTrendChartOptions.stroke"
+          [dataLabels]="taskTrendChartOptions.dataLabels"
+          [plotOptions]="taskTrendChartOptions.plotOptions"
+        ></apx-chart>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5 col-xl-4 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-2">
+          <h6 class="card-title mb-0">Department Task Distribution</h6>
+          <div ngbDropdown class="mb-2">
+            <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton5">
+              <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+            </a>
+            <div ngbDropdownMenu aria-labelledby="dropdownMenuButton5">
+              <a ngbDropdownItem class="d-flex align-items-center" routerLink="/tasks/housekeeping">
+                <i data-feather="home" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">Housekeeping</span>
+              </a>
+              <a ngbDropdownItem class="d-flex align-items-center" routerLink="/tasks/maintenance">
+                <i data-feather="tool" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">Maintenance</span>
+              </a>
+              <a ngbDropdownItem class="d-flex align-items-center" routerLink="/tasks/frontdesk">
+                <i data-feather="phone" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">Front Desk</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <apx-chart
+          *ngIf="departmentChartOptions && departmentChartOptions.series"
+          [series]="departmentChartOptions.series"
+          [chart]="departmentChartOptions.chart"
+          [colors]="departmentChartOptions.colors"
+          [plotOptions]="departmentChartOptions.plotOptions"
+          [fill]="departmentChartOptions.fill"
+          [stroke]="departmentChartOptions.stroke"
+          [labels]="departmentChartOptions.labels"
+          [legend]="departmentChartOptions.legend"
+        ></apx-chart>
+        <div class="row mb-3" *ngFor="let dept of departmentTasks; let i = index">
+          <div class="col-12 mb-2">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <span class="p-2 me-2 rounded-circle" [style.background-color]="dept.color"></span>
+                <span class="fs-10px text-uppercase fw-bold">{{ dept.department }}</span>
+              </div>
+              <h6 class="fw-bolder mb-0">{{ dept.count }} tasks</h6>
+            </div>
+          </div>
+        </div>
+        <div class="d-grid">
+          <button class="btn btn-primary" routerLink="/tasks/all">View All Tasks</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Activities and Quick Actions -->
+<div class="row">
+  <div class="col-lg-5 col-xl-4 grid-margin grid-margin-lg-0 stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-2">
+          <h6 class="card-title mb-0">Recent Activities</h6>
+          <div ngbDropdown class="mb-2">
+            <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton6">
+              <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+            </a>
+            <div ngbDropdownMenu aria-labelledby="dropdownMenuButton6">
+              <a ngbDropdownItem class="d-flex align-items-center" routerLink="/guests/conversations">
+                <i data-feather="message-circle" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">View All</span>
+              </a>
+              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false">
+                <i data-feather="filter" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">Filter</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex flex-column">
+          <div *ngFor="let activity of recentActivities; let isLast = last"
+               class="d-flex align-items-center"
+               [class.border-bottom]="!isLast"
+               [class.pb-3]="!isLast"
+               [class.py-3]="!isLast">
+            <div class="me-3">
+              <div class="rounded-circle d-flex align-items-center justify-content-center"
+                   [ngClass]="'bg-' + activity.color + '-light'"
+                   style="width: 35px; height: 35px;">
+                <i [appFeatherIcon]="activity.icon" [ngClass]="'text-' + activity.color"></i>
+              </div>
+            </div>
+            <div class="w-100">
+              <div class="d-flex justify-content-between">
+                <h6 class="text-body mb-2">{{ activity.title }}</h6>
+                <p class="text-secondary fs-12px">{{ activity.timestamp | date:'shortTime' }}</p>
+              </div>
+              <p class="text-secondary fs-13px">{{ activity.description }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="d-grid mt-3">
+          <button class="btn btn-outline-primary" routerLink="/guests/conversations">
+            View All Activities
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7 col-xl-8 stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-2">
+          <h6 class="card-title mb-0">Quick Actions</h6>
+          <div ngbDropdown class="mb-2">
+            <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton7">
+              <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+            </a>
+            <div ngbDropdownMenu aria-labelledby="dropdownMenuButton7">
+              <a ngbDropdownItem class="d-flex align-items-center" routerLink="/configuration/hotel-info">
+                <i data-feather="settings" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">Settings</span>
+              </a>
+              <a ngbDropdownItem class="d-flex align-items-center" routerLink="/help/docs">
+                <i data-feather="help-circle" appFeatherIcon class="icon-sm me-2"></i>
+                <span class="">Help</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-6 col-lg-4">
+            <button class="btn btn-outline-primary w-100 d-flex flex-column align-items-center p-3" routerLink="/broadcast/compose">
+              <i data-feather="send" appFeatherIcon class="mb-2" style="width: 24px; height: 24px;"></i>
+              <span class="fw-bold">Send Broadcast</span>
+              <small class="text-muted">Message all guests</small>
+            </button>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <button class="btn btn-outline-danger w-100 d-flex flex-column align-items-center p-3" routerLink="/broadcast/emergency">
+              <i data-feather="alert-triangle" appFeatherIcon class="mb-2" style="width: 24px; height: 24px;"></i>
+              <span class="fw-bold">Emergency Alert</span>
+              <small class="text-muted">Critical notifications</small>
+            </button>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <button class="btn btn-outline-success w-100 d-flex flex-column align-items-center p-3" routerLink="/tasks/all">
+              <i data-feather="clipboard" appFeatherIcon class="mb-2" style="width: 24px; height: 24px;"></i>
+              <span class="fw-bold">Manage Tasks</span>
+              <small class="text-muted">View & assign</small>
+            </button>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <button class="btn btn-outline-info w-100 d-flex flex-column align-items-center p-3" routerLink="/guests/conversations">
+              <i data-feather="message-circle" appFeatherIcon class="mb-2" style="width: 24px; height: 24px;"></i>
+              <span class="fw-bold">Guest Chat</span>
+              <small class="text-muted">Active conversations</small>
+            </button>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <button class="btn btn-outline-warning w-100 d-flex flex-column align-items-center p-3" routerLink="/users/staff">
+              <i data-feather="users" appFeatherIcon class="mb-2" style="width: 24px; height: 24px;"></i>
+              <span class="fw-bold">Staff Management</span>
+              <small class="text-muted">Users & roles</small>
+            </button>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <button class="btn btn-outline-secondary w-100 d-flex flex-column align-items-center p-3" routerLink="/reports/analytics">
+              <i data-feather="bar-chart-2" appFeatherIcon class="mb-2" style="width: 24px; height: 24px;"></i>
+              <span class="fw-bold">Analytics</span>
+              <small class="text-muted">Performance reports</small>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

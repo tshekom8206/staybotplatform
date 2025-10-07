@@ -1,0 +1,128 @@
+.page-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.075);
+}
+
+.badge {
+  font-size: 0.75rem;
+}
+
+.btn-group-sm .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.form-select {
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+}
+
+.form-select:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.alert {
+  margin-bottom: 1rem;
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+}
+
+.conversation-details {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.message-bubble {
+  max-width: 80%;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.message-bubble.guest {
+  background-color: #e9ecef;
+  margin-left: auto;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.message-bubble.bot {
+  background-color: #007bff;
+  color: white;
+  margin-right: auto;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.message-bubble.agent {
+  background-color: #28a745;
+  color: white;
+  margin-right: auto;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.message-meta {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+.transfer-info {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+}
+
+.transfer-info .icon {
+  color: #856404;
+}
+
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .btn-group-sm .btn {
+    padding: 0.125rem 0.25rem;
+    font-size: 0.65rem;
+  }
+
+  .message-bubble {
+    max-width: 95%;
+    font-size: 0.875rem;
+  }
+
+  .form-select {
+    font-size: 0.875rem;
+  }
+}

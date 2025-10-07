@@ -1,0 +1,169 @@
+// Notification bell icon animation
+.notification-ring {
+  animation: ring 2s ease-in-out infinite;
+  transform-origin: 50% 0%;
+}
+
+@keyframes ring {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  10%, 30% {
+    transform: rotate(-10deg);
+  }
+  20%, 40% {
+    transform: rotate(10deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+}
+
+// Notification count badge
+.notification-count {
+  position: absolute;
+  top: -2px;
+  right: -6px;
+  background: #dc3545; // Danger red color
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.2;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
+}
+
+// Notification item styling
+.notification-item {
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+  position: relative;
+  cursor: pointer;
+  text-decoration: none !important;
+
+  &:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    border-left-color: #007bff;
+    transform: translateX(2px);
+    text-decoration: none !important;
+
+    .fw-medium {
+      color: #007bff;
+    }
+  }
+
+  &.unread {
+    background-color: rgba(0, 123, 255, 0.08);
+    border-left-color: #007bff;
+    border-left-width: 3px;
+
+    .fw-medium {
+      font-weight: 600 !important;
+      color: #1e293b;
+    }
+
+    &:hover {
+      background-color: rgba(0, 123, 255, 0.12);
+      border-left-width: 4px;
+    }
+  }
+
+  // Fade-in animation for new notifications
+  &.new-notification {
+    animation: slideInNotification 0.4s ease-out;
+  }
+}
+
+@keyframes slideInNotification {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Notification badge indicator
+.notification-badge {
+  width: 8px;
+  height: 8px;
+  background: #007bff;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: blink 2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// Notification icon background colors
+.bg-success {
+  background-color: #28a745 !important;
+}
+
+.bg-primary {
+  background-color: #007bff !important;
+}
+
+.bg-warning {
+  background-color: #ffc107 !important;
+}
+
+.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+// Notification dropdown styling
+.nav-notifications {
+  .ngb-dropdown-menu {
+    min-width: 360px;
+    max-height: 500px;
+    overflow-y: auto;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+
+    @media (max-width: 576px) {
+      min-width: 300px;
+      max-height: 400px;
+    }
+  }
+}
+
+// Smooth scrollbar for notification list
+.ngb-dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ngb-dropdown-menu::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.ngb-dropdown-menu::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+
+  &:hover {
+    background: #555;
+  }
+}

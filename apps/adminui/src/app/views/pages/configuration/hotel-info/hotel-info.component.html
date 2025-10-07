@@ -1,0 +1,691 @@
+<div class="page-content">
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+      <h4 class="mb-3 mb-md-0">Hotel Information</h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+      <button type="button"
+              class="btn btn-outline-secondary btn-icon-text me-2"
+              (click)="resetForms()"
+              [disabled]="loading || saving">
+        <i data-feather="refresh-ccw" featherIcon></i> Reset
+      </button>
+      <button type="button"
+              class="btn btn-primary btn-icon-text"
+              (click)="saveAllForms()"
+              [disabled]="!allFormsValid || loading || saving">
+        <span *ngIf="saving" class="spinner-border spinner-border-sm me-2" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </span>
+        <i data-feather="save" featherIcon class="me-1" *ngIf="!saving"></i>
+        {{ saving ? 'Saving...' : 'Save All Changes' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div class="row" *ngIf="success || error">
+    <div class="col-12">
+      <div class="alert alert-success alert-dismissible fade show" *ngIf="success">
+        <i data-feather="check-circle" featherIcon class="me-2"></i>
+        {{ success }}
+      </div>
+      <div class="alert alert-danger alert-dismissible fade show" *ngIf="error">
+        <i data-feather="alert-triangle" featherIcon class="me-2"></i>
+        {{ error }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="row" *ngIf="loading">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="text-muted mt-2">Loading hotel information...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hotel Information Forms -->
+  <div class="row" *ngIf="!loading">
+    <!-- Basic Information -->
+    <div class="col-lg-6 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i data-feather="info" featherIcon class="me-2"></i>
+            Basic Information
+          </h6>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="hotelForm">
+
+            <!-- Hotel Name -->
+            <div class="mb-3">
+              <label for="hotelName" class="form-label">Hotel Name</label>
+              <input type="text"
+                     class="form-control"
+                     id="hotelName"
+                     formControlName="name"
+                     placeholder="Enter hotel name"
+                     [class.is-invalid]="hotelForm.get('name')?.invalid && hotelForm.get('name')?.touched">
+              <div class="invalid-feedback"
+                   *ngIf="hotelForm.get('name')?.invalid && hotelForm.get('name')?.touched">
+                <div *ngIf="hotelForm.get('name')?.errors?.['required']">Hotel name is required</div>
+                <div *ngIf="hotelForm.get('name')?.errors?.['maxlength']">Name must be less than 100 characters</div>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+              <label for="description" class="form-label">Description</label>
+              <textarea class="form-control"
+                        id="description"
+                        formControlName="description"
+                        rows="3"
+                        placeholder="Enter hotel description"
+                        [class.is-invalid]="hotelForm.get('description')?.invalid && hotelForm.get('description')?.touched"></textarea>
+              <div class="invalid-feedback"
+                   *ngIf="hotelForm.get('description')?.invalid && hotelForm.get('description')?.touched">
+                <div *ngIf="hotelForm.get('description')?.errors?.['required']">Description is required</div>
+                <div *ngIf="hotelForm.get('description')?.errors?.['maxlength']">Description must be less than 1000 characters</div>
+              </div>
+            </div>
+
+            <!-- Category -->
+            <div class="mb-3">
+              <label for="category" class="form-label">Hotel Category</label>
+              <select class="form-select"
+                      id="category"
+                      formControlName="category"
+                      [class.is-invalid]="hotelForm.get('category')?.invalid && hotelForm.get('category')?.touched">
+                <option value="">Select category...</option>
+                <option *ngFor="let cat of hotelCategories"
+                        [value]="cat.value">{{ cat.label }}</option>
+              </select>
+              <div class="invalid-feedback"
+                   *ngIf="hotelForm.get('category')?.invalid && hotelForm.get('category')?.touched">
+                Hotel category is required
+              </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="phone" class="form-label">Phone</label>
+                  <input type="tel"
+                         class="form-control"
+                         id="phone"
+                         formControlName="phone"
+                         placeholder="+1 (555) 123-4567"
+                         [class.is-invalid]="hotelForm.get('phone')?.invalid && hotelForm.get('phone')?.touched">
+                  <div class="invalid-feedback"
+                       *ngIf="hotelForm.get('phone')?.invalid && hotelForm.get('phone')?.touched">
+                    <div *ngIf="hotelForm.get('phone')?.errors?.['required']">Phone is required</div>
+                    <div *ngIf="hotelForm.get('phone')?.errors?.['pattern']">Please enter a valid phone number</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email"
+                         class="form-control"
+                         id="email"
+                         formControlName="email"
+                         placeholder="hotel@example.com"
+                         [class.is-invalid]="hotelForm.get('email')?.invalid && hotelForm.get('email')?.touched">
+                  <div class="invalid-feedback"
+                         *ngIf="hotelForm.get('email')?.invalid && hotelForm.get('email')?.touched">
+                    <div *ngIf="hotelForm.get('email')?.errors?.['required']">Email is required</div>
+                    <div *ngIf="hotelForm.get('email')?.errors?.['email']">Please enter a valid email address</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Website -->
+            <div class="mb-3">
+              <label for="website" class="form-label">Website (Optional)</label>
+              <input type="url"
+                     class="form-control"
+                     id="website"
+                     formControlName="website"
+                     placeholder="https://www.hotel.com"
+                     [class.is-invalid]="hotelForm.get('website')?.invalid && hotelForm.get('website')?.touched">
+              <div class="invalid-feedback"
+                   *ngIf="hotelForm.get('website')?.invalid && hotelForm.get('website')?.touched">
+                Please enter a valid URL starting with http:// or https://
+              </div>
+            </div>
+
+            <!-- Check-in/Check-out Times -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="checkInTime" class="form-label">Check-in Time</label>
+                  <input type="time"
+                         class="form-control"
+                         id="checkInTime"
+                         formControlName="checkInTime"
+                         [class.is-invalid]="hotelForm.get('checkInTime')?.invalid && hotelForm.get('checkInTime')?.touched">
+                  <div class="invalid-feedback"
+                       *ngIf="hotelForm.get('checkInTime')?.invalid && hotelForm.get('checkInTime')?.touched">
+                    Check-in time is required
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="checkOutTime" class="form-label">Check-out Time</label>
+                  <input type="time"
+                         class="form-control"
+                         id="checkOutTime"
+                         formControlName="checkOutTime"
+                         [class.is-invalid]="hotelForm.get('checkOutTime')?.invalid && hotelForm.get('checkOutTime')?.touched">
+                  <div class="invalid-feedback"
+                       *ngIf="hotelForm.get('checkOutTime')?.invalid && hotelForm.get('checkOutTime')?.touched">
+                    Check-out time is required
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Property Details -->
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="numberOfRooms" class="form-label">Number of Rooms</label>
+                  <input type="number"
+                         class="form-control"
+                         id="numberOfRooms"
+                         formControlName="numberOfRooms"
+                         min="1"
+                         [class.is-invalid]="hotelForm.get('numberOfRooms')?.invalid && hotelForm.get('numberOfRooms')?.touched">
+                  <div class="invalid-feedback"
+                       *ngIf="hotelForm.get('numberOfRooms')?.invalid && hotelForm.get('numberOfRooms')?.touched">
+                    <div *ngIf="hotelForm.get('numberOfRooms')?.errors?.['required']">Number of rooms is required</div>
+                    <div *ngIf="hotelForm.get('numberOfRooms')?.errors?.['min']">Must be at least 1 room</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="numberOfFloors" class="form-label">Number of Floors</label>
+                  <input type="number"
+                         class="form-control"
+                         id="numberOfFloors"
+                         formControlName="numberOfFloors"
+                         min="1"
+                         [class.is-invalid]="hotelForm.get('numberOfFloors')?.invalid && hotelForm.get('numberOfFloors')?.touched">
+                  <div class="invalid-feedback"
+                       *ngIf="hotelForm.get('numberOfFloors')?.invalid && hotelForm.get('numberOfFloors')?.touched">
+                    <div *ngIf="hotelForm.get('numberOfFloors')?.errors?.['required']">Number of floors is required</div>
+                    <div *ngIf="hotelForm.get('numberOfFloors')?.errors?.['min']">Must be at least 1 floor</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="establishedYear" class="form-label">Established Year</label>
+                  <input type="number"
+                         class="form-control"
+                         id="establishedYear"
+                         formControlName="establishedYear"
+                         min="1800"
+                         [max]="currentYear"
+                         [class.is-invalid]="hotelForm.get('establishedYear')?.invalid && hotelForm.get('establishedYear')?.touched">
+                  <div class="invalid-feedback"
+                       *ngIf="hotelForm.get('establishedYear')?.invalid && hotelForm.get('establishedYear')?.touched">
+                    Please enter a valid year
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Default Language -->
+            <div class="mb-3">
+              <label for="defaultLanguage" class="form-label">Default Language</label>
+              <select class="form-select"
+                      id="defaultLanguage"
+                      formControlName="defaultLanguage"
+                      [class.is-invalid]="hotelForm.get('defaultLanguage')?.invalid && hotelForm.get('defaultLanguage')?.touched">
+                <option *ngFor="let lang of availableLanguages"
+                        [value]="lang.code">{{ lang.name }}</option>
+              </select>
+              <div class="invalid-feedback"
+                   *ngIf="hotelForm.get('defaultLanguage')?.invalid && hotelForm.get('defaultLanguage')?.touched">
+                Default language is required
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Address Information -->
+    <div class="col-lg-6 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i data-feather="map-pin" featherIcon class="me-2"></i>
+            Address Information
+          </h6>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="addressForm">
+
+            <!-- Street Address -->
+            <div class="mb-3">
+              <label for="street" class="form-label">Street Address</label>
+              <input type="text"
+                     class="form-control"
+                     id="street"
+                     formControlName="street"
+                     placeholder="123 Main Street"
+                     [class.is-invalid]="addressForm.get('street')?.invalid && addressForm.get('street')?.touched">
+              <div class="invalid-feedback"
+                   *ngIf="addressForm.get('street')?.invalid && addressForm.get('street')?.touched">
+                <div *ngIf="addressForm.get('street')?.errors?.['required']">Street address is required</div>
+              </div>
+            </div>
+
+            <!-- City -->
+            <div class="mb-3">
+              <label for="city" class="form-label">City</label>
+              <input type="text"
+                     class="form-control"
+                     id="city"
+                     formControlName="city"
+                     placeholder="City"
+                     [class.is-invalid]="addressForm.get('city')?.invalid && addressForm.get('city')?.touched">
+              <div class="invalid-feedback"
+                   *ngIf="addressForm.get('city')?.invalid && addressForm.get('city')?.touched">
+                City is required
+              </div>
+            </div>
+
+            <!-- State and Postal Code -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="state" class="form-label">State/Province</label>
+                  <input type="text"
+                         class="form-control"
+                         id="state"
+                         formControlName="state"
+                         placeholder="State"
+                         [class.is-invalid]="addressForm.get('state')?.invalid && addressForm.get('state')?.touched">
+                  <div class="invalid-feedback"
+                       *ngIf="addressForm.get('state')?.invalid && addressForm.get('state')?.touched">
+                    State is required
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="postalCode" class="form-label">Postal Code</label>
+                  <input type="text"
+                         class="form-control"
+                         id="postalCode"
+                         formControlName="postalCode"
+                         placeholder="12345"
+                         [class.is-invalid]="addressForm.get('postalCode')?.invalid && addressForm.get('postalCode')?.touched">
+                  <div class="invalid-feedback"
+                       *ngIf="addressForm.get('postalCode')?.invalid && addressForm.get('postalCode')?.touched">
+                    Postal code is required
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Country -->
+            <div class="mb-3">
+              <label for="country" class="form-label">Country</label>
+              <input type="text"
+                     class="form-control"
+                     id="country"
+                     formControlName="country"
+                     placeholder="Country"
+                     [class.is-invalid]="addressForm.get('country')?.invalid && addressForm.get('country')?.touched">
+              <div class="invalid-feedback"
+                   *ngIf="addressForm.get('country')?.invalid && addressForm.get('country')?.touched">
+                Country is required
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Language & Features -->
+    <div class="col-lg-6 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i data-feather="globe" featherIcon class="me-2"></i>
+            Languages & Features
+          </h6>
+        </div>
+        <div class="card-body">
+
+          <!-- Supported Languages -->
+          <div class="mb-3">
+            <label class="form-label">Supported Languages</label>
+            <div class="row">
+              <div class="col-md-6" *ngFor="let language of availableLanguages">
+                <div class="form-check">
+                  <input class="form-check-input"
+                         type="checkbox"
+                         [id]="'lang-' + language.code"
+                         [checked]="isLanguageSelected(language.code)"
+                         (change)="onLanguageToggle(language.code)">
+                  <label class="form-check-label"
+                         [for]="'lang-' + language.code">
+                    {{ language.name }}
+                  </label>
+                </div>
+              </div>
+            </div>
+            <small class="text-muted">Select all languages your hotel staff can communicate in</small>
+          </div>
+
+          <!-- Hotel Services & Amenities -->
+          <div class="mb-3">
+            <label class="form-label">Hotel Services & Amenities</label>
+            <div class="row">
+              <div class="col-md-6" *ngFor="let service of hotelServices">
+                <div class="form-check">
+                  <input class="form-check-input"
+                         type="checkbox"
+                         [id]="'service-' + service.id"
+                         [checked]="isServiceAvailable(service)"
+                         (change)="onServiceToggle(service)">
+                  <label class="form-check-label"
+                         [for]="'service-' + service.id">
+                    {{ service.name }}
+                    <small class="text-muted d-block" *ngIf="service.description">{{ service.description }}</small>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <small class="text-muted">
+              Enable/disable services available to your guests. Changes are saved immediately to the Services table.
+              <br>
+              <em>Note: These services also control chatbot responses - unchecked services won't trigger positive responses.</em>
+            </small>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Social Media -->
+    <div class="col-lg-6 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i data-feather="share-2" featherIcon class="me-2"></i>
+            Social Media Links
+          </h6>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="socialForm">
+
+            <!-- Facebook -->
+            <div class="mb-3">
+              <label for="facebook" class="form-label">Facebook</label>
+              <input type="url"
+                     class="form-control"
+                     id="facebook"
+                     formControlName="facebook"
+                     placeholder="https://www.facebook.com/yourhotel"
+                     [class.is-invalid]="socialForm.get('facebook')?.invalid && socialForm.get('facebook')?.touched">
+              <div class="invalid-feedback"
+                   *ngIf="socialForm.get('facebook')?.invalid && socialForm.get('facebook')?.touched">
+                Please enter a valid Facebook URL
+              </div>
+            </div>
+
+            <!-- Twitter -->
+            <div class="mb-3">
+              <label for="twitter" class="form-label">Twitter</label>
+              <input type="url"
+                     class="form-control"
+                     id="twitter"
+                     formControlName="twitter"
+                     placeholder="https://www.twitter.com/yourhotel"
+                     [class.is-invalid]="socialForm.get('twitter')?.invalid && socialForm.get('twitter')?.touched">
+              <div class="invalid-feedback"
+                   *ngIf="socialForm.get('twitter')?.invalid && socialForm.get('twitter')?.touched">
+                Please enter a valid Twitter URL
+              </div>
+            </div>
+
+            <!-- Instagram -->
+            <div class="mb-3">
+              <label for="instagram" class="form-label">Instagram</label>
+              <input type="url"
+                     class="form-control"
+                     id="instagram"
+                     formControlName="instagram"
+                     placeholder="https://www.instagram.com/yourhotel"
+                     [class.is-invalid]="socialForm.get('instagram')?.invalid && socialForm.get('instagram')?.touched">
+              <div class="invalid-feedback"
+                   *ngIf="socialForm.get('instagram')?.invalid && socialForm.get('instagram')?.touched">
+                Please enter a valid Instagram URL
+              </div>
+            </div>
+
+            <!-- LinkedIn -->
+            <div class="mb-3">
+              <label for="linkedin" class="form-label">LinkedIn</label>
+              <input type="url"
+                     class="form-control"
+                     id="linkedin"
+                     formControlName="linkedin"
+                     placeholder="https://www.linkedin.com/company/yourhotel"
+                     [class.is-invalid]="socialForm.get('linkedin')?.invalid && socialForm.get('linkedin')?.touched">
+              <div class="invalid-feedback"
+                   *ngIf="socialForm.get('linkedin')?.invalid && socialForm.get('linkedin')?.touched">
+                Please enter a valid LinkedIn URL
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hotel Policies -->
+    <div class="col-lg-12 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i data-feather="file-text" featherIcon class="me-2"></i>
+            Hotel Policies
+          </h6>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="policiesForm">
+
+            <div class="row">
+              <!-- Cancellation Policy -->
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="cancellationPolicy" class="form-label">Cancellation Policy</label>
+                  <textarea class="form-control"
+                            id="cancellationPolicy"
+                            formControlName="cancellationPolicy"
+                            rows="3"
+                            placeholder="Describe your cancellation policy..."
+                            [class.is-invalid]="policiesForm.get('cancellationPolicy')?.invalid && policiesForm.get('cancellationPolicy')?.touched"></textarea>
+                  <div class="invalid-feedback"
+                       *ngIf="policiesForm.get('cancellationPolicy')?.invalid && policiesForm.get('cancellationPolicy')?.touched">
+                    Cancellation policy is required
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pet Policy -->
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="petPolicy" class="form-label">Pet Policy</label>
+                  <textarea class="form-control"
+                            id="petPolicy"
+                            formControlName="petPolicy"
+                            rows="3"
+                            placeholder="Describe your pet policy..."
+                            [class.is-invalid]="policiesForm.get('petPolicy')?.invalid && policiesForm.get('petPolicy')?.touched"></textarea>
+                  <div class="invalid-feedback"
+                       *ngIf="policiesForm.get('petPolicy')?.invalid && policiesForm.get('petPolicy')?.touched">
+                    Pet policy is required
+                  </div>
+                </div>
+              </div>
+
+              <!-- Smoking Policy -->
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="smokingPolicy" class="form-label">Smoking Policy</label>
+                  <textarea class="form-control"
+                            id="smokingPolicy"
+                            formControlName="smokingPolicy"
+                            rows="3"
+                            placeholder="Describe your smoking policy..."
+                            [class.is-invalid]="policiesForm.get('smokingPolicy')?.invalid && policiesForm.get('smokingPolicy')?.touched"></textarea>
+                  <div class="invalid-feedback"
+                       *ngIf="policiesForm.get('smokingPolicy')?.invalid && policiesForm.get('smokingPolicy')?.touched">
+                    Smoking policy is required
+                  </div>
+                </div>
+              </div>
+
+              <!-- Child Policy -->
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="childPolicy" class="form-label">Child Policy</label>
+                  <textarea class="form-control"
+                            id="childPolicy"
+                            formControlName="childPolicy"
+                            rows="3"
+                            placeholder="Describe your child policy..."
+                            [class.is-invalid]="policiesForm.get('childPolicy')?.invalid && policiesForm.get('childPolicy')?.touched"></textarea>
+                  <div class="invalid-feedback"
+                       *ngIf="policiesForm.get('childPolicy')?.invalid && policiesForm.get('childPolicy')?.touched">
+                    Child policy is required
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Settings -->
+    <div class="col-lg-12 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i data-feather="settings" featherIcon class="me-2"></i>
+            System Settings
+          </h6>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="settingsForm">
+
+            <div class="row">
+              <!-- System Settings Checkboxes -->
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">System Features</label>
+                  <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="allowOnlineBooking"
+                           formControlName="allowOnlineBooking">
+                    <label class="form-check-label" for="allowOnlineBooking">
+                      Allow Online Booking
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="requirePhoneVerification"
+                           formControlName="requirePhoneVerification">
+                    <label class="form-check-label" for="requirePhoneVerification">
+                      Require Phone Verification
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="enableNotifications"
+                           formControlName="enableNotifications">
+                    <label class="form-check-label" for="enableNotifications">
+                      Enable Push Notifications
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="enableChatbot"
+                           formControlName="enableChatbot">
+                    <label class="form-check-label" for="enableChatbot">
+                      Enable Chatbot
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Timezone and Currency -->
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="timezone" class="form-label">Timezone</label>
+                  <select class="form-select"
+                          id="timezone"
+                          formControlName="timezone"
+                          [class.is-invalid]="settingsForm.get('timezone')?.invalid && settingsForm.get('timezone')?.touched">
+                    <option *ngFor="let tz of timezones" [value]="tz">{{ tz }}</option>
+                  </select>
+                  <div class="invalid-feedback"
+                       *ngIf="settingsForm.get('timezone')?.invalid && settingsForm.get('timezone')?.touched">
+                    Timezone is required
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="currency" class="form-label">Currency</label>
+                  <select class="form-select"
+                          id="currency"
+                          formControlName="currency"
+                          [class.is-invalid]="settingsForm.get('currency')?.invalid && settingsForm.get('currency')?.touched">
+                    <option *ngFor="let curr of currencies"
+                            [value]="curr.code">{{ curr.code }} - {{ curr.name }}</option>
+                  </select>
+                  <div class="invalid-feedback"
+                       *ngIf="settingsForm.get('currency')?.invalid && settingsForm.get('currency')?.touched">
+                    Currency is required
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

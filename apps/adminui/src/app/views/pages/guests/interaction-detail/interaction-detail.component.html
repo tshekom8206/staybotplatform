@@ -1,0 +1,228 @@
+<div class="page-content">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center">
+      <button class="btn btn-outline-secondary me-3" (click)="goBack()">
+        <i appFeatherIcon="arrow-left"></i>
+        Back to History
+      </button>
+      <div>
+        <h4 class="mb-1">Guest Interaction Details</h4>
+        <p class="text-muted mb-0" *ngIf="interaction">
+          {{ interaction.guestName }} • Room {{ interaction.roomNumber }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="text-muted mt-3">Loading interaction details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i appFeatherIcon="alert-triangle" class="me-2"></i>
+    {{ error }}
+    <button class="btn btn-sm btn-outline-danger ms-3" (click)="goBack()">
+      Go Back
+    </button>
+  </div>
+
+  <!-- Interaction Details -->
+  <div *ngIf="!loading && !error && interaction" class="row">
+    <!-- Guest Information Card -->
+    <div class="col-lg-4 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i appFeatherIcon="user" class="me-2"></i>
+            Guest Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="avatar-lg me-3">
+              <div class="avatar-title rounded-circle bg-primary-subtle text-primary">
+                {{ interaction.guestName.charAt(0).toUpperCase() }}
+              </div>
+            </div>
+            <div>
+              <h6 class="mb-1">{{ interaction.guestName }}</h6>
+              <p class="text-muted mb-0">
+                <i appFeatherIcon="phone" class="me-1"></i>
+                {{ interaction.phoneNumber }}
+              </p>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="info-item">
+                <label class="small text-muted">Room Number</label>
+                <div class="fw-semibold">{{ interaction.roomNumber }}</div>
+              </div>
+            </div>
+            <div class="col-6" *ngIf="interaction.checkInDate">
+              <div class="info-item">
+                <label class="small text-muted">Check-in Date</label>
+                <div class="fw-semibold">{{ interaction.checkInDate | date:'short' }}</div>
+              </div>
+            </div>
+            <div class="col-6" *ngIf="interaction.checkOutDate">
+              <div class="info-item">
+                <label class="small text-muted">Check-out Date</label>
+                <div class="fw-semibold">{{ interaction.checkOutDate | date:'short' }}</div>
+              </div>
+            </div>
+            <div class="col-6" *ngIf="interaction.bookingStatus">
+              <div class="info-item">
+                <label class="small text-muted">Booking Status</label>
+                <div class="fw-semibold">{{ interaction.bookingStatus }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interaction Summary Card -->
+    <div class="col-lg-8 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i appFeatherIcon="activity" class="me-2"></i>
+            Interaction Summary
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <div class="info-item">
+                <label class="small text-muted">Type</label>
+                <div>
+                  <span [class]="getTypeClass(interaction.interactionType)">
+                    <i [appFeatherIcon]="getTypeIcon(interaction.interactionType)" class="me-1"></i>
+                    {{ interaction.interactionType | titlecase }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <label class="small text-muted">Status</label>
+                <div>
+                  <span [class]="getStatusClass(interaction.status)">
+                    <i [appFeatherIcon]="getStatusIcon(interaction.status)" class="me-1"></i>
+                    {{ interaction.status | titlecase }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <label class="small text-muted">Staff Member</label>
+                <div class="fw-semibold">{{ interaction.staffMember }}</div>
+              </div>
+            </div>
+            <div class="col-md-6" *ngIf="interaction.duration">
+              <div class="info-item">
+                <label class="small text-muted">Duration</label>
+                <div class="fw-semibold">
+                  <i appFeatherIcon="clock" class="me-1"></i>
+                  {{ interaction.duration }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <label class="small text-muted">Summary</label>
+            <div class="bg-light p-3 rounded">{{ interaction.summary }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conversation Messages -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">
+            <i appFeatherIcon="message-square" class="me-2"></i>
+            Conversation Messages
+          </h5>
+          <span class="badge bg-primary">{{ interaction.messages.length }} messages</span>
+        </div>
+        <div class="card-body">
+          <div class="conversation-container" style="max-height: 600px; overflow-y: auto;">
+            <div *ngFor="let message of interaction.messages; trackBy: trackMessage"
+                 class="message-item mb-3"
+                 [class.message-inbound]="message.direction === 'Inbound'"
+                 [class.message-outbound]="message.direction === 'Outbound'">
+
+              <div class="d-flex align-items-start"
+                   [class.flex-row-reverse]="message.direction === 'Outbound'">
+
+                <!-- Avatar -->
+                <div class="message-avatar me-3"
+                     [class.me-0]="message.direction === 'Outbound'"
+                     [class.ms-3]="message.direction === 'Outbound'">
+                  <div class="avatar-sm">
+                    <div class="avatar-title rounded-circle"
+                         [class.bg-primary-subtle]="message.direction === 'Inbound'"
+                         [class.text-primary]="message.direction === 'Inbound'"
+                         [class.bg-success-subtle]="message.direction === 'Outbound'"
+                         [class.text-success]="message.direction === 'Outbound'">
+                      <i [appFeatherIcon]="message.direction === 'Inbound' ? 'user' : 'headphones'"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Message Content -->
+                <div class="message-content flex-grow-1">
+                  <div class="message-bubble p-3 rounded"
+                       [class.bg-primary-subtle]="message.direction === 'Inbound'"
+                       [class.bg-success-subtle]="message.direction === 'Outbound'">
+
+                    <!-- Message Header -->
+                    <div class="message-header d-flex justify-content-between align-items-center mb-2">
+                      <span class="fw-semibold small">
+                        {{ message.direction === 'Inbound' ? interaction.guestName : 'Hotel Assistant' }}
+                      </span>
+                      <span class="text-muted small">
+                        {{ getRelativeDate(message.createdAt) }}
+                      </span>
+                    </div>
+
+                    <!-- Message Body -->
+                    <div class="message-body">
+                      {{ message.body }}
+                    </div>
+
+                    <!-- Message Timestamp -->
+                    <div class="message-time text-end mt-2">
+                      <small class="text-muted">
+                        {{ message.createdAt | date:'MMM d, y h:mm a' }}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="interaction.messages.length === 0" class="text-center py-5">
+              <i appFeatherIcon="message-circle" class="text-muted mb-3" style="font-size: 3rem;"></i>
+              <h6 class="text-muted">No messages in this conversation</h6>
+              <p class="text-muted mb-0">This interaction doesn't have any recorded messages.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

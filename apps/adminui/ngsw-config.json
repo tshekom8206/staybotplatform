@@ -1,0 +1,91 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/index.csr.html",
+          "/index.html",
+          "/manifest.webmanifest",
+          "/*.css",
+          "/*.js"
+        ]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/**/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)",
+          "/fonts/**/*",
+          "/images/**/*",
+          "/icons/**/*",
+          "/sounds/**/*"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-tasks",
+      "urls": [
+        "**/api/tasks/**",
+        "**/api/task/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 100,
+        "maxAge": "5m",
+        "timeout": "10s"
+      }
+    },
+    {
+      "name": "api-conversations",
+      "urls": [
+        "**/api/conversations/**",
+        "**/api/conversation/**",
+        "**/api/messages/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 100,
+        "maxAge": "5m",
+        "timeout": "10s"
+      }
+    },
+    {
+      "name": "api-emergency",
+      "urls": [
+        "**/api/emergency/**",
+        "**/api/emergencies/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 50,
+        "maxAge": "2m",
+        "timeout": "5s"
+      }
+    },
+    {
+      "name": "api-config",
+      "urls": [
+        "**/api/hotel-info/**",
+        "**/api/configuration/**",
+        "**/api/faqs/**",
+        "**/api/menu/**",
+        "**/api/services/**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 50,
+        "maxAge": "1h"
+      }
+    }
+  ]
+}

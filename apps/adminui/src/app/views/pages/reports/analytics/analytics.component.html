@@ -1,0 +1,582 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="page-title">Analytics Dashboard</h2>
+    <p class="text-muted">Comprehensive insights and performance metrics for your hotel operations</p>
+  </div>
+  <div class="d-flex gap-2">
+    <div class="dropdown" ngbDropdown>
+      <button class="btn btn-outline-secondary" ngbDropdownToggle>
+        <i featherIcon="calendar" class="icon-sm me-2"></i>
+        {{ selectedPeriod | titlecase }}
+      </button>
+      <div class="dropdown-menu" ngbDropdownMenu>
+        <a class="dropdown-item" (click)="setPeriod('day')">Last 24 Hours</a>
+        <a class="dropdown-item" (click)="setPeriod('week')">Last 7 Days</a>
+        <a class="dropdown-item" (click)="setPeriod('month')">Last 30 Days</a>
+        <a class="dropdown-item" (click)="setPeriod('year')">Last Year</a>
+      </div>
+    </div>
+    <button type="button" class="btn btn-outline-secondary" (click)="refreshData()" [disabled]="loading">
+      <i featherIcon="refresh-cw" class="icon-sm me-2"></i>
+      Refresh
+    </button>
+    <button type="button" class="btn btn-primary" (click)="exportAnalytics()" [disabled]="loading">
+      <i featherIcon="download" class="icon-sm me-2"></i>
+      Export
+    </button>
+  </div>
+</div>
+
+<!-- Tab Navigation -->
+<ul class="nav nav-tabs mb-4" id="analyticsTab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" [class.active]="activeTab === 'overview'"
+            id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview"
+            type="button" role="tab" (click)="setActiveTab('overview')">
+      Overview
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" [class.active]="activeTab === 'tasks'"
+            id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks"
+            type="button" role="tab" (click)="setActiveTab('tasks')">
+      Task Analytics
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" [class.active]="activeTab === 'users'"
+            id="users-tab" data-bs-toggle="tab" data-bs-target="#users"
+            type="button" role="tab" (click)="setActiveTab('users')">
+      User Engagement
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" [class.active]="activeTab === 'conversations'"
+            id="conversations-tab" data-bs-toggle="tab" data-bs-target="#conversations"
+            type="button" role="tab" (click)="setActiveTab('conversations')">
+      Conversations
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" [class.active]="activeTab === 'performance'"
+            id="performance-tab" data-bs-toggle="tab" data-bs-target="#performance"
+            type="button" role="tab" (click)="setActiveTab('performance')">
+      Performance
+    </button>
+  </li>
+</ul>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="text-muted mt-3">Loading analytics data...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error && !loading" class="alert alert-danger">
+  <i featherIcon="alert-triangle" class="icon-sm me-2"></i>
+  {{ error }}
+</div>
+
+<!-- Tab Content -->
+<div class="tab-content" id="analyticsTabContent" *ngIf="!loading">
+  <!-- Overview Tab -->
+  <div class="tab-pane fade" [class.show]="activeTab === 'overview'" [class.active]="activeTab === 'overview'"
+       id="overview" role="tabpanel" aria-labelledby="overview-tab">
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="calendar" class="icon-xl text-primary mb-2"></i>
+          <h3 class="mb-1">{{ formatNumber(getTotalBookings()) }}</h3>
+          <p class="text-muted mb-0">Total Bookings</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="check-circle" class="icon-xl text-success mb-2"></i>
+          <h3 class="mb-1">{{ formatNumber(getCompletedTasks()) }}</h3>
+          <p class="text-muted mb-0">Completed Tasks</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="message-square" class="icon-xl text-info mb-2"></i>
+          <h3 class="mb-1">{{ formatNumber(getActiveConversations()) }}</h3>
+          <p class="text-muted mb-0">Active Conversations</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="home" class="icon-xl text-warning mb-2"></i>
+          <h3 class="mb-1">{{ formatPercentage(getOccupancyRate()) }}</h3>
+          <p class="text-muted mb-0">Occupancy Rate</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="clock" class="icon-xl text-success mb-2"></i>
+          <h3 class="mb-1">{{ getAverageResponseTime() }}</h3>
+          <p class="text-muted mb-0">Avg Response Time</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Second Row of Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="users" class="icon-xl text-secondary mb-2"></i>
+          <h3 class="mb-1">{{ formatNumber(0) }}</h3>
+          <p class="text-muted mb-0">Active Users</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="alert-triangle" class="icon-xl text-danger mb-2"></i>
+          <h3 class="mb-1">{{ formatNumber(0) }}</h3>
+          <p class="text-muted mb-0">Emergency Incidents</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="clock" class="icon-xl text-success mb-2"></i>
+          <h3 class="mb-1">{{ getAverageResponseTime() }}</h3>
+          <p class="text-muted mb-0">Avg Response Time</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body text-center">
+          <i featherIcon="message-circle" class="icon-xl text-info mb-2"></i>
+          <h3 class="mb-1">{{ formatNumber(getTotalGuestInteractions()) }}</h3>
+          <p class="text-muted mb-0">Guest Interactions</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance Metrics -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="activity" class="icon-sm me-2"></i>
+            System Performance
+          </h5>
+          <div class="text-center py-3">
+            <h2 class="text-primary mb-1">{{ formatPercentage(getSystemUptime()) }}</h2>
+            <p class="text-muted">System Uptime</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="trending-up" class="icon-sm me-2"></i>
+            Response Time Performance
+          </h5>
+          <div class="py-3">
+            <div class="progress mb-2" style="height: 1.5rem;">
+              <div
+                class="progress-bar bg-info"
+                role="progressbar"
+                [style.width.%]="getResponseTimePercentage()">
+                <span class="fw-bold">{{ getAverageResponseTime() }}</span>
+              </div>
+            </div>
+            <small class="text-muted">Average response time across all services</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts and Analysis -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="pie-chart" class="icon-sm me-2"></i>
+            Tasks by Status
+          </h5>
+          <div class="chart-container">
+            <div *ngFor="let item of getTasksByStatusData(); trackBy: trackByLabel" class="d-flex align-items-center justify-content-between mb-2">
+              <div class="d-flex align-items-center">
+                <div class="legend-color me-2" [style.background-color]="item.color"></div>
+                <span>{{ item.label }}</span>
+              </div>
+              <div class="d-flex align-items-center">
+                <small class="text-muted me-2">{{ item.value }}</small>
+                <div class="mini-bar" [style.width.px]="(item.value / getMaxValue(getTasksByStatusData())) * 100">
+                  <div class="mini-bar-fill" [style.background-color]="item.color"></div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="getTasksByStatusData().length === 0" class="text-muted text-center py-3">
+              No task data available
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="bar-chart-2" class="icon-sm me-2"></i>
+            Tasks by Type
+          </h5>
+          <div class="chart-container">
+            <div *ngFor="let item of getTasksByTypeData(); trackBy: trackByLabel" class="d-flex align-items-center justify-content-between mb-2">
+              <div class="d-flex align-items-center">
+                <div class="legend-color me-2" [style.background-color]="getTaskTypeColor(item.label)"></div>
+                <span>{{ item.label }}</span>
+              </div>
+              <div class="d-flex align-items-center">
+                <small class="text-muted me-2">{{ item.value }}</small>
+                <div class="mini-bar" [style.width.px]="(item.value / getMaxValue(getTasksByTypeData())) * 100">
+                  <div class="mini-bar-fill" [style.background-color]="getTaskTypeColor(item.label)"></div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="getTasksByTypeData().length === 0" class="text-muted text-center py-3">
+              No task type data available
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Performers -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="award" class="icon-sm me-2"></i>
+            Top Performing Staff
+          </h5>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Staff Member</th>
+                  <th>Completed Tasks</th>
+                  <th>Performance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let staff of getStaffPerformance(); let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-sm me-2">
+                        <div class="avatar-title rounded-circle bg-primary">
+                          {{ staff.email.charAt(0).toUpperCase() }}
+                        </div>
+                      </div>
+                      <div>
+                        <div class="fw-medium">{{ staff.email }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge bg-success">{{ staff.completedCount || 0 }}</span>
+                  </td>
+                  <td>
+                    <div class="progress" style="height: 6px;">
+                      <div
+                        class="progress-bar bg-success"
+                        role="progressbar"
+                        [style.width.%]="staff.completionRate || 0">
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div *ngIf="getStaffPerformance().length === 0" class="text-muted text-center py-3">
+              No staff performance data available
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i featherIcon="trending-up" class="icon-sm me-2"></i>
+            Activity Trends (Last 7 Days)
+          </h5>
+          <div class="chart-container">
+            <div *ngFor="let day of getDailyActivityData(); trackBy: trackByLabel" class="d-flex align-items-center justify-content-between mb-2">
+              <span class="text-muted">{{ day.label }}</span>
+              <div class="d-flex align-items-center">
+                <small class="text-muted me-2">{{ day.value }}</small>
+                <div class="mini-bar" [style.width.px]="(day.value / getMaxValue(getDailyActivityData())) * 60">
+                  <div class="mini-bar-fill bg-primary"></div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="getDailyActivityData().length === 0" class="text-muted text-center py-3">
+              No activity data available
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Task Analytics Tab -->
+  <div class="tab-pane fade" [class.show]="activeTab === 'tasks'" [class.active]="activeTab === 'tasks'"
+       id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">
+              <i featherIcon="pie-chart" class="icon-sm me-2"></i>
+              Tasks by Status
+            </h5>
+            <div class="chart-container">
+              <div *ngFor="let item of getTasksByStatusData(); trackBy: trackByLabel" class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center">
+                  <div class="legend-color me-2" [style.background-color]="item.color"></div>
+                  <span>{{ item.label }}</span>
+                </div>
+                <div class="d-flex align-items-center">
+                  <small class="text-muted me-2">{{ item.value }}</small>
+                  <div class="mini-bar" [style.width.px]="(item.value / getMaxValue(getTasksByStatusData())) * 100">
+                    <div class="mini-bar-fill" [style.background-color]="item.color"></div>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="getTasksByStatusData().length === 0" class="text-muted text-center py-3">
+                No task data available
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">
+              <i featherIcon="bar-chart-2" class="icon-sm me-2"></i>
+              Tasks by Type
+            </h5>
+            <div class="chart-container">
+              <div *ngFor="let item of getTasksByTypeData(); trackBy: trackByLabel" class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center">
+                  <div class="legend-color me-2" [style.background-color]="getTaskTypeColor(item.label)"></div>
+                  <span>{{ item.label }}</span>
+                </div>
+                <div class="d-flex align-items-center">
+                  <small class="text-muted me-2">{{ item.value }}</small>
+                  <div class="mini-bar" [style.width.px]="(item.value / getMaxValue(getTasksByTypeData())) * 100">
+                    <div class="mini-bar-fill" [style.background-color]="getTaskTypeColor(item.label)"></div>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="getTasksByTypeData().length === 0" class="text-muted text-center py-3">
+                No task type data available
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Engagement Tab -->
+  <div class="tab-pane fade" [class.show]="activeTab === 'users'" [class.active]="activeTab === 'users'"
+       id="users" role="tabpanel" aria-labelledby="users-tab">
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">
+              <i featherIcon="award" class="icon-sm me-2"></i>
+              Top Performing Staff
+            </h5>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Staff Member</th>
+                    <th>Completed Tasks</th>
+                    <th>Performance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let staff of getStaffPerformance(); let i = index">
+                    <td>{{ i + 1 }}</td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="avatar-sm me-2">
+                          <div class="avatar-title rounded-circle bg-primary">
+                            {{ staff.email.charAt(0).toUpperCase() }}
+                          </div>
+                        </div>
+                        <div>
+                          <div class="fw-medium">{{ staff.email }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge bg-success">{{ staff.completedCount || 0 }}</span>
+                    </td>
+                    <td>
+                      <div class="progress" style="height: 6px;">
+                        <div
+                          class="progress-bar bg-success"
+                          role="progressbar"
+                          [style.width.%]="staff.completionRate || 0">
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div *ngIf="getStaffPerformance().length === 0" class="text-muted text-center py-3">
+                No staff performance data available
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <i featherIcon="users" class="icon-xl text-secondary mb-2"></i>
+            <h3 class="mb-1">{{ formatNumber(0) }}</h3>
+            <p class="text-muted mb-0">Active Users</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conversations Tab -->
+  <div class="tab-pane fade" [class.show]="activeTab === 'conversations'" [class.active]="activeTab === 'conversations'"
+       id="conversations" role="tabpanel" aria-labelledby="conversations-tab">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <i featherIcon="message-square" class="icon-xl text-info mb-2"></i>
+            <h3 class="mb-1">{{ formatNumber(getActiveConversations()) }}</h3>
+            <p class="text-muted mb-0">Active Conversations</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <i featherIcon="message-circle" class="icon-xl text-info mb-2"></i>
+            <h3 class="mb-1">{{ formatNumber(getTotalGuestInteractions()) }}</h3>
+            <p class="text-muted mb-0">Guest Interactions</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <i featherIcon="clock" class="icon-xl text-success mb-2"></i>
+            <h3 class="mb-1">{{ getAverageResponseTime() }}</h3>
+            <p class="text-muted mb-0">Avg Response Time</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance Tab -->
+  <div class="tab-pane fade" [class.show]="activeTab === 'performance'" [class.active]="activeTab === 'performance'"
+       id="performance" role="tabpanel" aria-labelledby="performance-tab">
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">
+              <i featherIcon="activity" class="icon-sm me-2"></i>
+              System Performance
+            </h5>
+            <div class="text-center py-3">
+              <h2 class="text-primary mb-1">{{ formatPercentage(getSystemUptime()) }}</h2>
+              <p class="text-muted">System Uptime</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">
+              <i featherIcon="trending-up" class="icon-sm me-2"></i>
+              Response Time Performance
+            </h5>
+            <div class="py-3">
+              <div class="progress mb-2" style="height: 1.5rem;">
+                <div
+                  class="progress-bar bg-info"
+                  role="progressbar"
+                  [style.width.%]="getResponseTimePercentage()">
+                  <span class="fw-bold">{{ getAverageResponseTime() }}</span>
+                </div>
+              </div>
+              <small class="text-muted">Average response time across all services</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <i featherIcon="alert-triangle" class="icon-xl text-danger mb-2"></i>
+            <h3 class="mb-1">{{ formatNumber(0) }}</h3>
+            <p class="text-muted mb-0">Emergency Incidents</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
