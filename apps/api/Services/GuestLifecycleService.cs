@@ -70,8 +70,8 @@ public class GuestLifecycleService : IGuestLifecycleService
 
             // Update metrics
             metrics.TotalStays = bookings.Count;
-            metrics.FirstStayDate = bookings.FirstOrDefault()?.CheckInDate ?? bookings.First().CreatedAt;
-            metrics.LastStayDate = bookings.LastOrDefault()?.CheckOutDate ?? bookings.Last().CreatedAt;
+            metrics.FirstStayDate = bookings.FirstOrDefault()?.CheckInDate?.ToUniversalTime() ?? bookings.First().CreatedAt;
+            metrics.LastStayDate = bookings.LastOrDefault()?.CheckOutDate?.ToUniversalTime() ?? bookings.Last().CreatedAt;
             metrics.LifetimeValue = bookings.Sum(b => b.TotalRevenue ?? 0);
 
             // Calculate average satisfaction from both ratings and surveys

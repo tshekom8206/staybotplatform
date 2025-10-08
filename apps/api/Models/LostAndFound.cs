@@ -24,7 +24,10 @@ public class LostItem
     
     [MaxLength(100)]
     public string? LocationLost { get; set; } // Where the guest thinks they lost it
-    
+
+    [MaxLength(10)]
+    public string? RoomNumber { get; set; } // Guest's room number
+
     [MaxLength(20)]
     public string ReporterPhone { get; set; } = string.Empty;
     

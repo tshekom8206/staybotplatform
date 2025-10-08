@@ -44,6 +44,10 @@ function addToken(request: HttpRequest<any>, token: string | null, authService: 
     headers['X-Tenant'] = 'panoramaview';
   }
 
+  console.log('[AuthInterceptor] Request URL:', request.url);
+  console.log('[AuthInterceptor] Headers being added:', headers);
+  console.log('[AuthInterceptor] Has token:', !!token);
+
   return request.clone({
     setHeaders: headers
   });

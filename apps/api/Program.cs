@@ -127,6 +127,9 @@ builder.Services.AddScoped<IConversationHandoffService, ConversationHandoffServi
 builder.Services.AddScoped<IBookingStatusUpdateService, BookingStatusUpdateService>();
 builder.Services.AddScoped<IBookingManagementService, BookingManagementService>();
 
+// Information Gathering Services
+builder.Services.AddScoped<IInformationGatheringService, InformationGatheringService>();
+
 // Phase 1: Context-Aware Chatbot Enhancement Services
 builder.Services.AddScoped<ITemporalContextService, TemporalContextService>();
 builder.Services.AddScoped<IConversationStateService, ConversationStateService>();
@@ -138,6 +141,7 @@ builder.Services.AddScoped<IClarificationStrategyService, ClarificationStrategyS
 builder.Services.AddScoped<IContextRelevanceService, ContextRelevanceService>();
 builder.Services.AddScoped<IBusinessRulesEngine, BusinessRulesEngine>();
 builder.Services.AddScoped<ILLMBusinessRulesEngine, LLMBusinessRulesEngine>();
+builder.Services.AddScoped<IUpsellService, UpsellService>();
 
 // Phase 3: Enhanced Response Generation and Flow Management Services
 builder.Services.AddScoped<IEnhancedResponseGeneratorService, EnhancedResponseGeneratorService>();

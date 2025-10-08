@@ -62,6 +62,7 @@ public class Service
 
     // Navigation properties
     public virtual Tenant Tenant { get; set; } = null!;
+    public virtual ICollection<ServiceBusinessRule> BusinessRules { get; set; } = new List<ServiceBusinessRule>();
 }
 
 public class ServiceIcon

@@ -430,14 +430,21 @@ Analyze this message and respond with the following JSON structure:
 {{
     ""intents"": [
         {{
-            ""intent"": ""REQUEST_ITEM | REQUEST_SERVICE | INQUIRY | COMPLAINT | BOOKING_CHANGE | GREETING | OTHER"",
-            ""category"": ""BEVERAGE | FOOD | HOUSEKEEPING | MAINTENANCE | AMENITIES | DINING | OTHER"",
+            ""intent"": ""REQUEST_ITEM | REQUEST_SERVICE | INQUIRY | COMPLAINT | BOOKING_CHANGE | GREETING | LOST_AND_FOUND | OTHER"",
+            ""category"": ""BEVERAGE | FOOD | HOUSEKEEPING | MAINTENANCE | AMENITIES | DINING | LOST_ITEMS | OTHER"",
             ""specificityLevel"": ""SPECIFIC | VAGUE | UNCLEAR"",
             ""availableOptions"": [""List ONLY the actual available options from hotel configuration that match the request""],
             ""entityType"": ""The specific entity being requested (e.g., 'towels', 'breakfast time', 'pool')"",
             ""originalText"": ""The exact portion of the message related to this intent"",
             ""confidence"": 0.0-1.0,
-            ""requestedQuantity"": <number or null>
+            ""requestedQuantity"": <number or null>,
+            ""citations"": {{
+                ""intent"": ""Quote the exact phrase that triggered this intent classification"",
+                ""category"": ""Quote or explain how you determined the category"",
+                ""entity"": ""Quote the exact phrase for the entity or 'inferred from context'""
+            }},
+            ""assumptions"": [""List any assumptions made for this intent""],
+            ""uncertainties"": [""List any uncertainties about this intent classification""]
         }}
     ],
     ""isAmbiguous"": true/false,
@@ -449,6 +456,50 @@ Analyze this message and respond with the following JSON structure:
     }}
 }}
 
+REFLECTION REQUIREMENTS (CRITICAL - prevents hallucinations):
+
+1. CITATIONS - For each intent, provide exact quotes from the guest message:
+   - intent: Quote the EXACT phrase that indicates REQUEST_ITEM vs INQUIRY vs other intent types
+     * Example: Guest said ""I need towels"" -> intent citation: ""I need towels""
+     * Example: Guest said ""What services do you have?"" -> intent citation: ""What services do you have?""
+   - category: Explain how you determined HOUSEKEEPING vs DINING vs other category
+     * Example: ""Determined HOUSEKEEPING from the word 'towels'""
+     * Example: ""Inferred DINING from context: breakfast is a meal service""
+   - entity: Quote the exact entity mentioned OR state 'inferred from context'
+     * Example: Guest said ""extra pillows"" -> entity citation: ""extra pillows""
+     * Example: Guest said ""it"" referring to pool -> entity citation: ""inferred from context: pool mentioned earlier""
+
+2. ASSUMPTIONS - List every assumption made during intent classification:
+   - Example: ""Assumed 'help' is a general INQUIRY rather than a specific request""
+   - Example: ""Assumed REQUEST_ITEM because guest used 'I need' language pattern""
+   - Example: ""Assumed HOUSEKEEPING category because towels typically fall under housekeeping""
+   - If no assumptions needed, use empty array []
+
+3. UNCERTAINTIES - Explicitly state classification doubts:
+   - Example: ""Uncertain if this is INQUIRY or REQUEST_SERVICE - message is ambiguous""
+   - Example: ""Not certain which service category - could be DINING or ROOM_SERVICE""
+   - Example: ""Cannot determine exact entity - guest said 'something to drink' which is vague""
+   - Lower confidence (0.5-0.7) when uncertainties exist
+   - If uncertain, set isAmbiguous: true and provide ambiguityReason
+
+4. ""I DON'T KNOW"" ENFORCEMENT FOR HOTEL CONFIGURATION:
+   - If guest asks about ""rooftop pool"" but ONLY ""Swimming Pool"" exists:
+     * citations.entity: ""rooftop pool"" (what guest asked for)
+     * assumptions: [""Guest may be asking about the regular swimming pool""]
+     * uncertainties: [""Hotel configuration does not show a 'rooftop' pool specifically - only outdoor pool available""]
+     * availableOptions: [""Swimming Pool""] (what actually exists)
+   - If guest asks about service not in configuration:
+     * availableOptions: [] (empty - nothing matches)
+     * uncertainties: [""Requested service not found in hotel configuration""]
+     * confidence: < 0.5
+   - NEVER invent or assume services that aren't explicitly in the hotel configuration
+
+5. CONFIDENCE SCORING WITH REFLECTION:
+   - High confidence (0.8-1.0): Clear intent, exact match in configuration, no uncertainties
+   - Medium confidence (0.6-0.8): Intent clear but minor assumptions needed
+   - Low confidence (0.3-0.6): Significant uncertainties, ambiguous request, or no configuration match
+   - Very low confidence (< 0.3): Cannot determine intent with any certainty
+
 CRITICAL ANALYSIS RULES:
 1. In availableOptions, list ONLY items/services that ACTUALLY exist in the hotel configuration
 2. If the guest asks about something specific (like ""rooftop pool""), check if it exists EXACTLY as described
@@ -457,7 +508,7 @@ CRITICAL ANALYSIS RULES:
 5. For ambiguous requests (like 'water' when multiple types exist), set isAmbiguous=true
 6. If guest specifies exact match (like 'still water' matches 'Still Water'), it is NOT ambiguous
 7. If nothing matches the request, return empty availableOptions array
-8. Extract requestedQuantity from the message (e.g., ""50 towels"" → 50, ""I need towels"" → null)
+8. Extract requestedQuantity from the message (e.g., ""50 towels"" -> 50, ""I need towels"" -> null)
 9. If quantity > 5, set clarificationNeeded.type = ""QUANTITY"" and ask for confirmation
 10. Vague single-word requests like ""help"", ""info"", ""assistance"" should be classified as INQUIRY, not REQUEST_ITEM
 11. GREETING intent: Simple greetings, salutations, or conversational openers should be classified as GREETING
@@ -468,34 +519,52 @@ CRITICAL ANALYSIS RULES:
 EXAMPLES:
 
 SINGLE-INTENT EXAMPLES:
-1. Guest: ""water"", Config has: [""Sparkling Water"", ""Still Water""] → intents: [{{intent: REQUEST_ITEM, entityType: ""water"", availableOptions: [""Sparkling Water"", ""Still Water""]}}], isAmbiguous: true
-2. Guest: ""still water"", Config has: [""Still Water""] → intents: [{{intent: REQUEST_ITEM, entityType: ""still water"", availableOptions: [""Still Water""]}}], isAmbiguous: false
-3. Guest: ""help"" → intents: [{{intent: INQUIRY, entityType: ""assistance"", originalText: ""help""}}], clarificationNeeded.question: ""I'd be happy to assist you! What can I help you with today?""
-4. Guest: ""Hi"" → intents: [{{intent: GREETING, entityType: ""greeting"", originalText: ""Hi""}}], isAmbiguous: false
+1. Guest: ""water"", Config has: [""Sparkling Water"", ""Still Water""] -> intents: [{{intent: REQUEST_ITEM, entityType: ""water"", availableOptions: [""Sparkling Water"", ""Still Water""]}}], isAmbiguous: true
+2. Guest: ""still water"", Config has: [""Still Water""] -> intents: [{{intent: REQUEST_ITEM, entityType: ""still water"", availableOptions: [""Still Water""]}}], isAmbiguous: false
+3. Guest: ""help"" -> intents: [{{intent: INQUIRY, entityType: ""assistance"", originalText: ""help""}}], clarificationNeeded.question: ""I'd be happy to assist you! What can I help you with today?""
+4. Guest: ""Hi"" -> intents: [{{intent: GREETING, entityType: ""greeting"", originalText: ""Hi""}}], isAmbiguous: false
 
 MULTI-INTENT EXAMPLES (CRITICAL):
-5. Guest: ""I need towels and also what time is breakfast?"" → intents: [
+5. Guest: ""I need towels and also what time is breakfast?"" -> intents: [
    {{intent: REQUEST_ITEM, category: HOUSEKEEPING, entityType: ""towels"", originalText: ""I need towels"", availableOptions: [""Towels""]}},
    {{intent: INQUIRY, category: DINING, entityType: ""breakfast time"", originalText: ""what time is breakfast?""}}
 ]
-6. Guest: ""Can I get water and check what amenities you have?"" → intents: [
+6. Guest: ""Can I get water and check what amenities you have?"" -> intents: [
    {{intent: REQUEST_ITEM, category: BEVERAGE, entityType: ""water"", originalText: ""Can I get water""}},
    {{intent: INQUIRY, category: AMENITIES, entityType: ""amenities list"", originalText: ""check what amenities you have""}}
 ]
-7. Guest: ""My AC is not working and I need extra pillows"" → intents: [
+7. Guest: ""My AC is not working and I need extra pillows"" -> intents: [
    {{intent: COMPLAINT, category: MAINTENANCE, entityType: ""air conditioning"", originalText: ""My AC is not working""}},
    {{intent: REQUEST_ITEM, category: HOUSEKEEPING, entityType: ""pillows"", originalText: ""I need extra pillows""}}
 ]
 
 CRITICAL AMENITY/SERVICE INQUIRY EXAMPLES (MUST CLASSIFY CORRECTLY):
-8. Guest: ""What services do you provide?"" → intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""services list"", originalText: ""What services do you provide?""}}]
-9. Guest: ""What other services do you provide?"" → intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""services list"", originalText: ""What other services do you provide?""}}]
-10. Guest: ""What amenities do you have?"" → intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""amenities list"", originalText: ""What amenities do you have?""}}]
-11. Guest: ""What other amenities do you provide?"" → intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""amenities list"", originalText: ""What other amenities do you provide?""}}]
-12. Guest: ""List the amenities you provide"" → intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""amenities list"", originalText: ""List the amenities you provide""}}]
-13. Guest: ""What else do you offer?"" → intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""services list"", originalText: ""What else do you offer?""}}]
-14. Guest: ""Tell me what's available"" → intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""services list"", originalText: ""Tell me what's available""}}]
-15. Guest: ""What can you help me with?"" → intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""services list"", originalText: ""What can you help me with?""}}]
+8. Guest: ""What services do you provide?"" -> intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""services list"", originalText: ""What services do you provide?""}}]
+9. Guest: ""What other services do you provide?"" -> intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""services list"", originalText: ""What other services do you provide?""}}]
+10. Guest: ""What amenities do you have?"" -> intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""amenities list"", originalText: ""What amenities do you have?""}}]
+11. Guest: ""What other amenities do you provide?"" -> intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""amenities list"", originalText: ""What other amenities do you provide?""}}]
+12. Guest: ""List the amenities you provide"" -> intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""amenities list"", originalText: ""List the amenities you provide""}}]
+13. Guest: ""What else do you offer?"" -> intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""services list"", originalText: ""What else do you offer?""}}]
+14. Guest: ""Tell me what's available"" -> intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""services list"", originalText: ""Tell me what's available""}}]
+15. Guest: ""What can you help me with?"" -> intents: [{{intent: INQUIRY, category: AMENITIES, entityType: ""services list"", originalText: ""What can you help me with?""}}]
+
+LOST & FOUND EXAMPLES (CRITICAL - must detect lost item reports):
+16. Guest: ""I think i left my belt"" -> intents: [{{intent: LOST_AND_FOUND, category: LOST_ITEMS, entityType: ""belt"", originalText: ""I think i left my belt"", citations: {{intent: ""I think i left"", entity: ""belt""}}, assumptions: [""Assumed LOST_AND_FOUND from 'left' indicating item misplaced""], uncertainties: []}}]
+17. Guest: ""I lost my phone in the pool area"" -> intents: [{{intent: LOST_AND_FOUND, category: LOST_ITEMS, entityType: ""phone"", originalText: ""I lost my phone in the pool area"", citations: {{intent: ""I lost"", entity: ""phone"", location: ""pool area""}}}}]
+18. Guest: ""I can't find my wallet"" -> intents: [{{intent: LOST_AND_FOUND, category: LOST_ITEMS, entityType: ""wallet"", originalText: ""I can't find my wallet"", citations: {{intent: ""can't find"", entity: ""wallet""}}}}]
+19. Guest: ""I forgot my sunglasses in the restaurant"" -> intents: [{{intent: LOST_AND_FOUND, category: LOST_ITEMS, entityType: ""sunglasses"", originalText: ""I forgot my sunglasses in the restaurant"", citations: {{intent: ""I forgot"", entity: ""sunglasses"", location: ""restaurant""}}}}]
+20. Guest: ""Did anyone find a black iPhone?"" -> intents: [{{intent: LOST_AND_FOUND, category: LOST_ITEMS, entityType: ""iPhone"", originalText: ""Did anyone find a black iPhone?"", citations: {{intent: ""Did anyone find"", entity: ""black iPhone""}}}}]
+21. Guest: ""I left my passport in room 305"" -> intents: [{{intent: LOST_AND_FOUND, category: LOST_ITEMS, entityType: ""passport"", originalText: ""I left my passport in room 305"", citations: {{intent: ""I left"", entity: ""passport"", location: ""room 305""}}}}]
+
+LOST & FOUND TRIGGER PHRASES (look for these):
+- ""I lost..."", ""I left..."", ""I forgot..."", ""I can't find..."", ""I misplaced...""
+- ""Did anyone find..."", ""Has anyone seen..."", ""Looking for my...""
+- ""Missing..."", ""Can't locate..."", ""Where is my...""
+
+IMPORTANT: When detecting LOST_AND_FOUND:
+- Extract: WHAT (item), WHERE (location if mentioned), WHEN (timeline if mentioned)
+- Color/Brand details in citations
+- Urgency: checkout today = urgent
 
 Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.";
 
@@ -832,8 +901,8 @@ CRITICAL RULES:
 7. If the guest is asking a follow-up clarification question, address their specific concern directly
 
 Examples:
-- Guest: ""Is it a rooftop pool?"" → ""We have a lovely outdoor Swimming Pool available from 6:00 AM to 10:00 PM, with pool towels provided. While it's not on the rooftop, it's a great spot to relax and unwind!""
-- Guest: ""What kind of pool?"" → ""We have an outdoor Swimming Pool open daily from 6:00 AM to 10:00 PM. Pool towels are provided, and children under 12 must be supervised. It's perfect for a refreshing swim!""
+- Guest: ""Is it a rooftop pool?"" -> ""We have a lovely outdoor Swimming Pool available from 6:00 AM to 10:00 PM, with pool towels provided. While it's not on the rooftop, it's a great spot to relax and unwind!""
+- Guest: ""What kind of pool?"" -> ""We have an outdoor Swimming Pool open daily from 6:00 AM to 10:00 PM. Pool towels are provided, and children under 12 must be supervised. It's perfect for a refreshing swim!""
 
 Generate a natural, warm response:";
 
@@ -907,6 +976,11 @@ Generate a natural, warm response:";
         public string OriginalText { get; set; } = string.Empty;
         public double Confidence { get; set; }
         public int? RequestedQuantity { get; set; }
+
+        // Reflection fields for hallucination prevention
+        public Dictionary<string, string?>? Citations { get; set; }
+        public string[]? Assumptions { get; set; }
+        public string[]? Uncertainties { get; set; }
     }
 
     private class IntentAnalysisResponse

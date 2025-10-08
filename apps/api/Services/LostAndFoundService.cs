@@ -17,6 +17,7 @@ public interface ILostAndFoundService
         string? color = null,
         string? brand = null,
         string? locationLost = null,
+        string? roomNumber = null,
         string? reporterName = null,
         decimal? rewardAmount = null);
         
@@ -40,12 +41,14 @@ public interface ILostAndFoundService
     Task<List<LostItem>> GetLostItemsAsync(int tenantId, string? status = null, string? reporterPhone = null);
     Task<List<FoundItem>> GetFoundItemsAsync(int tenantId, string? status = null);
     Task<List<LostAndFoundMatch>> GetPendingMatchesAsync(int tenantId);
-    
+
+    Task<bool> UpdateLostItemLocationAsync(int tenantId, int lostItemId, string location);
+
     Task<(bool IsLostAndFoundRequest, string RequestType, object? ParsedDetails)> DetectLostAndFoundRequestAsync(
         TenantContext tenantContext,
         string message,
         string senderPhone);
-        
+
     Task ProcessDisposalWarningsAsync(int tenantId);
     Task<bool> MarkItemForDisposalAsync(int tenantId, int foundItemId, string reason);
     
@@ -98,6 +101,7 @@ public class LostAndFoundService : ILostAndFoundService
         string? color = null,
         string? brand = null,
         string? locationLost = null,
+        string? roomNumber = null,
         string? reporterName = null,
         decimal? rewardAmount = null)
     {
@@ -112,6 +116,7 @@ public class LostAndFoundService : ILostAndFoundService
             Color = color,
             Brand = brand,
             LocationLost = locationLost,
+            RoomNumber = roomNumber,
             ReporterPhone = reporterPhone,
             ReporterName = reporterName,
             ConversationId = conversationId,
@@ -392,6 +397,26 @@ public class LostAndFoundService : ILostAndFoundService
             .OrderByDescending(m => m.MatchScore)
             .ThenByDescending(m => m.CreatedAt)
             .ToListAsync();
+    }
+
+    public async Task<bool> UpdateLostItemLocationAsync(int tenantId, int lostItemId, string location)
+    {
+        using var scope = new TenantScope(_context, tenantId);
+
+        var lostItem = await _context.LostItems
+            .FirstOrDefaultAsync(l => l.Id == lostItemId && l.TenantId == tenantId);
+
+        if (lostItem == null)
+        {
+            _logger.LogWarning("Lost item {LostItemId} not found for tenant {TenantId}", lostItemId, tenantId);
+            return false;
+        }
+
+        lostItem.LocationLost = location;
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Updated location for lost item {LostItemId} to '{Location}'", lostItemId, location);
+        return true;
     }
 
     public async Task<(bool IsLostAndFoundRequest, string RequestType, object? ParsedDetails)> DetectLostAndFoundRequestAsync(

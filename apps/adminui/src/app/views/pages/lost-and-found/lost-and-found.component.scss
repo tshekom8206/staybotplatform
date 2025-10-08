@@ -1,0 +1,428 @@
+// Lost & Found Component Styles
+// Following NobleUI Bootstrap patterns and custom design
+
+// Icon Badge Styles
+.icon-badge {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+
+  .feather-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// Item Card Styles
+.lost-item-card,
+.found-item-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.item-icon-lg {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .feather-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+// Details Grid
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .detail-label {
+      color: #6c757d;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+  }
+}
+
+// Match Item Cards
+.match-item {
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .feather-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Category Selection Grid (Register Modal)
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+
+  .category-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    min-height: 100px;
+
+    .feather-icon {
+      width: 32px;
+      height: 32px;
+      color: #6c757d;
+    }
+
+    span {
+      font-size: 0.875rem;
+      color: #495057;
+      font-weight: 500;
+    }
+
+    &:hover {
+      border-color: #0d6efd;
+      background: rgba(13, 110, 253, 0.05);
+
+      .feather-icon {
+        color: #0d6efd;
+      }
+
+      span {
+        color: #0d6efd;
+      }
+    }
+
+    &.active {
+      border-color: #0d6efd;
+      background: rgba(13, 110, 253, 0.1);
+
+      .feather-icon {
+        color: #0d6efd;
+      }
+
+      span {
+        color: #0d6efd;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// Status Badges Enhancement
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+
+  &.bg-info-subtle {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+    color: #0dcaf0 !important;
+  }
+}
+
+// Alert Enhancements
+.alert {
+  &.bg-danger.bg-opacity-10 {
+    .feather-icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &.bg-success.bg-opacity-10 {
+    .feather-icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &.bg-warning.bg-opacity-10 {
+    .feather-icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &.bg-info.bg-opacity-10 {
+    .feather-icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+// Tab Pills Enhancement
+.nav-pills {
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    color: #6c757d;
+    transition: all 0.2s ease;
+
+    .feather-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &.active {
+      background-color: #0d6efd;
+      color: white;
+
+      .badge {
+        background-color: white !important;
+        color: #0d6efd !important;
+      }
+    }
+
+    &:hover:not(.active) {
+      background-color: rgba(13, 110, 253, 0.1);
+      color: #0d6efd;
+    }
+  }
+}
+
+// Card Border Enhancements
+.border-start {
+  border-left-width: 4px !important;
+}
+
+.border-2 {
+  border-width: 2px !important;
+}
+
+.border-3 {
+  border-width: 3px !important;
+}
+
+// Cursor Utilities
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// Stats Card Icon
+.stats-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .feather-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// Match Score Colors
+.bg-success {
+  &.border-success {
+    border-color: #198754 !important;
+  }
+}
+
+.bg-info {
+  &.border-info {
+    border-color: #0dcaf0 !important;
+  }
+}
+
+.bg-warning {
+  &.border-warning {
+    border-color: #ffc107 !important;
+  }
+}
+
+.bg-secondary {
+  &.border-secondary {
+    border-color: #6c757d !important;
+  }
+}
+
+// Modal Category Grid Mobile Responsive
+@media (max-width: 768px) {
+  .category-grid {
+    grid-template-columns: repeat(3, 1fr);
+
+    .category-card {
+      padding: 1rem 0.5rem;
+      min-height: 80px;
+
+      .feather-icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      span {
+        font-size: 0.75rem;
+      }
+    }
+  }
+
+  .stats-icon {
+    width: 40px;
+    height: 40px;
+
+    .feather-icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .item-icon-lg {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+
+    .feather-icon {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+// Page Title Enhancement
+.page-title {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 0;
+
+  .feather-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+// Empty State
+.text-muted {
+  .feather-icon {
+    opacity: 0.5;
+  }
+}
+
+// Card Footer Actions
+.card-footer {
+  padding: 0.75rem 1rem;
+
+  .btn-sm {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+
+    .feather-icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+// Loading State
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+// Form Enhancements
+.form-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.form-control,
+.form-select {
+  border-color: #dee2e6;
+
+  &:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+}
+
+// Input Group Enhancement
+.input-group-text {
+  .feather-icon {
+    width: 16px;
+    height: 16px;
+    color: #6c757d;
+  }
+}
+
+// Modal Header Enhancement
+.modal-header {
+  .modal-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .feather-icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// Button Icon Alignment
+.btn {
+  .feather-icon {
+    vertical-align: middle;
+  }
+}
+
+// Responsive Adjustments
+@media (max-width: 576px) {
+  .page-title {
+    font-size: 1.25rem;
+
+    .feather-icon {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  .d-flex.gap-2 {
+    gap: 0.5rem !important;
+  }
+
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+}

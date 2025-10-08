@@ -238,26 +238,38 @@ CRITICAL ANALYSIS REQUIREMENTS:
 4. INTENT CLASSIFICATION: What does the guest actually want based on both the message AND conversation flow?
 5. CONFIDENCE SCORING: How certain are you about the classification considering the full conversation context?
 
-SERVICE CATEGORIES:
+SERVICE CATEGORIES (use exact category names):
 - FOOD_BEVERAGE: Food items, drinks, beverages (including sparkling water, still water, juices)
-- SPA_WELLNESS: Actual spa treatments, massages, wellness services
+- MASSAGE: Massages, spa treatments, wellness services (including aromatherapy, hot stone, deep tissue)
+- SPA: General spa services, spa packages, spa facilities
+- LOCAL_TOURS: Tours, safaris, excursions, guided activities, transfers, sightseeing
+- CONFERENCE_ROOM: Conference rooms, meeting rooms, business centers, event spaces
+- DINING: Restaurant reservations, table bookings, dining experiences
+- ACTIVITIES: Activities, experiences, workshops, classes
 - MAINTENANCE: Repairs, technical issues, room problems
 - HOUSEKEEPING: Cleaning, amenities, towels, toiletries
-- ACTIVITIES_EXPERIENCES: Tours, safaris, excursions, activities, bookable experiences, transfers
-- CONCIERGE: Information, bookings, general assistance
+- CONCIERGE: Information, general assistance (not bookings)
+
+BOOKING DETECTION:
+- If guest wants to book/reserve MASSAGE, SPA, LOCAL_TOURS, CONFERENCE_ROOM, DINING, or ACTIVITIES → use BOOKING intent
+- Use the specific category name (MASSAGE, SPA, etc.), NOT generic categories like SPA_WELLNESS
 
 RESPOND WITH VALID JSON:
 {{
     ""primaryIntent"": ""REQUEST_ITEM | REQUEST_SERVICE | INQUIRY | COMPLAINT | BOOKING"",
-    ""serviceCategory"": ""FOOD_BEVERAGE | SPA_WELLNESS | MAINTENANCE | HOUSEKEEPING | ACTIVITIES_EXPERIENCES | CONCIERGE"",
+    ""serviceCategory"": ""FOOD_BEVERAGE | MASSAGE | SPA | LOCAL_TOURS | CONFERENCE_ROOM | DINING | ACTIVITIES | MAINTENANCE | HOUSEKEEPING | CONCIERGE"",
     ""specificItem"": ""exact item or service name"",
     ""overallConfidence"": 0.0-1.0,
     ""categoryConfidences"": {{
         ""FOOD_BEVERAGE"": 0.0-1.0,
-        ""SPA_WELLNESS"": 0.0-1.0,
+        ""MASSAGE"": 0.0-1.0,
+        ""SPA"": 0.0-1.0,
+        ""LOCAL_TOURS"": 0.0-1.0,
+        ""CONFERENCE_ROOM"": 0.0-1.0,
+        ""DINING"": 0.0-1.0,
+        ""ACTIVITIES"": 0.0-1.0,
         ""MAINTENANCE"": 0.0-1.0,
         ""HOUSEKEEPING"": 0.0-1.0,
-        ""ACTIVITIES_EXPERIENCES"": 0.0-1.0,
         ""CONCIERGE"": 0.0-1.0
     }},
     ""contextFactors"": {{
@@ -270,16 +282,77 @@ RESPOND WITH VALID JSON:
     }},
     ""detectedKeywords"": [""actual keywords in context""],
     ""relevantBusinessRules"": [""spa_services_availability"", ""room_service_hours"", ""maintenance_priority""],
-    ""reasoningExplanation"": ""Clear explanation of why you classified this way""
+    ""reasoningExplanation"": ""Clear explanation of why you classified this way"",
+    ""citations"": {{
+        ""primaryIntent"": ""Exact quote from message that indicates the intent type"",
+        ""serviceCategory"": ""Exact quote or reasoning for category classification"",
+        ""specificItem"": ""Exact quote mentioning the item or 'inferred from context'"",
+        ""availableServiceMatch"": ""Quote from Available Services list that matches, or 'NOT FOUND in available services'"",
+        ""availableItemMatch"": ""Quote from Available Items list that matches, or 'NOT FOUND in available items'""
+    }},
+    ""assumptions"": [""List every assumption made during classification""],
+    ""uncertainties"": [""List any uncertainties about the classification""]
 }}
 
+REFLECTION REQUIREMENTS (CRITICAL - prevents hallucinations):
+
+1. CITATIONS - For each classification, provide exact quotes:
+   - primaryIntent: Quote the EXACT phrase showing REQUEST_ITEM vs REQUEST_SERVICE vs INQUIRY etc.
+     Example: ""Guest said: 'I need sparkling water' → REQUEST_ITEM (direct item request)""
+
+   - serviceCategory: Quote or explain category determination
+     Example: ""'sparkling water' is a beverage → FOOD_BEVERAGE category""
+
+   - specificItem: Quote the exact entity OR state inference
+     Example: ""Guest said: 'sparkling water' → exact match""
+     Example: ""Guest said: 'some water' → inferred 'water' (generic, requires clarification)""
+
+   - availableServiceMatch: MUST check Available Services list
+     Example: ""Found 'Room Service' in available services list""
+     Example: ""NOT FOUND: 'Spa Services' is not in available services - DO NOT suggest spa""
+
+   - availableItemMatch: MUST check Available Items list
+     Example: ""Found 'Sparkling Water' in available items list""
+     Example: ""NOT FOUND: 'caviar' is not in available items - cannot fulfill this request""
+
+2. ASSUMPTIONS - List every assumption made:
+   - Example: ""Assumed 'water' means still water (default) unless qualified""
+   - Example: ""Assumed conversation context means guest wants confirmation, not new request""
+   - Example: ""Assumed FOOD_BEVERAGE based on 'sparkling water' NOT 'spa water therapy'""
+
+3. UNCERTAINTIES - Explicitly state classification doubts:
+   - Example: ""Not certain if 'spa' in 'sparkling water' should trigger SPA_WELLNESS""
+   - Example: ""Confidence reduced because exact item name not in available items""
+   - Example: ""Cannot determine if this is REQUEST_ITEM or just INQUIRY without more context""
+
+4. ""I DON'T KNOW"" ENFORCEMENT FOR HOTEL CONFIGURATION:
+   - If item/service NOT in available lists: SET availableServiceMatch or availableItemMatch = 'NOT FOUND'
+   - If NOT in configuration: REDUCE confidence and ADD to uncertainties
+   - NEVER classify as high confidence if not found in hotel's actual services/items
+   - Example: ""Uncertainty: Guest requested 'caviar' but NOT FOUND in available items. Confidence = 0.4""
+
+5. CONVERSATION CONTEXT VERIFICATION:
+   - If recent conversation shows bot offered options, CITE those options
+   - Match guest response to those specific options
+   - Example: ""Bot previously offered: 'sparkling or still water?' → Guest said 'sparkling' → exact match to previous offer""
+
+6. CONFIDENCE SCORING WITH REFLECTION:
+   - High confidence (0.8-1.0): Exact match in available items/services, clear intent, no uncertainties
+   - Medium confidence (0.6-0.8): Intent clear but item not exact match or minor assumptions needed
+   - Low confidence (0.3-0.6): Significant uncertainties, item/service NOT in configuration, or ambiguous intent
+   - Very Low (<0.3): Cannot determine, NOT in hotel config, or conflicting signals
+
 EXAMPLES:
-- ""I need sparkling water"" → FOOD_BEVERAGE (water is a beverage, NOT spa related)
-- ""I want a spa treatment"" → SPA_WELLNESS (actual spa service request)
-- ""Book me a massage"" → SPA_WELLNESS (wellness service)
-- ""I want to go on a safari"" → ACTIVITIES_EXPERIENCES + BOOKING intent (bookable activity/experience)
-- ""Can you arrange a tour?"" → ACTIVITIES_EXPERIENCES + BOOKING intent (bookable experience)
-- ""My AC is broken"" → MAINTENANCE (technical repair)
+- ""I need sparkling water"" → FOOD_BEVERAGE + REQUEST_ITEM (water is a beverage, NOT spa related)
+- ""Can I book a spa?"" → MASSAGE + BOOKING (spa treatment is a bookable massage service)
+- ""I want a massage"" → MASSAGE + BOOKING (massage booking request)
+- ""Book me a traditional massage"" → MASSAGE + BOOKING (specific massage type)
+- ""I want to go on a safari"" → LOCAL_TOURS + BOOKING (bookable tour/experience)
+- ""Can you arrange a tour?"" → LOCAL_TOURS + BOOKING (bookable tour)
+- ""I need the conference room tomorrow"" → CONFERENCE_ROOM + BOOKING (meeting room booking)
+- ""Can I make a dinner reservation?"" → DINING + BOOKING (restaurant booking)
+- ""My AC is broken"" → MAINTENANCE + REQUEST_SERVICE (technical repair)
+- ""I need towels"" → HOUSEKEEPING + REQUEST_ITEM (housekeeping item)
 
 Analyze the message with semantic understanding, not just keyword matching.";
 

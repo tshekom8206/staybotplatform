@@ -1,0 +1,279 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+  <div>
+    <h4 class="mb-3 mb-md-0">Service Business Rules</h4>
+    <p class="text-muted mb-0">Configure validation rules and behavior for hotel services</p>
+  </div>
+  <div class="d-flex align-items-center flex-wrap text-nowrap">
+    <button type="button" class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0" (click)="refresh()">
+      <i class="btn-icon-prepend" data-feather="refresh-cw" appFeatherIcon></i>
+      Refresh
+    </button>
+    <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" [routerLink]="['/business-rules']">
+      <i class="btn-icon-prepend" data-feather="arrow-left" appFeatherIcon></i>
+      Back to Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Search</label>
+            <input type="text" class="form-control" placeholder="Search services..." [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Category</label>
+            <select class="form-select" [(ngModel)]="categoryFilter" (ngModelChange)="applyFilters()">
+              <option value="all">All Categories</option>
+              <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+              <option value="all">All Services</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Inactive Only</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()">
+              <i data-feather="x" appFeatherIcon class="icon-sm me-1"></i>
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="text-muted mt-3">Loading services...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error && !loading" class="alert alert-danger" role="alert">
+  <i data-feather="alert-circle" appFeatherIcon class="me-2"></i>
+  {{ error }}
+</div>
+
+<!-- Services List -->
+<div *ngIf="!loading && !error" class="row">
+  <div class="col-12">
+    <!-- Service Cards -->
+    <div *ngFor="let service of filteredServices" class="card mb-3">
+      <div class="card-body">
+        <!-- Service Header -->
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center mb-2">
+              <h5 class="mb-0 me-3">{{ service.name }}</h5>
+              <span [class]="getStatusBadgeClass(service.isActive)">
+                {{ service.isActive ? 'Active' : 'Inactive' }}
+              </span>
+              <span class="badge bg-light text-dark ms-2">{{ service.category }}</span>
+            </div>
+            <p class="text-muted mb-2" *ngIf="service.description">{{ service.description }}</p>
+            <div class="d-flex align-items-center text-muted small">
+              <i data-feather="shield" appFeatherIcon class="icon-sm me-1"></i>
+              <span class="me-3">{{ service.ruleCount || 0 }} rules ({{ service.activeRuleCount || 0 }} active)</span>
+              <i data-feather="clock" appFeatherIcon class="icon-sm me-1"></i>
+              <span *ngIf="service.lastModified">Last modified {{ service.lastModified | date:'short' }}</span>
+              <span *ngIf="service.lastModifiedBy" class="ms-1">by {{ service.lastModifiedBy }}</span>
+            </div>
+          </div>
+          <div class="d-flex align-items-center">
+            <button class="btn btn-sm btn-primary me-2" (click)="openCreateRuleModal(service)">
+              <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i>
+              Add Rule
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="toggleServiceExpanded(service)">
+              <i [attr.data-feather]="isServiceExpanded(service.id) ? 'chevron-up' : 'chevron-down'" appFeatherIcon class="icon-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Rules List (Expanded) -->
+        <div *ngIf="isServiceExpanded(service.id)" class="border-top pt-3">
+          <div *ngIf="loadingRules" class="text-center py-3">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+              <span class="visually-hidden">Loading rules...</span>
+            </div>
+          </div>
+
+          <div *ngIf="!loadingRules && getServiceRules(service.id).length === 0" class="text-center text-muted py-4">
+            <i data-feather="inbox" appFeatherIcon class="icon-lg mb-2"></i>
+            <p class="mb-0">No rules configured for this service</p>
+            <button class="btn btn-sm btn-primary mt-2" (click)="openCreateRuleModal(service)">
+              Create First Rule
+            </button>
+          </div>
+
+          <div *ngIf="!loadingRules && getServiceRules(service.id).length > 0">
+            <div *ngFor="let rule of getServiceRules(service.id)" class="card mb-2 border" [class.border-success]="rule.isActive" [class.border-secondary]="!rule.isActive">
+              <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-2">
+                      <i [attr.data-feather]="getRuleTypeIcon(rule.ruleType)" appFeatherIcon class="icon-sm me-2 text-primary"></i>
+                      <h6 class="mb-0 me-2">{{ getRuleTypeLabel(rule.ruleType) }}</h6>
+                      <span [class]="getStatusBadgeClass(rule.isActive)">
+                        {{ rule.isActive ? 'Active' : 'Inactive' }}
+                      </span>
+                    </div>
+                    <div class="mb-2">
+                      <small class="text-muted">Rule Key:</small>
+                      <code class="ms-1">{{ rule.ruleKey }}</code>
+                    </div>
+                    <div class="mb-2">
+                      <small class="text-muted">Value:</small>
+                      <code class="ms-1">{{ rule.ruleValue }}</code>
+                    </div>
+                    <div class="mb-2" *ngIf="rule.validationMessage">
+                      <small class="text-muted">Validation Message:</small>
+                      <p class="mb-0 mt-1 text-dark small">"{{ rule.validationMessage }}"</p>
+                    </div>
+                    <div class="d-flex align-items-center">
+                      <small class="text-muted me-2">Priority:</small>
+                      <div class="d-flex">
+                        <i *ngFor="let star of getPriorityStars(rule.priority)" [attr.data-feather]="star" appFeatherIcon class="icon-sm text-warning"></i>
+                      </div>
+                      <small class="text-muted ms-3" *ngIf="rule.minConfidenceScore">Min Confidence: {{ (rule.minConfidenceScore * 100).toFixed(0) }}%</small>
+                    </div>
+                  </div>
+                  <div class="d-flex flex-column gap-2">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" [checked]="rule.isActive" (change)="toggleRuleActive(service, rule)" [id]="'rule-' + rule.id">
+                      <label class="form-check-label" [for]="'rule-' + rule.id">Active</label>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="openEditRuleModal(service, rule)" [ngbTooltip]="'Edit rule'">
+                      <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" (click)="confirmDeleteRule(service, rule)" [ngbTooltip]="'Delete rule'">
+                      <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredServices.length === 0 && !loading" class="card">
+      <div class="card-body text-center py-5">
+        <i data-feather="search" appFeatherIcon class="icon-xxl text-muted mb-3"></i>
+        <h5 class="text-muted">No services found</h5>
+        <p class="text-muted mb-0">Try adjusting your filters or search term</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rule Editor Modal -->
+<ng-template #ruleEditorModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">{{ isEditMode ? 'Edit Rule' : 'Create New Rule' }}</h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="ruleForm">
+      <div class="mb-3">
+        <label class="form-label">Rule Type <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="ruleType">
+          <option value="">Select a rule type...</option>
+          <option *ngFor="let type of ruleTypes" [value]="type.value">{{ type.label }}</option>
+        </select>
+        <div class="form-text">Choose the type of validation this rule will perform</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Rule Key <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="ruleKey" placeholder="e.g., max_group_size">
+        <div class="form-text">Unique identifier for this rule (lowercase with underscores)</div>
+        <div class="text-danger small" *ngIf="ruleForm.get('ruleKey')?.invalid && ruleForm.get('ruleKey')?.touched">
+          Invalid rule key format. Use lowercase letters and underscores only.
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Rule Value (JSON) <span class="text-danger">*</span></label>
+        <textarea class="form-control" formControlName="ruleValue" rows="3" placeholder='{"maxPeople": 8}'></textarea>
+        <div class="form-text">JSON object containing the rule configuration</div>
+        <div class="text-danger small" *ngIf="ruleForm.get('ruleValue')?.hasError('invalidJson') && ruleForm.get('ruleValue')?.touched">
+          Invalid JSON format. Please check your syntax.
+        </div>
+        <div class="text-success small" *ngIf="ruleForm.get('ruleValue')?.valid && ruleForm.get('ruleValue')?.value">
+          ✓ Valid JSON
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Validation Message <span class="text-danger">*</span></label>
+        <textarea class="form-control" formControlName="validationMessage" rows="3" placeholder="I'm sorry, but..."></textarea>
+        <div class="form-text d-flex justify-content-between">
+          <span>Message shown to guests when validation fails</span>
+          <span>{{ ruleForm.get('validationMessage')?.value?.length || 0 }} / 500</span>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Priority (1-5) <span class="text-danger">*</span></label>
+          <input type="number" class="form-control" formControlName="priority" min="1" max="5">
+          <div class="form-text">Higher priority rules are checked first</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Minimum Confidence Score</label>
+          <input type="number" class="form-control" formControlName="minConfidenceScore" min="0" max="1" step="0.05">
+          <div class="form-text">AI confidence threshold (0.0 - 1.0)</div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" formControlName="isActive" id="isActiveCheck">
+          <label class="form-check-label" for="isActiveCheck">
+            Activate rule immediately
+          </label>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-primary" (click)="saveRule()" [disabled]="!ruleForm.valid">
+      {{ isEditMode ? 'Update Rule' : 'Create Rule' }}
+    </button>
+  </div>
+</ng-template>
+
+<!-- Delete Confirmation Modal -->
+<ng-template #deleteConfirmModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title text-danger">Delete Rule</h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <div class="text-center mb-3">
+      <i data-feather="alert-triangle" appFeatherIcon class="icon-xxl text-danger"></i>
+    </div>
+    <p class="text-center mb-0">Are you sure you want to delete the rule <strong>{{ ruleToDelete?.ruleName }}</strong>?</p>
+    <p class="text-center text-muted mt-2">This action cannot be undone.</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-danger" (click)="deleteRule()">Delete Rule</button>
+  </div>
+</ng-template>

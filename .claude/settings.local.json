@@ -62,7 +62,12 @@
       "Bash(az webapp config appsettings list:*)",
       "Bash(dotnet publish:*)",
       "Bash(start /B dotnet run)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(Select-String \"listening\" -Context 0,1)",
+      "Bash(Select-String \"error\")",
+      "mcp__ide__getDiagnostics",
+      "Bash(Select-Object -Last 50)",
+      "Bash(Where-Object {$_d -eq 27224})"
     ],
     "deny": [],
     "ask": []

@@ -54,6 +54,7 @@ public class RequestItem
     public virtual Tenant Tenant { get; set; } = null!;
     public virtual ICollection<StaffTask> StaffTasks { get; set; } = new List<StaffTask>();
     public virtual ICollection<StockEvent> StockEvents { get; set; } = new List<StockEvent>();
+    public virtual ICollection<RequestItemRule> BusinessRules { get; set; } = new List<RequestItemRule>();
 }
 
 public class StaffTask

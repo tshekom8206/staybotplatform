@@ -710,13 +710,27 @@ namespace Hostr.Api.Migrations
                     b.Property<int?>("AssignedAgentId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("BookingInfoState")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ConversationMode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("LastBotAction")
+                        .HasColumnType("text");
+
                     b.Property<DateTime?>("LastBotReplyAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("StateVariables")
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -798,6 +812,55 @@ namespace Hostr.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("ConversationFlows");
+                });
+
+            modelBuilder.Entity("Hostr.Api.Models.ConversationStateRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContextData")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ConversationId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PendingField")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("StateType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("ConversationStateRecords");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ConversationTransfer", b =>
@@ -2153,6 +2216,10 @@ namespace Hostr.Api.Migrations
                     b.Property<decimal?>("RewardAmount")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("RoomNumber")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<string>("SpecialInstructions")
                         .HasColumnType("text");
 
@@ -2963,6 +3030,94 @@ namespace Hostr.Api.Migrations
                     b.ToTable("RequestItems");
                 });
 
+            modelBuilder.Entity("Hostr.Api.Models.RequestItemRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("MaxPerGuest")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MaxPerRoom")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("MinConfidenceScore")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RelevanceContext")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("RequestItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RequiresActiveBooking")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RestrictedHours")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("RuleKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("RuleType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("RuleValue")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("UpsellSuggestions")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ValidationMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "RequestItemId", "IsActive" }, "IX_RequestItemRules_Item_Active");
+
+                    b.HasIndex(new[] { "RuleType" }, "IX_RequestItemRules_RuleType");
+
+                    b.HasIndex(new[] { "TenantId" }, "IX_RequestItemRules_Tenant");
+
+                    b.ToTable("RequestItemRules");
+                });
+
             modelBuilder.Entity("Hostr.Api.Models.ResponseTemplate", b =>
                 {
                     b.Property<int>("Id")
@@ -3135,6 +3290,81 @@ namespace Hostr.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("Services");
+                });
+
+            modelBuilder.Entity("Hostr.Api.Models.ServiceBusinessRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal?>("MinConfidenceScore")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RelevanceContext")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("RuleKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("RuleType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("RuleValue")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("UpsellSuggestions")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ValidationMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "RuleType" }, "IX_ServiceBusinessRules_RuleType");
+
+                    b.HasIndex(new[] { "ServiceId", "IsActive" }, "IX_ServiceBusinessRules_Service_Active");
+
+                    b.HasIndex(new[] { "TenantId" }, "IX_ServiceBusinessRules_Tenant");
+
+                    b.ToTable("ServiceBusinessRules");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ServiceCategory", b =>
@@ -4401,6 +4631,25 @@ namespace Hostr.Api.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("Hostr.Api.Models.ConversationStateRecord", b =>
+                {
+                    b.HasOne("Hostr.Api.Models.Conversation", "Conversation")
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Hostr.Api.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("Hostr.Api.Models.ConversationTransfer", b =>
                 {
                     b.HasOne("Hostr.Api.Models.Conversation", "Conversation")
@@ -4933,6 +5182,25 @@ namespace Hostr.Api.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("Hostr.Api.Models.RequestItemRule", b =>
+                {
+                    b.HasOne("Hostr.Api.Models.RequestItem", "RequestItem")
+                        .WithMany("BusinessRules")
+                        .HasForeignKey("RequestItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Hostr.Api.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RequestItem");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("Hostr.Api.Models.ResponseTemplate", b =>
                 {
                     b.HasOne("Hostr.Api.Models.Tenant", "Tenant")
@@ -4962,6 +5230,25 @@ namespace Hostr.Api.Migrations
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Hostr.Api.Models.ServiceBusinessRule", b =>
+                {
+                    b.HasOne("Hostr.Api.Models.Service", "Service")
+                        .WithMany("BusinessRules")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Hostr.Api.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Service");
 
                     b.Navigation("Tenant");
                 });
@@ -5330,9 +5617,16 @@ namespace Hostr.Api.Migrations
 
             modelBuilder.Entity("Hostr.Api.Models.RequestItem", b =>
                 {
+                    b.Navigation("BusinessRules");
+
                     b.Navigation("StaffTasks");
 
                     b.Navigation("StockEvents");
+                });
+
+            modelBuilder.Entity("Hostr.Api.Models.Service", b =>
+                {
+                    b.Navigation("BusinessRules");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ServiceCategory", b =>

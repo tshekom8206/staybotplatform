@@ -1,0 +1,200 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+  <div>
+    <h4 class="mb-3 mb-md-0">Upselling Management</h4>
+    <p class="text-muted mb-0">Manage upsell items, strategies, and monitor performance</p>
+  </div>
+  <div class="d-flex align-items-center flex-wrap text-nowrap">
+    <button type="button" class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0" (click)="refresh()">
+      <i class="btn-icon-prepend" data-feather="refresh-cw" appFeatherIcon></i>
+      Refresh
+    </button>
+    <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" [routerLink]="['/business-rules']">
+      <i class="btn-icon-prepend" data-feather="arrow-left" appFeatherIcon></i>
+      Back to Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="text-muted mt-3">Loading upsell data...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error && !loading" class="alert alert-danger" role="alert">
+  <i data-feather="alert-circle" appFeatherIcon class="me-2"></i>
+  {{ error }}
+</div>
+
+<!-- Content -->
+<div *ngIf="!loading && !error">
+  <div class="card">
+    <div class="card-body">
+      <!-- Tabs -->
+      <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-tabs">
+        <li [ngbNavItem]="1">
+          <button ngbNavLink>
+            <i data-feather="gift" appFeatherIcon class="icon-sm me-2"></i>
+            Upsell Items
+          </button>
+          <ng-template ngbNavContent>
+            <div class="pt-3">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Upsell Items Library</h6>
+                <button class="btn btn-sm btn-primary">
+                  <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i>
+                  Create Upsell Item
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Categories</th>
+                      <th class="text-end">Price</th>
+                      <th>Status</th>
+                      <th class="text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of upsellItems">
+                      <td>
+                        <div>
+                          <strong>{{ item.title }}</strong>
+                          <p class="text-muted mb-0 small">{{ item.description }}</p>
+                        </div>
+                      </td>
+                      <td>
+                        <span *ngFor="let category of item.categories" class="badge bg-light text-dark me-1">
+                          {{ category }}
+                        </span>
+                      </td>
+                      <td class="text-end">{{ formatCurrency(item.priceCents) }}</td>
+                      <td>
+                        <span [class]="item.isActive ? 'badge bg-success' : 'badge bg-secondary'">
+                          {{ item.isActive ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                      <td class="text-center">
+                        <button class="btn btn-sm btn-outline-secondary me-1" [ngbTooltip]="'Edit'">
+                          <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" [ngbTooltip]="'Delete'">
+                          <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div *ngIf="upsellItems.length === 0" class="text-center text-muted py-5">
+                <i data-feather="inbox" appFeatherIcon class="icon-xxl mb-3"></i>
+                <p class="mb-0">No upsell items configured yet</p>
+                <button class="btn btn-sm btn-primary mt-2">Create First Upsell Item</button>
+              </div>
+            </div>
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="2">
+          <button ngbNavLink>
+            <i data-feather="zap" appFeatherIcon class="icon-sm me-2"></i>
+            Strategies
+          </button>
+          <ng-template ngbNavContent>
+            <div class="pt-3">
+              <div class="text-center text-muted py-5">
+                <i data-feather="settings" appFeatherIcon class="icon-xxl mb-3"></i>
+                <h5>Upsell Strategies</h5>
+                <p class="mb-0">Configure when and how upsell suggestions are presented</p>
+                <p class="text-muted small mt-2">Coming soon in the next release</p>
+              </div>
+            </div>
+          </ng-template>
+        </li>
+
+        <li [ngbNavItem]="3">
+          <button ngbNavLink>
+            <i data-feather="trending-up" appFeatherIcon class="icon-sm me-2"></i>
+            Performance
+          </button>
+          <ng-template ngbNavContent>
+            <div class="pt-3">
+              <h6 class="mb-3">Upsell Performance Analytics (Last 30 Days)</h6>
+
+              <!-- Summary Cards -->
+              <div class="row mb-4">
+                <div class="col-md-3" *ngIf="analytics">
+                  <div class="card bg-primary text-white">
+                    <div class="card-body">
+                      <h6 class="mb-1">Total Revenue</h6>
+                      <h3 class="mb-0">{{ formatCurrency(analytics.totalRevenue) }}</h3>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3" *ngIf="analytics">
+                  <div class="card bg-success text-white">
+                    <div class="card-body">
+                      <h6 class="mb-1">Conversion Rate</h6>
+                      <h3 class="mb-0">{{ formatPercentage(analytics.conversionRate) }}</h3>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3" *ngIf="analytics">
+                  <div class="card bg-info text-white">
+                    <div class="card-body">
+                      <h6 class="mb-1">Suggestions</h6>
+                      <h3 class="mb-0">{{ analytics.totalSuggestions }}</h3>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3" *ngIf="analytics">
+                  <div class="card bg-warning text-white">
+                    <div class="card-body">
+                      <h6 class="mb-1">Acceptances</h6>
+                      <h3 class="mb-0">{{ analytics.totalAccepted }}</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Top Performers Table -->
+              <div class="table-responsive" *ngIf="analytics">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Upsell Item</th>
+                      <th class="text-end">Suggestions</th>
+                      <th class="text-end">Acceptances</th>
+                      <th class="text-end">Conversion Rate</th>
+                      <th class="text-end">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let performer of analytics.topPerformers">
+                      <td>{{ performer.upsellItemTitle }}</td>
+                      <td class="text-end">{{ performer.suggestions }}</td>
+                      <td class="text-end">{{ performer.acceptances }}</td>
+                      <td class="text-end">
+                        <span class="text-success fw-bold">{{ formatPercentage(performer.conversionRate) }}</span>
+                      </td>
+                      <td class="text-end fw-bold">{{ formatCurrency(performer.revenue) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </ng-template>
+        </li>
+      </ul>
+
+      <div [ngbNavOutlet]="nav" class="mt-2"></div>
+    </div>
+  </div>
+</div>

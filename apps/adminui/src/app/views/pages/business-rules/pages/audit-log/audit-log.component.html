@@ -1,0 +1,124 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+  <div>
+    <h4 class="mb-3 mb-md-0">Audit Log</h4>
+    <p class="text-muted mb-0">Track all changes to business rules and configurations</p>
+  </div>
+  <div class="d-flex align-items-center flex-wrap text-nowrap">
+    <button type="button" class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0" (click)="refresh()">
+      <i class="btn-icon-prepend" data-feather="refresh-cw" appFeatherIcon></i>
+      Refresh
+    </button>
+    <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" [routerLink]="['/business-rules']">
+      <i class="btn-icon-prepend" data-feather="arrow-left" appFeatherIcon></i>
+      Back to Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Search</label>
+            <input type="text" class="form-control" placeholder="Search by user or entity..." [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Action</label>
+            <select class="form-select" [(ngModel)]="actionFilter" (ngModelChange)="applyFilters()">
+              <option value="all">All Actions</option>
+              <option *ngFor="let action of actions" [value]="action">{{ action }}</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Entity Type</label>
+            <select class="form-select" [(ngModel)]="entityTypeFilter" (ngModelChange)="applyFilters()">
+              <option value="all">All Types</option>
+              <option *ngFor="let type of entityTypes" [value]="type">{{ getEntityTypeLabel(type) }}</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Date From</label>
+            <input type="date" class="form-control" [(ngModel)]="dateFrom" (ngModelChange)="applyFilters()">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Date To</label>
+            <input type="date" class="form-control" [(ngModel)]="dateTo" (ngModelChange)="applyFilters()">
+          </div>
+          <div class="col-md-1 d-flex align-items-end">
+            <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()">
+              <i data-feather="x" appFeatherIcon class="icon-sm"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="text-muted mt-3">Loading audit log...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error && !loading" class="alert alert-danger" role="alert">
+  <i data-feather="alert-circle" appFeatherIcon class="me-2"></i>
+  {{ error }}
+</div>
+
+<!-- Audit Log Entries -->
+<div *ngIf="!loading && !error">
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Entity Type</th>
+              <th>Entity Name</th>
+              <th>IP Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of filteredEntries">
+              <td>
+                <div>{{ entry.timestamp | date:'short' }}</div>
+                <small class="text-muted">{{ entry.timestamp | date:'mediumDate' }}</small>
+              </td>
+              <td>
+                <div>{{ entry.userName }}</div>
+                <small class="text-muted">{{ entry.userEmail }}</small>
+              </td>
+              <td>
+                <span [class]="getActionClass(entry.action)">
+                  <i [attr.data-feather]="getActionIcon(entry.action)" appFeatherIcon class="icon-sm me-1"></i>
+                  {{ entry.action }}
+                </span>
+              </td>
+              <td>{{ getEntityTypeLabel(entry.entityType) }}</td>
+              <td>
+                <strong *ngIf="entry.entityName">{{ entry.entityName }}</strong>
+                <span *ngIf="!entry.entityName" class="text-muted">N/A</span>
+              </td>
+              <td><code>{{ entry.ipAddress }}</code></td>
+            </tr>
+            <tr *ngIf="filteredEntries.length === 0">
+              <td colspan="6" class="text-center text-muted py-4">
+                No audit log entries found
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

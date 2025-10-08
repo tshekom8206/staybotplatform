@@ -59,8 +59,8 @@ public class OpenAIService : IOpenAIService
         try
         {
             _logger.LogInformation("Generating response for user message: {Message}", userMessage);
-            
-            var chatOptions = new ChatCompletionsOptions("gpt-3.5-turbo", new List<ChatRequestMessage>
+
+            var chatOptions = new ChatCompletionsOptions("gpt-4.1-mini-2025-04-14", new List<ChatRequestMessage>
             {
                 new ChatRequestSystemMessage(systemPrompt),
                 new ChatRequestUserMessage($"Context: {context}\n\nAvailable Items: {itemsContext}\n\nUser Message: {userMessage}")
@@ -150,7 +150,7 @@ public class OpenAIService : IOpenAIService
             // Add current user message
             messages.Add(new ChatRequestUserMessage(userMessage));
 
-            var chatOptions = new ChatCompletionsOptions("gpt-3.5-turbo", messages)
+            var chatOptions = new ChatCompletionsOptions("gpt-4.1-mini-2025-04-14", messages)
             {
                 Temperature = 0.0f  // Set to 0 for factual, deterministic responses - NO HALLUCINATION
             };
@@ -416,7 +416,7 @@ public class OpenAIService : IOpenAIService
         {
             _logger.LogInformation("Generating structured response of type {Type}", typeof(T).Name);
 
-            var chatOptions = new ChatCompletionsOptions("gpt-3.5-turbo", new List<ChatRequestMessage>
+            var chatOptions = new ChatCompletionsOptions("gpt-4.1-mini-2025-04-14", new List<ChatRequestMessage>
             {
                 new ChatRequestUserMessage($"{prompt}\n\nIMPORTANT: Respond only with valid JSON that matches the requested structure. Do not include any additional text, explanations, or markdown formatting.")
             })

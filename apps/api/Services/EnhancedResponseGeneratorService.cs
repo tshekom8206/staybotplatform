@@ -111,19 +111,19 @@ public class EnhancedResponseGeneratorService : IEnhancedResponseGeneratorServic
         {
             ResponseTone.Professional, new Dictionary<string, string>
             {
-                { "greeting", "Good {timeOfDay}! I'm here to assist you with your inquiry." },
-                { "confirmation", "I can confirm that your request has been processed." },
-                { "apology", "I apologize for any inconvenience this may have caused." },
-                { "closure", "Please don't hesitate to reach out if you need further assistance." }
+                { "greeting", "Good {timeOfDay}! I'm delighted to assist you with your inquiry." },
+                { "confirmation", "Perfect! I can confirm that your request has been processed." },
+                { "apology", "I'm sorry for any inconvenience this may have caused." },
+                { "closure", "Please don't hesitate to reach out if you need anything else - I'm here to help!" }
             }
         },
         {
             ResponseTone.Friendly, new Dictionary<string, string>
             {
-                { "greeting", "Hi there! Hope you're having a great {timeOfDay}!" },
-                { "confirmation", "Great news! I've got that sorted for you." },
-                { "apology", "So sorry about that! Let me make it right." },
-                { "closure", "Feel free to message me anytime if you need anything else!" }
+                { "greeting", "Hi there! I hope you're having a wonderful {timeOfDay}!" },
+                { "confirmation", "Wonderful! I've got that sorted for you." },
+                { "apology", "I'm so sorry about that! Let me make it right for you." },
+                { "closure", "Feel free to reach out anytime if you need anything else!" }
             }
         },
         {
@@ -131,8 +131,8 @@ public class EnhancedResponseGeneratorService : IEnhancedResponseGeneratorServic
             {
                 { "greeting", "Hello! I understand you need some help, and I'm here for you." },
                 { "confirmation", "I completely understand your concern, and I've taken care of this for you." },
-                { "apology", "I truly understand how frustrating this must be. Let me help resolve this." },
-                { "closure", "I hope this helps! I'm always here if you need support." }
+                { "apology", "I truly understand how frustrating this must be. Let me help resolve this for you." },
+                { "closure", "I hope this helps! I'm always here if you need anything else." }
             }
         }
     };
@@ -140,16 +140,16 @@ public class EnhancedResponseGeneratorService : IEnhancedResponseGeneratorServic
     private static readonly Dictionary<string, List<string>> ContextualPhrases = new()
     {
         {
-            "morning", new List<string> { "Good morning", "Hope you're starting your day well", "This morning" }
+            "morning", new List<string> { "Good morning", "I hope you're starting your day well", "This morning" }
         },
         {
-            "afternoon", new List<string> { "Good afternoon", "Hope your day is going well", "This afternoon" }
+            "afternoon", new List<string> { "Good afternoon", "I hope your day is going well", "This afternoon" }
         },
         {
-            "evening", new List<string> { "Good evening", "Hope you've had a good day", "This evening" }
+            "evening", new List<string> { "Good evening", "I hope you've had a wonderful day", "This evening" }
         },
         {
-            "late", new List<string> { "Thanks for reaching out", "I'm here to help even at this hour", "Despite the late hour" }
+            "late", new List<string> { "Thank you for reaching out", "I'm here to help you even at this hour", "Despite the late hour" }
         }
     };
 
@@ -249,7 +249,7 @@ public class EnhancedResponseGeneratorService : IEnhancedResponseGeneratorServic
             // Return fallback response
             return new ResponseGenerationResult
             {
-                GeneratedResponse = "I apologize, but I'm experiencing some technical difficulties. A team member will assist you shortly.",
+                GeneratedResponse = "I'm sorry, but I'm experiencing some technical difficulties at the moment. Let me connect you with a team member who will be happy to assist you shortly.",
                 Tone = ResponseTone.Professional,
                 Complexity = ResponseComplexity.Simple,
                 ConfidenceScore = 0.1,
@@ -430,12 +430,12 @@ public class EnhancedResponseGeneratorService : IEnhancedResponseGeneratorServic
                 request.CurrentMessage,
                 request.PhoneNumber);
 
-            return response?.Reply ?? "I'm here to help! Could you please provide more details about what you need?";
+            return response?.Reply ?? "I'd be happy to help! Could you please provide more details about what you need?";
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating base response");
-            return "I'm here to assist you. How can I help today?";
+            return "I'd be happy to assist you! How can I help you today?";
         }
     }
 
@@ -645,7 +645,7 @@ public class EnhancedResponseGeneratorService : IEnhancedResponseGeneratorServic
     {
         if (!response.Contains("hour") && !response.Contains("time"))
         {
-            return response + " Our full services are available during business hours.";
+            return response + " I'm happy to let you know our full services are available during business hours.";
         }
         return response;
     }
@@ -654,7 +654,7 @@ public class EnhancedResponseGeneratorService : IEnhancedResponseGeneratorServic
     {
         if (!response.Contains("hour") && !response.Contains("time"))
         {
-            return response + " Please note that some services may have limited availability outside business hours.";
+            return response + " Please note that some services may have limited availability outside business hours, but I'm here to help however I can.";
         }
         return response;
     }
@@ -663,7 +663,7 @@ public class EnhancedResponseGeneratorService : IEnhancedResponseGeneratorServic
     {
         if (timeContext.MealPeriod != MealPeriod.None && response.Contains("menu"))
         {
-            return response + $" Our {timeContext.MealPeriod.ToString().ToLower()} menu is currently available.";
+            return response + $" I'm happy to let you know our {timeContext.MealPeriod.ToString().ToLower()} menu is currently available.";
         }
         return response;
     }
@@ -672,7 +672,7 @@ public class EnhancedResponseGeneratorService : IEnhancedResponseGeneratorServic
     {
         if (serviceContext.Metadata.TryGetValue("status", out var status) && status.ToString() == "Pending")
         {
-            return response + " I can see you have a pending service request that we're working on.";
+            return response + " I can see you have a pending service request that we're working on for you.";
         }
         return response;
     }
@@ -742,7 +742,7 @@ public class EnhancedResponseGeneratorService : IEnhancedResponseGeneratorServic
 
     private string AddEscalationContext(string response, BusinessRuleResult businessRules)
     {
-        return response + " I'll ensure a team member follows up with you personally.";
+        return response + " I'll make sure a team member follows up with you personally.";
     }
 
     private string AddCapacityConstraint(string response, BusinessRuleResult businessRules)

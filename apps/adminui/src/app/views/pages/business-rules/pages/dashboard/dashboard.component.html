@@ -1,0 +1,385 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+  <div>
+    <h4 class="mb-3 mb-md-0">Business Rules Management</h4>
+    <p class="text-muted mb-0">Manage chatbot behavior, validation rules, and upselling strategies</p>
+  </div>
+  <div class="d-flex align-items-center flex-wrap text-nowrap">
+    <button type="button" class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0" (click)="refresh()">
+      <i class="btn-icon-prepend" data-feather="refresh-cw" appFeatherIcon></i>
+      Refresh
+    </button>
+    <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" [routerLink]="['/business-rules/services']">
+      <i class="btn-icon-prepend" data-feather="plus" appFeatherIcon></i>
+      Create Rule
+    </button>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="text-muted mt-3">Loading dashboard data...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error && !loading" class="alert alert-danger" role="alert">
+  <i data-feather="alert-circle" appFeatherIcon class="me-2"></i>
+  {{ error }}
+</div>
+
+<!-- Dashboard Content -->
+<div *ngIf="!loading && !error && stats">
+  <!-- Statistics Row -->
+  <div class="row">
+    <!-- Active Rules Widget -->
+    <div class="col-md-3 col-sm-6 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline">
+            <h6 class="card-title mb-0">Active Rules</h6>
+            <div class="dropdown mb-2">
+              <a class="text-muted" [ngbTooltip]="'Currently active business rules'">
+                <i data-feather="info" appFeatherIcon></i>
+              </a>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6 col-md-12 col-xl-7">
+              <h3 class="mb-2">{{ stats.activeRules }}</h3>
+              <div class="d-flex align-items-baseline">
+                <p class="text-success">
+                  <span>{{ getActiveRulePercentage() }}%</span>
+                  <i data-feather="arrow-up" appFeatherIcon class="icon-sm mb-1"></i>
+                </p>
+              </div>
+            </div>
+            <div class="col-6 col-md-12 col-xl-5">
+              <div class="mt-xl-0 mt-3">
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-success" role="progressbar"
+                       [style.width.%]="getActiveRulePercentage()"
+                       [attr.aria-valuenow]="getActiveRulePercentage()"
+                       aria-valuemin="0"
+                       aria-valuemax="100"></div>
+                </div>
+                <p class="text-muted mt-2 mb-0"><small>of {{ stats.totalRules }} total</small></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Draft Rules Widget -->
+    <div class="col-md-3 col-sm-6 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline">
+            <h6 class="card-title mb-0">Draft Rules</h6>
+            <div class="dropdown mb-2">
+              <a class="text-muted" [ngbTooltip]="'Rules saved but not activated'">
+                <i data-feather="info" appFeatherIcon></i>
+              </a>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6 col-md-12 col-xl-7">
+              <h3 class="mb-2">{{ stats.draftRules }}</h3>
+              <div class="d-flex align-items-baseline">
+                <p class="text-warning">
+                  <span>Pending activation</span>
+                </p>
+              </div>
+            </div>
+            <div class="col-6 col-md-12 col-xl-5">
+              <div class="mt-xl-0 mt-3">
+                <i data-feather="file-text" appFeatherIcon class="icon-xl text-warning"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inactive Rules Widget -->
+    <div class="col-md-3 col-sm-6 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline">
+            <h6 class="card-title mb-0">Inactive Rules</h6>
+            <div class="dropdown mb-2">
+              <a class="text-muted" [ngbTooltip]="'Rules that are disabled'">
+                <i data-feather="info" appFeatherIcon></i>
+              </a>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6 col-md-12 col-xl-7">
+              <h3 class="mb-2">{{ stats.inactiveRules }}</h3>
+              <div class="d-flex align-items-baseline">
+                <p class="text-muted">
+                  <span>Deactivated</span>
+                </p>
+              </div>
+            </div>
+            <div class="col-6 col-md-12 col-xl-5">
+              <div class="mt-xl-0 mt-3">
+                <i data-feather="x-circle" appFeatherIcon class="icon-xl text-muted"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upsell Performance Widget -->
+    <div class="col-md-3 col-sm-6 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline">
+            <h6 class="card-title mb-0">Upsell Revenue</h6>
+            <div class="dropdown mb-2">
+              <a class="text-muted" [ngbTooltip]="'Revenue from upsell suggestions (Last 30 days)'">
+                <i data-feather="info" appFeatherIcon></i>
+              </a>
+            </div>
+          </div>
+          <div class="row" *ngIf="upsellAnalytics">
+            <div class="col-6 col-md-12 col-xl-7">
+              <h3 class="mb-2">{{ formatCurrency(upsellAnalytics.totalRevenue) }}</h3>
+              <div class="d-flex align-items-baseline">
+                <p class="text-success">
+                  <span>{{ formatPercentage(upsellAnalytics.conversionRate) }}</span>
+                </p>
+              </div>
+            </div>
+            <div class="col-6 col-md-12 col-xl-5">
+              <div class="mt-xl-0 mt-3">
+                <i data-feather="trending-up" appFeatherIcon class="icon-xl text-success"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions Row -->
+  <div class="row">
+    <!-- Service Rules Overview -->
+    <div class="col-lg-4 col-xl-4 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline mb-3">
+            <h6 class="card-title mb-0">Service Business Rules</h6>
+            <a [routerLink]="['/business-rules/services']" class="btn btn-link btn-sm p-0">
+              View All <i data-feather="arrow-right" appFeatherIcon class="icon-sm"></i>
+            </a>
+          </div>
+          <div class="d-flex flex-column">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class="d-flex align-items-center">
+                <i data-feather="layers" appFeatherIcon class="icon-md text-primary me-2"></i>
+                <span>Total Services</span>
+              </div>
+              <h4 class="mb-0">{{ stats.totalServices }}</h4>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class="d-flex align-items-center">
+                <i data-feather="check-circle" appFeatherIcon class="icon-md text-success me-2"></i>
+                <span>With Rules</span>
+              </div>
+              <h5 class="mb-0 text-muted">{{ stats.servicesWithRules }}</h5>
+            </div>
+            <div class="progress mb-3" style="height: 8px;">
+              <div class="progress-bar bg-primary" role="progressbar"
+                   [style.width.%]="getServicesWithRulesPercentage()"
+                   [attr.aria-valuenow]="getServicesWithRulesPercentage()"
+                   aria-valuemin="0"
+                   aria-valuemax="100"></div>
+            </div>
+            <button class="btn btn-primary btn-sm" [routerLink]="['/business-rules/services']">
+              <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i>
+              Manage Service Rules
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Request Item Rules Overview -->
+    <div class="col-lg-4 col-xl-4 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline mb-3">
+            <h6 class="card-title mb-0">Request Item Rules</h6>
+            <a [routerLink]="['/business-rules/request-items']" class="btn btn-link btn-sm p-0">
+              View All <i data-feather="arrow-right" appFeatherIcon class="icon-sm"></i>
+            </a>
+          </div>
+          <div class="d-flex flex-column">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class="d-flex align-items-center">
+                <i data-feather="package" appFeatherIcon class="icon-md text-info me-2"></i>
+                <span>Total Items</span>
+              </div>
+              <h4 class="mb-0">{{ stats.totalRequestItems }}</h4>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class="d-flex align-items-center">
+                <i data-feather="shield" appFeatherIcon class="icon-md text-success me-2"></i>
+                <span>With Rules</span>
+              </div>
+              <h5 class="mb-0 text-muted">{{ stats.requestItemsWithRules }}</h5>
+            </div>
+            <div class="progress mb-3" style="height: 8px;">
+              <div class="progress-bar bg-info" role="progressbar"
+                   [style.width.%]="(stats.requestItemsWithRules / stats.totalRequestItems) * 100"
+                   [attr.aria-valuenow]="(stats.requestItemsWithRules / stats.totalRequestItems) * 100"
+                   aria-valuemin="0"
+                   aria-valuemax="100"></div>
+            </div>
+            <button class="btn btn-info btn-sm" [routerLink]="['/business-rules/request-items']">
+              <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i>
+              Manage Item Rules
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upselling Overview -->
+    <div class="col-lg-4 col-xl-4 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline mb-3">
+            <h6 class="card-title mb-0">Upselling Management</h6>
+            <a [routerLink]="['/business-rules/upselling']" class="btn btn-link btn-sm p-0">
+              View All <i data-feather="arrow-right" appFeatherIcon class="icon-sm"></i>
+            </a>
+          </div>
+          <div class="d-flex flex-column">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class="d-flex align-items-center">
+                <i data-feather="gift" appFeatherIcon class="icon-md text-warning me-2"></i>
+                <span>Total Upsell Items</span>
+              </div>
+              <h4 class="mb-0">{{ stats.totalUpsellItems }}</h4>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class="d-flex align-items-center">
+                <i data-feather="zap" appFeatherIcon class="icon-md text-success me-2"></i>
+                <span>Active</span>
+              </div>
+              <h5 class="mb-0 text-muted">{{ stats.activeUpsellItems }}</h5>
+            </div>
+            <div class="progress mb-3" style="height: 8px;">
+              <div class="progress-bar bg-warning" role="progressbar"
+                   [style.width.%]="getUpsellActivePercentage()"
+                   [attr.aria-valuenow]="getUpsellActivePercentage()"
+                   aria-valuemin="0"
+                   aria-valuemax="100"></div>
+            </div>
+            <button class="btn btn-warning btn-sm" [routerLink]="['/business-rules/upselling']">
+              <i data-feather="dollar-sign" appFeatherIcon class="icon-sm me-1"></i>
+              Manage Upselling
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Row -->
+  <div class="row">
+    <!-- Upsell Performance Details -->
+    <div class="col-lg-7 col-xl-8 grid-margin stretch-card" *ngIf="upsellAnalytics">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline mb-3">
+            <h6 class="card-title mb-0">Top Performing Upsells (Last 30 Days)</h6>
+            <a [routerLink]="['/business-rules/upselling']" class="btn btn-link btn-sm p-0">
+              View Analytics <i data-feather="arrow-right" appFeatherIcon class="icon-sm"></i>
+            </a>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Upsell Item</th>
+                  <th class="text-end">Suggestions</th>
+                  <th class="text-end">Acceptances</th>
+                  <th class="text-end">Conversion Rate</th>
+                  <th class="text-end">Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let performer of upsellAnalytics.topPerformers">
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <i data-feather="gift" appFeatherIcon class="icon-sm text-primary me-2"></i>
+                      <span>{{ performer.upsellItemTitle }}</span>
+                    </div>
+                  </td>
+                  <td class="text-end">{{ performer.suggestions }}</td>
+                  <td class="text-end">
+                    <span class="badge bg-success">{{ performer.acceptances }}</span>
+                  </td>
+                  <td class="text-end">
+                    <span class="text-success fw-bold">{{ formatPercentage(performer.conversionRate) }}</span>
+                  </td>
+                  <td class="text-end fw-bold">{{ formatCurrency(performer.revenue) }}</td>
+                </tr>
+                <tr *ngIf="upsellAnalytics.topPerformers.length === 0">
+                  <td colspan="5" class="text-center text-muted py-4">
+                    No upsell performance data available yet
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Changes -->
+    <div class="col-lg-5 col-xl-4 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline mb-3">
+            <h6 class="card-title mb-0">Recent Changes</h6>
+            <a [routerLink]="['/business-rules/audit-log']" class="btn btn-link btn-sm p-0">
+              View All <i data-feather="arrow-right" appFeatherIcon class="icon-sm"></i>
+            </a>
+          </div>
+          <div class="d-flex flex-column" *ngIf="recentChanges.length > 0">
+            <div *ngFor="let entry of recentChanges" class="d-flex align-items-start pb-3 mb-3 border-bottom">
+              <div class="me-3">
+                <i [attr.data-feather]="getActionIcon(entry.action)"
+                   appFeatherIcon
+                   [class]="'icon-sm ' + getActionClass(entry.action)"></i>
+              </div>
+              <div class="w-100">
+                <div class="d-flex justify-content-between">
+                  <h6 class="mb-1 fw-normal">{{ entry.userName }}</h6>
+                  <p class="text-muted tx-12">{{ getTimeAgo(entry.timestamp) }}</p>
+                </div>
+                <p class="text-muted tx-13 mb-0">
+                  <span class="badge bg-light text-dark">{{ entry.action }}</span>
+                  {{ getEntityTypeLabel(entry.entityType) }}
+                  <span *ngIf="entry.entityName" class="fw-bold">{{ entry.entityName }}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="recentChanges.length === 0" class="text-center text-muted py-4">
+            <i data-feather="clock" appFeatherIcon class="icon-lg mb-2"></i>
+            <p class="mb-0">No recent changes</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

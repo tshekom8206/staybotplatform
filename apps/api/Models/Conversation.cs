@@ -24,6 +24,13 @@ public class Conversation
     public DateTime? TransferCompletedAt { get; set; }
     public string? TransferSummary { get; set; }
 
+    // Booking information gathering state
+    [MaxLength(50)]
+    public string ConversationMode { get; set; } = "Normal"; // Normal|GatheringBookingInfo
+    public string? BookingInfoState { get; set; } // JSON serialized BookingInformationState
+    public string? LastBotAction { get; set; } // What the bot asked or did last
+    public string? StateVariables { get; set; } // JSON serialized Dictionary<string, string> for conversation state
+
     // Navigation properties
     public virtual Tenant Tenant { get; set; } = null!;
     public virtual User? AssignedAgent { get; set; }

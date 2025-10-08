@@ -1,0 +1,612 @@
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="page-title mb-1">
+      <i appFeatherIcon="package" class="feather-icon me-2"></i>
+      Lost & Found
+    </h3>
+    <p class="text-muted mb-0">Manage lost items, found items, and match verification</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-primary" (click)="refreshData()">
+      <i appFeatherIcon="refresh-cw" class="feather-icon me-1"></i>
+      Refresh
+    </button>
+    <button class="btn btn-primary" (click)="openRegisterFoundItemModal()">
+      <i appFeatherIcon="plus-circle" class="feather-icon me-1"></i>
+      Register Found Item
+    </button>
+  </div>
+</div>
+
+<!-- Quick Stats Cards -->
+<div class="row mb-4">
+  <div class="col-xl-3 col-md-6 col-6 mb-3">
+    <div class="card border-start border-warning border-3">
+      <div class="card-body py-3">
+        <div class="d-flex align-items-center">
+          <div class="icon-badge bg-warning bg-opacity-10 text-warning me-3">
+            <i appFeatherIcon="search" class="feather-icon"></i>
+          </div>
+          <div>
+            <h6 class="mb-0 text-muted small">Open Reports</h6>
+            <h3 class="mb-0 mt-1">{{ stats.openReports }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 col-6 mb-3">
+    <div class="card border-start border-info border-3">
+      <div class="card-body py-3">
+        <div class="d-flex align-items-center">
+          <div class="icon-badge bg-info bg-opacity-10 text-info me-3">
+            <i appFeatherIcon="check-circle" class="feather-icon"></i>
+          </div>
+          <div>
+            <h6 class="mb-0 text-muted small">Items in Storage</h6>
+            <h3 class="mb-0 mt-1">{{ stats.itemsInStorage }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 col-6 mb-3">
+    <div class="card border-start border-success border-3">
+      <div class="card-body py-3">
+        <div class="d-flex align-items-center">
+          <div class="icon-badge bg-success bg-opacity-10 text-success me-3">
+            <i appFeatherIcon="link" class="feather-icon"></i>
+          </div>
+          <div>
+            <h6 class="mb-0 text-muted small">Pending Matches</h6>
+            <h3 class="mb-0 mt-1">{{ stats.pendingMatches }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 col-6 mb-3">
+    <div class="card border-start border-danger border-3">
+      <div class="card-body py-3">
+        <div class="d-flex align-items-center">
+          <div class="icon-badge bg-danger bg-opacity-10 text-danger me-3">
+            <i appFeatherIcon="clock" class="feather-icon"></i>
+          </div>
+          <div>
+            <h6 class="mb-0 text-muted small">Urgent (Checkout Today)</h6>
+            <h3 class="mb-0 mt-1">{{ stats.urgentItems }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab Navigation -->
+<ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-pills mb-3">
+  <li [ngbNavItem]="'lost'">
+    <button ngbNavLink>
+      <i appFeatherIcon="alert-circle" class="feather-icon me-1"></i>
+      Lost Items Reported
+      <span class="badge bg-warning ms-2">{{ stats.openReports }}</span>
+    </button>
+    <ng-template ngbNavContent>
+      <!-- Lost Items Content -->
+    </ng-template>
+  </li>
+  <li [ngbNavItem]="'found'">
+    <button ngbNavLink>
+      <i appFeatherIcon="package" class="feather-icon me-1"></i>
+      Found Items
+      <span class="badge bg-info ms-2">{{ stats.itemsInStorage }}</span>
+    </button>
+    <ng-template ngbNavContent>
+      <!-- Found Items Content -->
+    </ng-template>
+  </li>
+  <li [ngbNavItem]="'matches'">
+    <button ngbNavLink>
+      <i appFeatherIcon="link" class="feather-icon me-1"></i>
+      Matches to Verify
+      <span class="badge bg-success ms-2">{{ stats.pendingMatches }}</span>
+    </button>
+    <ng-template ngbNavContent>
+      <!-- Matches Content -->
+    </ng-template>
+  </li>
+  <li [ngbNavItem]="'claimed'">
+    <button ngbNavLink>
+      <i appFeatherIcon="check-square" class="feather-icon me-1"></i>
+      Claimed Items
+    </button>
+    <ng-template ngbNavContent>
+      <!-- Claimed Items Content -->
+    </ng-template>
+  </li>
+</ul>
+
+<!-- Filters Row -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <div class="row align-items-center g-2">
+      <div class="col-md-4">
+        <div class="input-group">
+          <span class="input-group-text bg-transparent">
+            <i appFeatherIcon="search" class="feather-icon"></i>
+          </span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search by item, guest name, or reference..."
+            [(ngModel)]="searchTerm"
+            (input)="applyFilters()"
+          >
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <select class="form-select" [(ngModel)]="categoryFilter" (change)="applyFilters()">
+          <option value="all">All Categories</option>
+          <option *ngFor="let cat of categories" [value]="cat.value">{{ cat.label }}</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <select class="form-select" [(ngModel)]="urgencyFilter" (change)="applyFilters()">
+          <option value="all">All Items</option>
+          <option value="urgent">🔴 Urgent (Checkout Today)</option>
+          <option value="high-value">💰 High-Value Items</option>
+          <option value="recent">🕐 Reported Last 24h</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <select class="form-select" [(ngModel)]="sortBy" (change)="applyFilters()">
+          <option value="newest">Newest First</option>
+          <option value="urgent">Most Urgent</option>
+          <option value="match-score">Best Matches</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab Content -->
+<div [ngbNavOutlet]="nav"></div>
+
+<!-- Lost Items Tab Content -->
+<div *ngIf="activeTab === 'lost'" class="row">
+  <div class="col-lg-6 col-xl-4 mb-3" *ngFor="let item of filteredLostItems; trackBy: itemTrackBy">
+    <div class="card h-100 lost-item-card cursor-pointer" (click)="viewLostItemDetails(item)">
+      <div class="card-header bg-warning bg-opacity-10 border-bottom border-warning py-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="badge bg-warning">{{ item.status }}</span>
+          <span class="text-muted small">{{ item.referenceNumber }}</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="d-flex align-items-start mb-3">
+          <div class="item-icon-lg bg-primary bg-opacity-10 text-primary rounded me-3">
+            <i [appFeatherIcon]="getCategoryIcon(item.category)" class="feather-icon"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="mb-1">{{ item.itemName }}</h5>
+            <p class="text-muted mb-1 small">
+              <i appFeatherIcon="user" class="feather-icon me-1"></i>
+              {{ item.guestName }} (Room {{ item.roomNumber }})
+            </p>
+            <p class="text-muted mb-0 small">
+              <i appFeatherIcon="clock" class="feather-icon me-1"></i>
+              Reported {{ getTimeAgo(item.reportedDate) }}
+            </p>
+          </div>
+        </div>
+
+        <div class="details-grid mb-3">
+          <div class="detail-item">
+            <span class="detail-label">Category:</span>
+            <span class="badge bg-info-subtle text-info">{{ item.category }}</span>
+          </div>
+          <div class="detail-item" *ngIf="item.color">
+            <span class="detail-label">Color:</span>
+            <span>{{ item.color }}</span>
+          </div>
+          <div class="detail-item" *ngIf="item.brand">
+            <span class="detail-label">Brand:</span>
+            <span>{{ item.brand }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Last Seen:</span>
+            <span>{{ item.lastSeenLocation }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="isCheckoutToday(item.checkoutDate)" class="alert alert-danger bg-danger bg-opacity-10 border-danger d-flex align-items-center mt-3 mb-0 py-2">
+          <i appFeatherIcon="alert-triangle" class="feather-icon me-2"></i>
+          <small><strong>URGENT:</strong> Guest checking out today</small>
+        </div>
+
+        <div *ngIf="item.potentialMatches && item.potentialMatches > 0" class="alert alert-success bg-success bg-opacity-10 border-success d-flex align-items-center mt-3 mb-0 py-2">
+          <i appFeatherIcon="link" class="feather-icon me-2"></i>
+          <small><strong>{{ item.potentialMatches }} Potential {{ item.potentialMatches === 1 ? 'Match' : 'Matches' }}</strong> - Click to review</small>
+        </div>
+      </div>
+
+      <div class="card-footer bg-transparent border-top">
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-primary flex-grow-1" (click)="$event.stopPropagation()">
+            <i appFeatherIcon="link" class="feather-icon me-1"></i>
+            View Matches ({{ item.potentialMatches || 0 }})
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" (click)="$event.stopPropagation()">
+            <i appFeatherIcon="message-circle" class="feather-icon"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" (click)="$event.stopPropagation()">
+            <i appFeatherIcon="more-vertical" class="feather-icon"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12" *ngIf="filteredLostItems.length === 0 && !loading">
+    <div class="card">
+      <div class="card-body text-center py-5">
+        <i appFeatherIcon="inbox" class="feather-icon text-muted mb-3" style="width: 64px; height: 64px;"></i>
+        <h5 class="text-muted mb-2">No lost items found</h5>
+        <p class="text-muted">No items match your current filters.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Found Items Tab Content -->
+<div *ngIf="activeTab === 'found'" class="row">
+  <div class="col-lg-6 col-xl-4 mb-3" *ngFor="let item of filteredFoundItems; trackBy: itemTrackBy">
+    <div class="card h-100 found-item-card">
+      <div class="card-header bg-info bg-opacity-10 border-bottom border-info py-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="badge bg-info">{{ item.status }}</span>
+          <span class="text-muted small">{{ item.referenceNumber }}</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="d-flex align-items-start mb-3">
+          <div class="item-icon-lg bg-info bg-opacity-10 text-info rounded me-3">
+            <i [appFeatherIcon]="getCategoryIcon(item.category)" class="feather-icon"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="mb-1">{{ item.itemName }}</h5>
+            <p class="text-muted mb-1 small">
+              <i appFeatherIcon="map-pin" class="feather-icon me-1"></i>
+              Found in: {{ item.foundLocation }}
+            </p>
+            <p class="text-muted mb-0 small">
+              <i appFeatherIcon="clock" class="feather-icon me-1"></i>
+              Found {{ getTimeAgo(item.foundDate) }}
+            </p>
+          </div>
+        </div>
+
+        <div class="details-grid mb-3">
+          <div class="detail-item">
+            <span class="detail-label">Category:</span>
+            <span class="badge bg-info-subtle text-info">{{ item.category }}</span>
+          </div>
+          <div class="detail-item" *ngIf="item.color">
+            <span class="detail-label">Color:</span>
+            <span>{{ item.color }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Storage:</span>
+            <span>{{ item.storageLocation }}</span>
+          </div>
+          <div class="detail-item" *ngIf="item.isSecure">
+            <span class="detail-label">Security:</span>
+            <span><i appFeatherIcon="lock" class="feather-icon text-warning"></i> Required</span>
+          </div>
+        </div>
+
+        <div class="alert alert-warning bg-warning bg-opacity-10 border-warning mt-3 mb-0 py-2">
+          <div class="d-flex align-items-center">
+            <i appFeatherIcon="calendar" class="feather-icon me-2"></i>
+            <small>Disposal in <strong>{{ calculateDaysUntilDisposal(item.disposalDate) }} days</strong></small>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer bg-transparent border-top">
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-primary flex-grow-1" (click)="findMatchesForFoundItem(item.id)">
+            <i appFeatherIcon="search" class="feather-icon me-1"></i>
+            Find Matches
+          </button>
+          <button class="btn btn-sm btn-outline-secondary">
+            <i appFeatherIcon="edit" class="feather-icon"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-secondary">
+            <i appFeatherIcon="more-vertical" class="feather-icon"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12" *ngIf="filteredFoundItems.length === 0 && !loading">
+    <div class="card">
+      <div class="card-body text-center py-5">
+        <i appFeatherIcon="inbox" class="feather-icon text-muted mb-3" style="width: 64px; height: 64px;"></i>
+        <h5 class="text-muted mb-2">No found items</h5>
+        <p class="text-muted">No items in storage match your filters.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Matches Tab Content -->
+<div *ngIf="activeTab === 'matches'" class="row">
+  <div class="col-lg-6 col-xl-4 mb-3" *ngFor="let match of filteredMatches; trackBy: matchTrackBy">
+    <div class="card h-100 border-success border-2">
+      <div class="card-header bg-success bg-opacity-10 border-bottom border-success py-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="badge bg-{{ getMatchScoreColor(match.matchScore) }}">{{ match.matchScore }}% Match</span>
+          <span class="text-muted small">{{ match.matchReferenceNumber }}</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="match-item bg-warning bg-opacity-5 rounded p-2">
+              <h6 class="text-warning mb-2 small">
+                <i appFeatherIcon="alert-circle" class="feather-icon me-1"></i>
+                LOST (Guest)
+              </h6>
+              <div class="text-center mb-2">
+                <i [appFeatherIcon]="getCategoryIcon(match.lostItem.category)" class="feather-icon text-warning" style="width: 32px; height: 32px;"></i>
+              </div>
+              <p class="mb-1 small"><strong>{{ match.lostItem.itemName }}</strong></p>
+              <p class="mb-0 text-muted small">{{ match.lostItem.guestName }}, Room {{ match.lostItem.roomNumber }}</p>
+              <p class="mb-0 text-muted small">{{ match.lostItem.lastSeenLocation }}</p>
+            </div>
+          </div>
+
+          <div class="col-6">
+            <div class="match-item bg-info bg-opacity-5 rounded p-2">
+              <h6 class="text-info mb-2 small">
+                <i appFeatherIcon="package" class="feather-icon me-1"></i>
+                FOUND (Storage)
+              </h6>
+              <div class="text-center mb-2">
+                <i [appFeatherIcon]="getCategoryIcon(match.foundItem.category)" class="feather-icon text-info" style="width: 32px; height: 32px;"></i>
+              </div>
+              <p class="mb-1 small"><strong>{{ match.foundItem.itemName }}</strong></p>
+              <p class="mb-0 text-muted small">Found by: {{ match.foundItem.foundBy }}</p>
+              <p class="mb-0 text-muted small">{{ match.foundItem.foundLocation }}, {{ match.foundItem.storageLocation }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 p-2 bg-light rounded">
+          <p class="mb-2 small text-muted"><strong>Why this is a match:</strong></p>
+          <ul class="mb-0 small">
+            <li *ngFor="let reason of match.matchReasons">{{ reason }}</li>
+          </ul>
+        </div>
+
+        <div *ngIf="match.foundItem.isHighValue" class="alert alert-info bg-info bg-opacity-10 border-info mt-3 mb-0 py-2">
+          <small>
+            <strong>⚠️ High-Value Item:</strong> Verify guest ID before release
+          </small>
+        </div>
+      </div>
+
+      <div class="card-footer bg-transparent border-top">
+        <div class="d-grid gap-2">
+          <button class="btn btn-success" (click)="openMatchVerificationModal(match)">
+            <i appFeatherIcon="check-circle" class="feather-icon me-1"></i>
+            Confirm Match & Notify Guest
+          </button>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-danger flex-grow-1" (click)="openMatchVerificationModal(match)">
+              <i appFeatherIcon="x-circle" class="feather-icon me-1"></i>
+              Not a Match
+            </button>
+            <button class="btn btn-outline-secondary flex-grow-1">
+              <i appFeatherIcon="help-circle" class="feather-icon me-1"></i>
+              Need More Info
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12" *ngIf="filteredMatches.length === 0 && !loading">
+    <div class="card">
+      <div class="card-body text-center py-5">
+        <i appFeatherIcon="inbox" class="feather-icon text-muted mb-3" style="width: 64px; height: 64px;"></i>
+        <h5 class="text-muted mb-2">No pending matches</h5>
+        <p class="text-muted">No matches require verification at this time.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Claimed Items Tab Content -->
+<div *ngIf="activeTab === 'claimed'" class="row">
+  <div class="col-lg-6 col-xl-4 mb-3" *ngFor="let item of claimedItems; trackBy: itemTrackBy">
+    <div class="card h-100">
+      <div class="card-header bg-secondary bg-opacity-10 border-bottom border-secondary py-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="badge bg-secondary">Claimed</span>
+          <span class="text-muted small">{{ item.referenceNumber }}</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="d-flex align-items-start">
+          <div class="item-icon-lg bg-secondary bg-opacity-10 text-secondary rounded me-3">
+            <i [appFeatherIcon]="getCategoryIcon(item.category)" class="feather-icon"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="mb-1">{{ item.itemName }}</h5>
+            <p class="text-muted mb-0 small">{{ item.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12" *ngIf="claimedItems.length === 0 && !loading">
+    <div class="card">
+      <div class="card-body text-center py-5">
+        <i appFeatherIcon="inbox" class="feather-icon text-muted mb-3" style="width: 64px; height: 64px;"></i>
+        <h5 class="text-muted mb-2">No claimed items</h5>
+        <p class="text-muted">No items have been claimed yet.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="d-flex justify-content-center py-5" *ngIf="loading">
+  <div class="text-center">
+    <div class="spinner-border text-primary mb-3" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="text-muted">Loading lost & found items...</p>
+  </div>
+</div>
+
+<!-- Register Found Item Modal -->
+<ng-template #registerFoundItemModal let-modal>
+  <div class="modal-header bg-primary bg-opacity-10">
+    <h5 class="modal-title">
+      <i appFeatherIcon="plus-circle" class="feather-icon me-2"></i>
+      Register Found Item
+    </h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <form [formGroup]="registerFoundItemForm">
+      <!-- Category Selection -->
+      <div class="mb-4">
+        <label class="form-label">What did you find?</label>
+        <div class="category-grid">
+          <button
+            type="button"
+            *ngFor="let cat of categories"
+            class="category-card"
+            [class.active]="selectedCategory === cat.value"
+            (click)="selectCategory(cat.value)">
+            <i [appFeatherIcon]="cat.icon" class="feather-icon mb-2" style="width: 32px; height: 32px;"></i>
+            <span>{{ cat.label }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Item Details -->
+      <div class="row g-3" *ngIf="selectedCategory">
+        <div class="col-md-6">
+          <label class="form-label">Item Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="itemName" placeholder="e.g., iPhone 15 Pro">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Color</label>
+          <input type="text" class="form-control" formControlName="color" placeholder="e.g., Black">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Brand (if visible)</label>
+          <input type="text" class="form-control" formControlName="brand" placeholder="e.g., Apple, Samsung">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Where Found <span class="text-danger">*</span></label>
+          <select class="form-select" formControlName="foundLocation">
+            <option value="">Select location...</option>
+            <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Storage Location <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="storageLocation" placeholder="e.g., Locker A-12">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Found By</label>
+          <input type="text" class="form-control" formControlName="foundBy" placeholder="Staff name">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Description / Notes</label>
+          <textarea class="form-control" rows="2" formControlName="description" placeholder="Any additional details..."></textarea>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="isHighValue" id="isHighValue">
+            <label class="form-check-label" for="isHighValue">
+              High-Value Item (requires ID verification)
+            </label>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-primary" [disabled]="registerFoundItemForm.invalid" (click)="registerFoundItem()">
+      <i appFeatherIcon="check" class="feather-icon me-1"></i>
+      Register & Find Matches
+    </button>
+  </div>
+</ng-template>
+
+<!-- Match Verification Modal -->
+<ng-template #matchVerificationModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Verify Match</h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body" *ngIf="selectedMatch">
+    <div class="alert alert-info">
+      <strong>Match Score: {{ selectedMatch.matchScore }}%</strong>
+    </div>
+
+    <form [formGroup]="matchVerificationForm">
+      <div class="mb-3">
+        <label class="form-label">Verification Notes</label>
+        <textarea class="form-control" rows="3" formControlName="verificationNotes" placeholder="Add any verification notes..."></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Rejection Reason (if not a match)</label>
+        <textarea class="form-control" rows="2" formControlName="rejectedReason" placeholder="Why is this not a match?"></textarea>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-danger" (click)="rejectMatch()">
+      <i appFeatherIcon="x-circle" class="feather-icon me-1"></i>
+      Reject Match
+    </button>
+    <button type="button" class="btn btn-success" (click)="confirmMatch()">
+      <i appFeatherIcon="check-circle" class="feather-icon me-1"></i>
+      Confirm Match
+    </button>
+  </div>
+</ng-template>

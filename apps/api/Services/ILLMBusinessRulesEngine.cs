@@ -94,4 +94,9 @@ public class LLMBusinessRuleResponse
     public List<string> DetectedKeywords { get; set; } = new();
     public List<string> RelevantBusinessRules { get; set; } = new();
     public string ReasoningExplanation { get; set; } = string.Empty;
+
+    // Reflection fields for hallucination prevention
+    public Dictionary<string, string?>? Citations { get; set; }
+    public string[]? Assumptions { get; set; }
+    public string[]? Uncertainties { get; set; }
 }

@@ -76,10 +76,10 @@ namespace Hostr.Api.Services
             { "4", "four" },
             { "5", "five" },
             { "won", "one" },
-            { "to", "two" },
-            { "too", "two" },
+            // REMOVED: { "to", "two" }, - conflicts with preposition "to"
+            // REMOVED: { "too", "two" }, - conflicts with adverb "too"
             { "tree", "three" },
-            { "for", "four" },
+            // REMOVED: { "for", "four" }, - conflicts with preposition "for"
             { "fiv", "five" },
 
             // Time related

@@ -47,6 +47,14 @@ export const routes: Routes = [
         loadChildren: () => import('./views/pages/analytics/analytics.routes')
       },
       {
+        path: 'lost-and-found',
+        loadChildren: () => import('./views/pages/lost-and-found/lost-and-found.routes')
+      },
+      {
+        path: 'business-rules',
+        loadChildren: () => import('./views/pages/business-rules/business-rules.routes')
+      },
+      {
         path: 'apps',
         loadChildren: () => import('./views/pages/apps/apps.routes')
       },

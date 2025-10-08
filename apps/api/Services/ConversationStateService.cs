@@ -20,6 +20,13 @@ public interface IConversationStateService
     Task<bool> IsRecentInteractionAsync(int conversationId, TimeSpan threshold);
     Task StoreLastUserMessageAsync(int conversationId, string message);
     Task StoreLastBotResponseAsync(int conversationId, string response);
+
+    // New structured state management methods
+    Task CreatePendingStateAsync(int conversationId, int tenantId, string stateType, string entityType, int entityId, string? pendingField = null, string? contextData = null);
+    Task<ConversationStateRecord?> GetPendingStateAsync(int conversationId, string stateType, string entityType);
+    Task<ConversationStateRecord?> GetAnyPendingStateForConversationAsync(int conversationId);
+    Task ResolvePendingStateAsync(int stateId);
+    Task<bool> HasPendingStateAsync(int conversationId, string stateType, string entityType);
 }
 
 public class ConversationState
@@ -99,6 +106,23 @@ public class ConversationStateService : IConversationStateService
                 MessageCount = messageCount
             };
 
+            // Load state variables from database
+            if (!string.IsNullOrEmpty(conversation.StateVariables))
+            {
+                try
+                {
+                    var variables = JsonSerializer.Deserialize<Dictionary<string, string>>(conversation.StateVariables);
+                    if (variables != null)
+                    {
+                        state.Variables = variables;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to deserialize StateVariables for conversation {ConversationId}", conversationId);
+                }
+            }
+
             // Get only the most recent messages efficiently without loading all
             var lastUserMessage = await _context.Messages
                 .AsNoTracking()
@@ -143,8 +167,14 @@ public class ConversationStateService : IConversationStateService
                 _stateCache[conversationId] = state;
             }
 
-            // Future: Persist to database if needed
-            _logger.LogDebug("Updated conversation state for {ConversationId}", conversationId);
+            // Persist state variables to database
+            var conversation = await _context.Conversations.FirstOrDefaultAsync(c => c.Id == conversationId);
+            if (conversation != null)
+            {
+                conversation.StateVariables = JsonSerializer.Serialize(state.Variables);
+                await _context.SaveChangesAsync();
+                _logger.LogDebug("Persisted conversation state for {ConversationId} to database", conversationId);
+            }
         }
         catch (Exception ex)
         {
@@ -364,6 +394,123 @@ public class ConversationStateService : IConversationStateService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error setting context for conversation {ConversationId}", conversationId);
+        }
+    }
+
+    // ============= NEW STRUCTURED STATE MANAGEMENT =============
+
+    /// <summary>
+    /// Creates a new pending state record for a conversation
+    /// </summary>
+    public async Task CreatePendingStateAsync(int conversationId, int tenantId, string stateType, string entityType, int entityId, string? pendingField = null, string? contextData = null)
+    {
+        try
+        {
+            var stateRecord = new ConversationStateRecord
+            {
+                TenantId = tenantId,
+                ConversationId = conversationId,
+                StateType = stateType,
+                EntityType = entityType,
+                EntityId = entityId,
+                PendingField = pendingField,
+                ContextData = contextData,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.ConversationStateRecords.Add(stateRecord);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Created pending state: {StateType} for {EntityType}:{EntityId} in conversation {ConversationId}",
+                stateType, entityType, entityId, conversationId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating pending state for conversation {ConversationId}", conversationId);
+        }
+    }
+
+    /// <summary>
+    /// Gets a specific pending state record
+    /// </summary>
+    public async Task<ConversationStateRecord?> GetPendingStateAsync(int conversationId, string stateType, string entityType)
+    {
+        try
+        {
+            return await _context.ConversationStateRecords
+                .Where(s => s.ConversationId == conversationId
+                    && s.StateType == stateType
+                    && s.EntityType == entityType
+                    && s.ResolvedAt == null)
+                .OrderByDescending(s => s.CreatedAt)
+                .FirstOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting pending state for conversation {ConversationId}", conversationId);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets any pending state for a conversation (most recent first)
+    /// </summary>
+    public async Task<ConversationStateRecord?> GetAnyPendingStateForConversationAsync(int conversationId)
+    {
+        try
+        {
+            return await _context.ConversationStateRecords
+                .Where(s => s.ConversationId == conversationId && s.ResolvedAt == null)
+                .OrderByDescending(s => s.CreatedAt)
+                .FirstOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting any pending state for conversation {ConversationId}", conversationId);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Marks a pending state as resolved
+    /// </summary>
+    public async Task ResolvePendingStateAsync(int stateId)
+    {
+        try
+        {
+            var stateRecord = await _context.ConversationStateRecords.FindAsync(stateId);
+            if (stateRecord != null)
+            {
+                stateRecord.ResolvedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Resolved pending state {StateId} ({StateType} for {EntityType}:{EntityId})",
+                    stateId, stateRecord.StateType, stateRecord.EntityType, stateRecord.EntityId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resolving pending state {StateId}", stateId);
+        }
+    }
+
+    /// <summary>
+    /// Checks if a conversation has a specific pending state
+    /// </summary>
+    public async Task<bool> HasPendingStateAsync(int conversationId, string stateType, string entityType)
+    {
+        try
+        {
+            return await _context.ConversationStateRecords
+                .AnyAsync(s => s.ConversationId == conversationId
+                    && s.StateType == stateType
+                    && s.EntityType == entityType
+                    && s.ResolvedAt == null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking pending state for conversation {ConversationId}", conversationId);
+            return false;
         }
     }
 }

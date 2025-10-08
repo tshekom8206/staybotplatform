@@ -76,6 +76,10 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<Service> Services { get; set; }
     public DbSet<ServiceIcon> ServiceIcons { get; set; }
 
+    // Business Rules
+    public DbSet<ServiceBusinessRule> ServiceBusinessRules { get; set; }
+    public DbSet<RequestItemRule> RequestItemRules { get; set; }
+
     // Tenant Department Configuration
     public DbSet<TenantDepartment> TenantDepartments { get; set; }
     public DbSet<ServiceDepartmentMapping> ServiceDepartmentMappings { get; set; }
@@ -86,6 +90,9 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<LostAndFoundMatch> LostAndFoundMatches { get; set; }
     public DbSet<LostAndFoundCategory> LostAndFoundCategories { get; set; }
     public DbSet<LostAndFoundNotification> LostAndFoundNotifications { get; set; }
+
+    // Conversation State Tracking
+    public DbSet<ConversationStateRecord> ConversationStateRecords { get; set; }
 
     // Welcome Message models
     public DbSet<WelcomeMessage> WelcomeMessages { get; set; }
@@ -141,9 +148,10 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
         ConfigureWelcomeMessages(builder);
         ConfigureDepartments(builder);
         ConfigureBusinessMetrics(builder);
+        ConfigureBusinessRules(builder);
         ConfigureAgentTransfer(builder);
         ConfigureIndexes(builder);
-        
+
         // Global query filters for tenant isolation
         ApplyGlobalFilters(builder);
     }
@@ -543,6 +551,8 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             builder.Entity<EmergencyContact>().HasQueryFilter(e => e.TenantId == tenantId);
             builder.Entity<WelcomeMessage>().HasQueryFilter(e => e.TenantId == tenantId);
             builder.Entity<GuestBusinessMetrics>().HasQueryFilter(e => e.TenantId == tenantId);
+            builder.Entity<ServiceBusinessRule>().HasQueryFilter(e => e.TenantId == tenantId);
+            builder.Entity<RequestItemRule>().HasQueryFilter(e => e.TenantId == tenantId);
         }
     }
 
@@ -786,6 +796,27 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             .WithMany()
             .HasForeignKey(e => e.ExtendedFromBookingId)
             .OnDelete(DeleteBehavior.SetNull);
+    }
+
+    private void ConfigureBusinessRules(ModelBuilder builder)
+    {
+        builder.Entity<ServiceBusinessRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.Tenant).WithMany().HasForeignKey(e => e.TenantId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Service).WithMany(s => s.BusinessRules).HasForeignKey(e => e.ServiceId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+
+        builder.Entity<RequestItemRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.Tenant).WithMany().HasForeignKey(e => e.TenantId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.RequestItem).WithMany(r => r.BusinessRules).HasForeignKey(e => e.RequestItemId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
     }
 
     private void ConfigureAgentTransfer(ModelBuilder builder)

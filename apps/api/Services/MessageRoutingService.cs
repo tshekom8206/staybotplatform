@@ -19,6 +19,7 @@ public class MessageRoutingResponse
     public string? Model { get; set; }
     public int? TokensPrompt { get; set; }
     public int? TokensCompletion { get; set; }
+    public string? ActionType { get; set; }
 }
 
 public class GreetingResponse
@@ -49,6 +50,18 @@ public class ItemRequestAnalysisResult
     public bool IsItemRequest { get; set; }
     public double Confidence { get; set; }
     public string Reasoning { get; set; } = string.Empty;
+}
+
+public class LostItemDetails
+{
+    public string? ItemName { get; set; }
+    public string? Category { get; set; }
+    public string? Description { get; set; }
+    public string? Color { get; set; }
+    public string? Brand { get; set; }
+    public string? LocationLost { get; set; }
+    public string? WhenLost { get; set; }
+    public string? Urgency { get; set; }
 }
 
 public interface IMessageRoutingService
@@ -86,6 +99,9 @@ public class MessageRoutingService : IMessageRoutingService
     private readonly IResponseDeduplicationService _responseDeduplicationService;
     private readonly IHumanTransferService _humanTransferService;
     private readonly IFAQService _faqService;
+    private readonly IInformationGatheringService _informationGatheringService;
+    private readonly ILostAndFoundService _lostAndFoundService;
+    private readonly IConfiguration _configuration;
 
     public MessageRoutingService(
         HostrDbContext context,
@@ -110,7 +126,10 @@ public class MessageRoutingService : IMessageRoutingService
         IConfigurationBasedResponseService configurationBasedResponseService,
         IResponseDeduplicationService responseDeduplicationService,
         IHumanTransferService humanTransferService,
-        IFAQService faqService)
+        IFAQService faqService,
+        IInformationGatheringService informationGatheringService,
+        ILostAndFoundService lostAndFoundService,
+        IConfiguration configuration)
     {
         _context = context;
         _openAIService = openAIService;
@@ -135,6 +154,9 @@ public class MessageRoutingService : IMessageRoutingService
         _responseDeduplicationService = responseDeduplicationService;
         _humanTransferService = humanTransferService;
         _faqService = faqService;
+        _informationGatheringService = informationGatheringService;
+        _lostAndFoundService = lostAndFoundService;
+        _configuration = configuration;
     }
 
     public async Task<MessageRoutingResponse> RouteMessageAsync(TenantContext tenantContext, Conversation conversation, Message message)
@@ -150,7 +172,49 @@ public class MessageRoutingService : IMessageRoutingService
         {
             _logger.LogInformation("Message normalized: '{Original}' -> '{Normalized}'", originalMessage, normalizedMessage);
         }
-        
+
+        // Step 0.5: Check for pending clarifications (state-based routing)
+        var pendingState = await _conversationStateService.GetAnyPendingStateForConversationAsync(conversation.Id);
+
+        if (pendingState != null)
+        {
+            _logger.LogInformation("Found pending state: {StateType} for {EntityType}:{EntityId}. Processing user response: '{Response}'",
+                pendingState.StateType, pendingState.EntityType, pendingState.EntityId, normalizedMessage);
+
+            // Handle lost item location clarification
+            if (pendingState.StateType == ConversationStateType.AwaitingClarification
+                && pendingState.EntityType == Models.EntityType.LostItem
+                && pendingState.PendingField == Models.PendingField.Location)
+            {
+                var updated = await _lostAndFoundService.UpdateLostItemLocationAsync(
+                    tenantContext.TenantId,
+                    pendingState.EntityId,
+                    normalizedMessage
+                );
+
+                if (updated)
+                {
+                    await _conversationStateService.ResolvePendingStateAsync(pendingState.Id);
+                    _logger.LogInformation("Successfully updated lost item {LostItemId} with location '{Location}'", pendingState.EntityId, normalizedMessage);
+
+                    return new MessageRoutingResponse
+                    {
+                        Reply = $"Thank you! I've updated your lost item report with the location: {normalizedMessage}. Our staff will search that area and contact you if we find it.",
+                        ActionType = "lost_item_location_updated"
+                    };
+                }
+                else
+                {
+                    _logger.LogError("Failed to update lost item {LostItemId} with location", pendingState.EntityId);
+                    return new MessageRoutingResponse
+                    {
+                        Reply = "Thank you for the information. I've logged your response and our staff will follow up with you.",
+                        ActionType = "acknowledgment"
+                    };
+                }
+            }
+        }
+
         // Step 1: Check for emergency situations - highest priority
         var emergencyResult = await _emergencyService.ProcessEmergencyAsync(
             tenantContext,
@@ -167,10 +231,10 @@ public class MessageRoutingService : IMessageRoutingService
             return new MessageRoutingResponse
             {
                 Reply = "🚨 **Emergency Detected** 🚨\n\n" +
-                        "Your emergency has been reported and our team has been immediately notified. " +
-                        "An incident has been created and is being processed with the highest priority.\n\n" +
+                        "I've immediately alerted our team about your emergency, and they're responding with the highest priority. " +
+                        "An incident has been created and is being handled right now.\n\n" +
                         "**Incident ID:** " + emergencyResult.Incident.Id + "\n\n" +
-                        "Emergency services and staff are being contacted as appropriate. " +
+                        "I'm contacting emergency services and our staff as appropriate. " +
                         "Please remain calm and follow any instructions from our staff."
             };
         }
@@ -253,12 +317,12 @@ public class MessageRoutingService : IMessageRoutingService
                 {
                     return new MessageRoutingResponse
                     {
-                        Reply = "🧑‍💼 **Connecting you with a team member...**\n\n" +
-                                $"I'm transferring you to one of our {transferDetection.Department.ToLower()} specialists who can assist you personally. " +
-                                "Please hold on while I connect you.\n\n" +
+                        Reply = "🧑‍💼 **Wonderful! I'm connecting you with a team member...**\n\n" +
+                                $"I'm personally transferring you to one of our {transferDetection.Department.ToLower()} specialists who will be delighted to assist you. " +
+                                "Please hold on just a moment while I connect you.\n\n" +
                                 $"**Agent:** {routing.RecommendedAgent.Name}\n" +
                                 $"**Department:** {routing.RecommendedAgent.Department}\n\n" +
-                                "They'll be with you shortly!"
+                                "They'll be with you very shortly!"
                     };
                 }
             }
@@ -267,21 +331,30 @@ public class MessageRoutingService : IMessageRoutingService
                 // No agents available - queue or provide alternatives
                 return new MessageRoutingResponse
                 {
-                    Reply = "🧑‍💼 **Personal Assistance Requested**\n\n" +
-                            "I understand you'd like to speak with a team member. " +
-                            (routing.UnavailabilityReason != null ? $"Currently, {routing.UnavailabilityReason.ToLower()}. " : "") +
+                    Reply = "🧑‍💼 **I'd be happy to connect you with a team member!**\n\n" +
+                            "I understand you'd like to speak with someone personally. " +
+                            (routing.UnavailabilityReason != null ? $"At the moment, {routing.UnavailabilityReason.ToLower()}. " : "") +
                             (routing.EstimatedWaitTime != null ? $"The estimated wait time is {routing.EstimatedWaitTime}.\n\n" : "\n") +
                             "In the meantime, I'm here to help with:\n" +
                             "• Room service and housekeeping requests\n" +
                             "• General hotel information\n" +
                             "• Menu and dining options\n" +
                             "• Local recommendations\n\n" +
-                            "Would you like me to help with any of these, or shall I add you to the queue for the next available agent?"
+                            "Would you like me to help with any of these right now, or shall I add you to the queue for the next available agent?"
                 };
             }
         }
 
-        // Step 1.2: Check for contextual follow-up responses (highest priority - timing responses, etc)
+        // Step 1.3: Check if we're in information gathering mode (INTEGRATION POINT A)
+        if (conversation.ConversationMode == "GatheringBookingInfo" &&
+            !string.IsNullOrEmpty(conversation.BookingInfoState))
+        {
+            _logger.LogInformation("Resuming booking information gathering for conversation {ConversationId}", conversation.Id);
+            var existingState = JsonSerializer.Deserialize<BookingInformationState>(conversation.BookingInfoState);
+            return await HandleBookingInformationGathering(tenantContext, conversation, normalizedMessage, existingState);
+        }
+
+        // Step 1.4: Check for contextual follow-up responses (highest priority - timing responses, etc)
         _logger.LogInformation("MessageRoutingService: Loading conversation history for conversation {ConversationId}", conversation.Id);
         var conversationHistory = await LoadConversationHistoryAsync(conversation.Id);
         _logger.LogInformation("MessageRoutingService: Calling ProcessContextualResponse with {MessageCount} messages", conversationHistory.Count);
@@ -337,11 +410,23 @@ public class MessageRoutingService : IMessageRoutingService
             {
                 _logger.LogInformation("LLM provided direct response for intent: {Intent}", intentAnalysis.Intent);
 
-                // For item requests, we should create a task even if we have a warm response
+                // For item requests and booking changes, we should proceed to processing flow
                 if (intentAnalysis.Intent == "REQUEST_ITEM")
                 {
                     _logger.LogInformation("LLM detected non-ambiguous item request, proceeding to create task");
                     // Continue to normal processing flow to create tasks through ProcessWithEnhancedRAG
+                }
+                else if (intentAnalysis.Intent == "BOOKING_CHANGE")
+                {
+                    _logger.LogInformation("LLM detected booking change request, starting booking information gathering");
+                    // Directly trigger booking information gathering flow
+                    return await HandleBookingInformationGathering(tenantContext, conversation, normalizedMessage, null);
+                }
+                else if (intentAnalysis.Intent == "LOST_AND_FOUND")
+                {
+                    _logger.LogInformation("LLM detected lost item report, starting lost & found processing");
+                    // Directly trigger lost item reporting flow
+                    return await HandleLostItemReporting(tenantContext, conversation, normalizedMessage, intentAnalysis);
                 }
                 else
                 {
@@ -409,6 +494,42 @@ public class MessageRoutingService : IMessageRoutingService
 
             _logger.LogInformation("LLM Analysis: Intent={Intent}, Category={Category}, Item={Item}, Confidence={Confidence}",
                 analysis.PrimaryIntent, analysis.ServiceCategory, analysis.SpecificItem, analysis.OverallConfidence);
+
+            // INTEGRATION POINT A: Detect booking service requests early (before LLM response generation)
+            _logger.LogInformation("🔍 Integration Point A - Checking for booking service. Intent={Intent}, Category={Category}",
+                analysis.PrimaryIntent, analysis.ServiceCategory);
+
+            // Accept REQUEST_ITEM, BOOKING, and BOOKING_CHANGE intents for bookable services
+            var validIntents = new[] { "REQUEST_ITEM", "BOOKING", "BOOKING_CHANGE" };
+
+            if (validIntents.Contains(analysis.PrimaryIntent, StringComparer.OrdinalIgnoreCase) && analysis.ServiceCategory != null)
+            {
+                _logger.LogInformation("✅ Intent is {Intent} and Category is not null", analysis.PrimaryIntent);
+
+                // Normalize category name to handle legacy/alias names
+                var normalizedCategory = ServiceCategoryConstants.NormalizeCategory(analysis.ServiceCategory);
+                _logger.LogInformation("📋 Normalized category '{Original}' → '{Normalized}'", analysis.ServiceCategory, normalizedCategory);
+
+                // Check if this is a bookable service category using standardized constants
+                if (ServiceCategoryConstants.IsBookable(normalizedCategory))
+                {
+                    _logger.LogInformation("🎯 Early detection: Booking service request detected for category {Category} (normalized: {Normalized}), item {Item}",
+                        analysis.ServiceCategory, normalizedCategory, analysis.SpecificItem);
+
+                    // Start information gathering immediately with normalized category
+                    return await HandleBookingInformationGathering(tenantContext, conversation, normalizedMessage, null);
+                }
+                else
+                {
+                    _logger.LogWarning("❌ Category '{Category}' (normalized: '{Normalized}') NOT bookable. Bookable categories: [{BookableList}]",
+                        analysis.ServiceCategory, normalizedCategory, string.Join(", ", ServiceCategoryConstants.BookableCategories));
+                }
+            }
+            else
+            {
+                _logger.LogInformation("❌ Intent check failed. Intent={Intent}, CategoryNull={IsNull}",
+                    analysis.PrimaryIntent, analysis.ServiceCategory == null);
+            }
 
             // Step 2: Validate business rules based on LLM analysis
             var violations = await _llmBusinessRulesEngine.ValidateBusinessRulesAsync(analysis, tenantContext);
@@ -525,7 +646,7 @@ public class MessageRoutingService : IMessageRoutingService
         await _smartContextManagerService.UpdateContextAsync(conversation.Id, "clarification_needed", "fallback_response");
         return new MessageRoutingResponse
         {
-            Reply = "I'm having trouble understanding your request. Could you please rephrase it or provide more details? You can ask about room rates, facilities, services, or any other hotel information."
+            Reply = "I'd love to help you! Could you please tell me a bit more about what you need? I'm here to assist with room rates, facilities, services, or any other hotel information you'd like to know."
         };
     }
 
@@ -1108,8 +1229,8 @@ public class MessageRoutingService : IMessageRoutingService
             // Still include legacy guest booking for compatibility
             var guestBooking = await _context.Bookings
                 .Where(b => b.Phone == conversation.WaUserPhone &&
-                           b.CheckinDate <= DateOnly.FromDateTime(DateTime.Now) &&
-                           b.CheckoutDate >= DateOnly.FromDateTime(DateTime.Now) &&
+                           b.CheckinDate <= DateOnly.FromDateTime(DateTime.UtcNow) &&
+                           b.CheckoutDate >= DateOnly.FromDateTime(DateTime.UtcNow) &&
                            b.Status == "CheckedIn")
                 .FirstOrDefaultAsync();
 
@@ -1334,7 +1455,7 @@ If guest complains about issues that match active broadcast messages, PRIORITIZE
 GUEST CONTEXT:
 {guestInfo}
 
-Current Time: {DateTime.Now:yyyy-MM-dd HH:mm}
+Current Time: {DateTime.UtcNow:yyyy-MM-dd HH:mm}
 Current Meal Period: {mealType}
 Timezone: {tenantContext.Timezone}
 
@@ -1472,11 +1593,22 @@ ESCALATION TRIGGERS (suggest human assistance for):
                     TokensCompletion = llmResponse.TokensCompletion
                 };
 
+                // INTEGRATION POINT B: Check if this is a booking service request that needs information gathering
+                var bookingServiceDetected = await DetectBookingServiceRequest(response, tenantContext.TenantId);
+                if (bookingServiceDetected.IsBookingService)
+                {
+                    _logger.LogInformation("Detected booking service request for: {ServiceName}, starting information gathering",
+                        bookingServiceDetected.ServiceName);
+
+                    // Start information gathering instead of creating task immediately
+                    return await HandleBookingInformationGathering(tenantContext, conversation, messageText, null);
+                }
+
                 await ProcessExtractedActions(tenantContext, conversation, response);
 
                 return response;
             }
-            
+
             return null;
         }
         catch (Exception ex)
@@ -1647,7 +1779,7 @@ Property plan: {{PLAN}}";
             {
                 return new MessageRoutingResponse
                 {
-                    Reply = "Of course! I'm here to help. What else can I assist you with? You can ask about our menu, request room service items, get information about local attractions, or anything else you need during your stay."
+                    Reply = "Wonderful! I'm here to help. What else can I assist you with? I'd be happy to help you with our menu, room service items, local attractions, or anything else you need during your stay."
                 };
             }
 
@@ -1674,7 +1806,7 @@ Property plan: {{PLAN}}";
             {
                 return new MessageRoutingResponse
                 {
-                    Reply = "I'm connecting you with our front desk right away. They'll be in touch within the next few minutes to assist you personally. In the meantime, feel free to ask me about anything else!"
+                    Reply = "Perfect! I'm connecting you with our front desk right away. They'll be in touch within the next few minutes to assist you personally. In the meantime, feel free to ask me about anything else!"
                 };
             }
 
@@ -1719,7 +1851,7 @@ Property plan: {{PLAN}}";
             {
                 return new MessageRoutingResponse
                 {
-                    Reply = "I understand you're having temperature issues in your room. Let me connect you with our front desk who can assist with the air conditioning or heating. They'll help you get comfortable right away. Would you like me to connect you now?"
+                    Reply = "I'm sorry to hear you're having temperature issues in your room. Let me connect you with our front desk right away - they'll help you get comfortable as quickly as possible. Would you like me to connect you now?"
                 };
             }
 
@@ -1740,7 +1872,7 @@ Property plan: {{PLAN}}";
                 {
                     return new MessageRoutingResponse
                     {
-                        Reply = "I apologize, but laundry service is currently unavailable. However, I can help you find alternative solutions or assist with other services. What else can I help you with during your stay?"
+                        Reply = "I'm sorry, but our laundry service is currently unavailable. However, I'd be happy to help you find alternative solutions or assist with other services. What else can I help you with during your stay?"
                     };
                 }
             }
@@ -1762,7 +1894,7 @@ Property plan: {{PLAN}}";
                 {
                     return new MessageRoutingResponse
                     {
-                        Reply = "I apologize, but housekeeping service is currently unavailable. However, I can help you find alternative solutions or assist with other services. What else can I help you with during your stay?"
+                        Reply = "I'm sorry, but our housekeeping service is currently unavailable at the moment. However, I'd be happy to help you find alternative solutions or assist with other services. What else can I help you with during your stay?"
                     };
                 }
             }
@@ -1784,7 +1916,7 @@ Property plan: {{PLAN}}";
                 {
                     return new MessageRoutingResponse
                     {
-                        Reply = "I apologize, but room service is currently unavailable. However, I can help you find alternative dining options or assist with other services. What else can I help you with during your stay?"
+                        Reply = "I'm sorry, but our room service is currently unavailable. However, I'd be happy to help you find alternative dining options or assist with other services. What else can I help you with during your stay?"
                     };
                 }
             }
@@ -2098,7 +2230,7 @@ Property plan: {{PLAN}}";
                 tenantContext.TenantId,
                 ResponseTemplateKeys.ServiceRequestHousekeepingUnavailable,
                 new Dictionary<string, object>(),
-                "I apologize, but our housekeeping service is currently unavailable. Please contact the front desk for assistance with towels."
+                "I'm sorry, but our housekeeping service is currently unavailable at the moment. Please feel free to contact our front desk, and they'll be happy to help you with towels right away."
             );
 
             return new MessageRoutingResponse
@@ -2373,7 +2505,7 @@ Property plan: {{PLAN}}";
                 tenantContext.TenantId,
                 ResponseTemplateKeys.ServiceRequestLaundryUnavailable,
                 new Dictionary<string, object>(),
-                "I apologize, but our laundry service is currently unavailable. Please contact the front desk for assistance."
+                "I'm sorry, but our laundry service is currently unavailable at the moment. Please feel free to contact our front desk, and they'll be happy to assist you."
             );
 
             return new MessageRoutingResponse
@@ -2427,7 +2559,7 @@ Property plan: {{PLAN}}";
                 tenantContext.TenantId,
                 ResponseTemplateKeys.ServiceRequestHousekeepingUnavailable,
                 new Dictionary<string, object>(),
-                "I apologize, but our housekeeping service is currently unavailable. Please contact the front desk for assistance."
+                "I'm sorry, but our housekeeping service is currently unavailable at the moment. Please feel free to contact our front desk, and they'll be happy to assist you."
             );
 
             return new MessageRoutingResponse
@@ -2494,8 +2626,8 @@ Property plan: {{PLAN}}";
         var variables = new Dictionary<string, object>();
 
         var fallbackReply = isUrgent
-            ? "I understand this is urgent! I've prioritized your maintenance request and our team will address it immediately. You should expect someone within the next 30 minutes. Is there anything else I can help you with in the meantime?"
-            : "Thank you for letting me know! I've logged your maintenance request and our team will take care of it during regular maintenance hours. You can expect it to be resolved within the next few hours. Anything else I can assist you with?";
+            ? "I understand this is urgent! I've prioritized your maintenance request, and our team is on their way to address it immediately. You should expect someone within the next 30 minutes. Is there anything else I can help you with in the meantime?"
+            : "Thank you for letting me know! I've logged your maintenance request, and our team will take care of it during regular maintenance hours. You can expect it to be resolved within the next few hours. Anything else I can help you with?";
 
         var processedTemplate = await _responseTemplateService.ProcessTemplateWithFallbackAsync(
             tenantContext.TenantId,
@@ -2544,7 +2676,7 @@ Property plan: {{PLAN}}";
                 tenantContext.TenantId,
                 ResponseTemplateKeys.WiFiStillNotWorking,
                 new Dictionary<string, object>(),
-                "I understand the basic steps didn't resolve the issue. Let me get our IT technical support team to come to your room right away. They'll have advanced tools to diagnose and fix any WiFi connectivity problems. You should expect someone within the next 15-20 minutes. In the meantime, you can use the lobby WiFi if needed. Anything else I can assist you with?"
+                "I'm sorry those basic steps didn't resolve the issue. Let me get our IT technical support team to come to your room right away. They'll have advanced tools to diagnose and fix any WiFi connectivity problems for you. You should expect someone within the next 15-20 minutes. In the meantime, you're welcome to use the lobby WiFi if needed. Anything else I can help you with?"
             );
 
             return new MessageRoutingResponse
@@ -3038,14 +3170,14 @@ Property plan: {{PLAN}}";
 
         var fallbackResponses = issueType.ToLower() switch
         {
-            "wifi/internet" => "I understand you're having trouble with the WiFi connection. I've notified our technical team and they'll check the connection shortly. In the meantime, you can also try restarting your device's WiFi connection.",
-            "hvac" => "I see there's an issue with the air conditioning/heating in your room. I've sent an alert to our maintenance team and they'll come to fix this as soon as possible. We apologize for any discomfort.",
-            "television" => "I've noted the issue with your TV. Our maintenance team will visit your room soon to resolve this. You might also try unplugging it for 30 seconds and plugging it back in.",
-            "lighting" => "I understand you're having lighting issues. I've created a maintenance request and someone will come to fix this shortly.",
-            "plumbing" => "I've logged the plumbing issue and notified our maintenance team immediately. They'll prioritize fixing this for you. If it's urgent, please don't hesitate to call the front desk directly.",
-            "access/security" => "I see you're having trouble with room access. I've alerted our security team and they'll assist you shortly. If you're currently locked out, please visit the front desk for immediate help.",
+            "wifi/internet" => "I understand you're having trouble with the WiFi connection. I've notified our technical team, and they'll check the connection shortly. In the meantime, you can also try restarting your device's WiFi connection.",
+            "hvac" => "I'm sorry to hear there's an issue with the air conditioning/heating in your room. I've sent an alert to our maintenance team, and they'll come to fix this as soon as possible. We apologize for any discomfort.",
+            "television" => "I've noted the issue with your TV. Our maintenance team will visit your room soon to resolve this for you. You might also try unplugging it for 30 seconds and plugging it back in.",
+            "lighting" => "I understand you're having lighting issues. I've created a maintenance request, and someone will come to fix this shortly.",
+            "plumbing" => "I've logged the plumbing issue and notified our maintenance team immediately. They'll prioritize fixing this for you. If it's urgent, please don't hesitate to call our front desk directly.",
+            "access/security" => "I see you're having trouble with room access. I've alerted our security team, and they'll assist you shortly. If you're currently locked out, please visit the front desk for immediate help.",
             "appliances" => "I've noted the appliance issue and created a maintenance ticket. Our team will come to check and repair it as needed.",
-            _ => "Thank you for reporting this issue. I've created a maintenance request and our team has been notified. They'll attend to this matter as soon as possible. We apologize for any inconvenience."
+            _ => "Thank you for reporting this issue. I've created a maintenance request, and our team has been notified. They'll attend to this matter as soon as possible. We apologize for any inconvenience."
         };
 
         var variables = new Dictionary<string, object>
@@ -5498,5 +5630,627 @@ Return only the classification word (TIMING_RESPONSE, GREETING, SERVICE_REQUEST,
             _logger.LogError(ex, "Error validating service hallucinations");
             return response;
         }
+    }
+
+    // Information Gathering Integration Methods
+
+    private async Task<(bool IsBookingService, string? ServiceName, string? ServiceCategory)> DetectBookingServiceRequest(
+        MessageRoutingResponse response,
+        int tenantId)
+    {
+        try
+        {
+            // Check if there are any actions
+            var actionsToCheck = new List<JsonElement>();
+            if (response.Action.HasValue)
+            {
+                actionsToCheck.Add(response.Action.Value);
+            }
+            if (response.Actions != null && response.Actions.Any())
+            {
+                actionsToCheck.AddRange(response.Actions);
+            }
+
+            foreach (var action in actionsToCheck)
+            {
+                // Check if this is a create_task action
+                if (!action.TryGetProperty("type", out var typeElement) ||
+                    typeElement.GetString() != "create_task")
+                {
+                    continue;
+                }
+
+                // Get the item_slug
+                if (!action.TryGetProperty("item_slug", out var itemSlugElement))
+                {
+                    continue;
+                }
+
+                var itemSlug = itemSlugElement.GetString();
+                if (string.IsNullOrEmpty(itemSlug))
+                {
+                    continue;
+                }
+
+                // Check if this item_slug matches a bookable service
+                var service = await _context.Services
+                    .Where(s => s.TenantId == tenantId &&
+                               s.IsAvailable &&
+                               s.Name == itemSlug)
+                    .FirstOrDefaultAsync();
+
+                if (service != null)
+                {
+                    // Determine if this service requires information gathering based on category
+                    var bookableCategories = new[] { "LOCAL_TOURS", "MASSAGE", "CONFERENCE_ROOM", "SPA", "ACTIVITIES" };
+
+                    if (bookableCategories.Contains(service.Category, StringComparer.OrdinalIgnoreCase))
+                    {
+                        _logger.LogInformation("Detected bookable service: {ServiceName} in category {Category}",
+                            service.Name, service.Category);
+                        return (true, service.Name, service.Category);
+                    }
+                }
+            }
+
+            return (false, null, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error detecting booking service request");
+            return (false, null, null);
+        }
+    }
+
+    private async Task<string> GetConversationHistoryAsync(int conversationId)
+    {
+        try
+        {
+            var messages = await _context.Messages
+                .Where(m => m.ConversationId == conversationId)
+                .OrderByDescending(m => m.CreatedAt)
+                .Take(10)
+                .ToListAsync();
+
+            var history = messages.OrderBy(m => m.CreatedAt)
+                .Select(m => $"{(m.Direction == "Inbound" ? "Guest" : "Bot")}: {m.Body}")
+                .ToList();
+
+            return string.Join("\n", history);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving conversation history for conversation {ConversationId}", conversationId);
+            return string.Empty;
+        }
+    }
+
+    private async Task<MessageRoutingResponse> HandleBookingInformationGathering(
+        TenantContext tenantContext,
+        Conversation conversation,
+        string normalizedMessage,
+        BookingInformationState? existingState = null)
+    {
+        try
+        {
+            _logger.LogInformation("Starting booking information gathering for conversation {ConversationId}", conversation.Id);
+
+            // 1. Load available bookable services
+            var availableServices = await _context.Services
+                .Where(s => s.TenantId == tenantContext.TenantId && s.IsAvailable)
+                .Select(s => new { s.Name, s.Category })
+                .ToListAsync();
+
+            var serviceList = availableServices
+                .Select(s => (s.Name, s.Category))
+                .ToList();
+
+            _logger.LogInformation("Loaded {Count} available services for LLM selection", serviceList.Count);
+
+            // 2. Extract information from current message
+            var conversationHistory = await GetConversationHistoryAsync(conversation.Id);
+            var extractedState = await _informationGatheringService.ExtractInformationFromMessage(
+                normalizedMessage,
+                conversationHistory,
+                existingState,
+                serviceList
+            );
+
+            // 2. Detect if user wants to cancel
+            var intentResult = await _informationGatheringService.DetectIntent(
+                normalizedMessage,
+                "GatheringBookingInfo",
+                extractedState.ServiceName ?? "booking"
+            );
+
+            if (intentResult.Intent == "cancel")
+            {
+                _logger.LogInformation("Guest cancelled booking information gathering for conversation {ConversationId}", conversation.Id);
+
+                // Clear state, return to normal mode
+                conversation.ConversationMode = "Normal";
+                conversation.BookingInfoState = null;
+                await _context.SaveChangesAsync();
+
+                return new MessageRoutingResponse
+                {
+                    Reply = "No problem! Let me know if you need anything else.",
+                    ActionType = "cancel_booking_gathering"
+                };
+            }
+
+            // 3. Get missing required fields
+            // Try to get service ID if we have a specific service name
+            int? serviceId = null;
+            if (!string.IsNullOrEmpty(extractedState.ServiceName))
+            {
+                var service = await _context.Services
+                    .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                             s.Name == extractedState.ServiceName);
+                serviceId = service?.Id;
+            }
+
+            var missingFields = await _informationGatheringService.GetMissingRequiredFields(
+                extractedState,
+                extractedState.ServiceCategory ?? "LOCAL_TOURS",
+                tenantContext.TenantId,
+                serviceId
+            );
+
+            // 4. Check if we have everything
+            if (missingFields.Count == 0)
+            {
+                _logger.LogInformation("All required information collected for conversation {ConversationId}", conversation.Id);
+
+                // Validate the booking
+                var service = await _context.Services
+                    .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                              s.Name == extractedState.ServiceName);
+
+                var validationResult = await _informationGatheringService.ValidateBooking(
+                    extractedState,
+                    service,
+                    DateTime.UtcNow,
+                    _configuration["HotelSettings:Timezone"] ?? "Africa/Johannesburg"
+                );
+
+                if (!validationResult.IsValid)
+                {
+                    _logger.LogWarning("Booking validation failed: {ErrorMessage}", validationResult.ErrorMessage);
+
+                    // Return validation error with suggestion
+                    return new MessageRoutingResponse
+                    {
+                        Reply = validationResult.ErrorMessage +
+                               (validationResult.SuggestedAlternative != null ? " " + validationResult.SuggestedAlternative : ""),
+                        ActionType = "validation_error"
+                    };
+                }
+
+                // Generate confirmation message FIRST (so we can save it in the task notes)
+                var confirmationReply = $"Perfect! I've booked {extractedState.ServiceName} for {extractedState.NumberOfPeople} people on {extractedState.RequestedDate:yyyy-MM-dd}";
+                if (extractedState.RequestedTime.HasValue)
+                {
+                    confirmationReply += $" at {extractedState.RequestedTime:HH:mm}";
+                }
+                confirmationReply += ". Our team will confirm the details shortly.";
+
+                // CREATE THE TASK with confirmation message in notes
+                var task = await CreateBookingTask(
+                    tenantContext,
+                    conversation,
+                    extractedState,
+                    service,
+                    confirmationReply
+                );
+
+                // Clear gathering state
+                conversation.ConversationMode = "Normal";
+                conversation.BookingInfoState = null;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Booking task {TaskId} created successfully for conversation {ConversationId}", task.Id, conversation.Id);
+
+                return new MessageRoutingResponse
+                {
+                    Reply = confirmationReply,
+                    ActionType = "booking_created",
+                    Action = JsonSerializer.SerializeToElement(new { taskId = task.Id })
+                };
+            }
+
+            // 5. Still missing information - ask next question
+            extractedState.QuestionAttempts++;
+            extractedState.MissingRequiredFields = missingFields;
+
+            var question = await _informationGatheringService.GenerateNextQuestion(
+                extractedState,
+                conversationHistory
+            );
+
+            // Check if exceeded question limit
+            if (extractedState.ExceededQuestionLimit())
+            {
+                _logger.LogWarning("Exceeded question limit for conversation {ConversationId}", conversation.Id);
+
+                // Offer human transfer
+                return new MessageRoutingResponse
+                {
+                    Reply = question + " Would you like me to connect you with a team member who can help?",
+                    ActionType = "max_questions_reached"
+                };
+            }
+
+            // Save state and continue gathering
+            conversation.ConversationMode = "GatheringBookingInfo";
+            conversation.BookingInfoState = JsonSerializer.Serialize(extractedState);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Asking question {AttemptNum} for conversation {ConversationId}", extractedState.QuestionAttempts, conversation.Id);
+
+            return new MessageRoutingResponse
+            {
+                Reply = question,
+                ActionType = "gathering_info"
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in HandleBookingInformationGathering for conversation {ConversationId}", conversation.Id);
+
+            // Reset state on error
+            conversation.ConversationMode = "Normal";
+            conversation.BookingInfoState = null;
+            await _context.SaveChangesAsync();
+
+            return new MessageRoutingResponse
+            {
+                Reply = "I'm sorry, but I encountered an issue processing your booking request. Could you please try again, or would you like me to connect you with a team member who can help?",
+                ActionType = "error"
+            };
+        }
+    }
+
+    private async Task<MessageRoutingResponse> HandleLostItemReporting(
+        TenantContext tenantContext,
+        Conversation conversation,
+        string normalizedMessage,
+        IntentAnalysisResult intentAnalysis)
+    {
+        try
+        {
+            _logger.LogInformation("🔍 Starting lost item reporting for conversation {ConversationId}", conversation.Id);
+
+            // 1. Extract lost item details using LLM
+            var conversationHistory = await GetConversationHistoryAsync(conversation.Id);
+            var extractedDetails = await ExtractLostItemDetails(normalizedMessage, conversationHistory, intentAnalysis);
+
+            if (extractedDetails == null || string.IsNullOrEmpty(extractedDetails.ItemName))
+            {
+                _logger.LogWarning("Failed to extract item details from message: {Message}", normalizedMessage);
+                return new MessageRoutingResponse
+                {
+                    Reply = "I'd be happy to help you report a lost item. Could you please tell me what item you're looking for and where you think you might have left it?",
+                    ActionType = "clarification"
+                };
+            }
+
+            // 2. Check guest booking status for urgency detection and shipping options
+            var guestStatus = await DetermineGuestStatusAsync(conversation.WaUserPhone, tenantContext.TenantId);
+            var isCheckedOut = guestStatus.Type == GuestType.PostCheckout;
+            var isCheckingOutToday = guestStatus.CheckoutDate?.ToDateTime(TimeOnly.MinValue).Date == DateTime.UtcNow.Date;
+
+            // 3. Report the lost item to the service (create immediately, even if location missing)
+            var lostItem = await _lostAndFoundService.ReportLostItemAsync(
+                tenantId: tenantContext.TenantId,
+                itemName: extractedDetails.ItemName,
+                category: extractedDetails.Category ?? "Other",
+                reporterPhone: conversation.WaUserPhone,
+                conversationId: conversation.Id,
+                description: extractedDetails.Description,
+                color: extractedDetails.Color,
+                brand: extractedDetails.Brand,
+                locationLost: extractedDetails.LocationLost,
+                roomNumber: guestStatus.RoomNumber,
+                reporterName: guestStatus.DisplayName
+            );
+
+            _logger.LogInformation("✅ Lost item {ItemId} reported successfully: {ItemName}", lostItem.Id, lostItem.ItemName);
+
+            // 3.5. If location is missing, ask for it and store clarification state
+            _logger.LogInformation("🔍 Checking if location clarification needed. LocationLost = '{Location}'", extractedDetails.LocationLost ?? "(null)");
+
+            if (string.IsNullOrWhiteSpace(extractedDetails.LocationLost))
+            {
+                _logger.LogInformation("❓ Location is missing - creating pending state and asking for clarification");
+
+                await _conversationStateService.CreatePendingStateAsync(
+                    conversationId: conversation.Id,
+                    tenantId: tenantContext.TenantId,
+                    stateType: ConversationStateType.AwaitingClarification,
+                    entityType: Models.EntityType.LostItem,
+                    entityId: lostItem.Id,
+                    pendingField: Models.PendingField.Location
+                );
+
+                _logger.LogInformation("✅ Pending state created for lost item {ItemId}, returning clarification request", lostItem.Id);
+
+                return new MessageRoutingResponse
+                {
+                    Reply = $"I've logged your lost {extractedDetails.ItemName}. Could you please tell me where you think you last saw it? For example, by the pool, in the restaurant, in your room, etc.",
+                    ActionType = "clarification"
+                };
+            }
+
+            _logger.LogInformation("✓ Location provided: '{Location}' - skipping clarification", extractedDetails.LocationLost);
+
+            // 4. Check for immediate matches
+            var potentialMatches = await _lostAndFoundService.FindPotentialMatchesAsync(tenantContext.TenantId, lostItem.Id);
+            var hasHighConfidenceMatch = potentialMatches.Any(m => m.MatchScore >= 0.8m);
+
+            // 5. Store last bot response for context
+            var response = GenerateLostItemReportResponse(
+                lostItem,
+                extractedDetails,
+                guestStatus,
+                hasHighConfidenceMatch,
+                isCheckedOut,
+                isCheckingOutToday
+            );
+
+            await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, response);
+
+            return new MessageRoutingResponse
+            {
+                Reply = response,
+                ActionType = "lost_item_reported"
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling lost item reporting for conversation {ConversationId}", conversation.Id);
+            return new MessageRoutingResponse
+            {
+                Reply = "I apologize, but I encountered an issue while reporting your lost item. Let me connect you with our staff who can help you directly.",
+                ActionType = "error"
+            };
+        }
+    }
+
+    private async Task<LostItemDetails?> ExtractLostItemDetails(
+        string message,
+        string conversationHistory,
+        IntentAnalysisResult intentAnalysis)
+    {
+        // Get the primary detected intent for hints
+        var primaryIntent = intentAnalysis.DetectedIntents.FirstOrDefault();
+        var detectedItem = primaryIntent?.EntityType;
+
+        var extractionPrompt = $@"Extract lost item details from the guest message. Return a JSON object with these fields:
+
+CONTEXT:
+{conversationHistory}
+
+CURRENT MESSAGE:
+""{message}""
+
+INTENT ANALYSIS HINTS:
+{(detectedItem != null ? $"- Detected item: {detectedItem}" : "")}
+
+Extract and return JSON with these fields:
+{{
+  ""itemName"": ""string (REQUIRED - what was lost, e.g. 'belt', 'iPhone', 'passport')"",
+  ""category"": ""string (Electronics/Clothing/Jewelry/Documents/Keys/Personal/Accessories/Other)"",
+  ""description"": ""string (any additional details about the item)"",
+  ""color"": ""string (if mentioned)"",
+  ""brand"": ""string (if mentioned, e.g. 'Apple', 'Gucci', 'Samsung')"",
+  ""locationLost"": ""string or null (ONLY if EXPLICITLY stated - e.g. 'by the pool', 'in the restaurant'. Use null if not mentioned)"",
+  ""whenLost"": ""string (timeline if mentioned - 'yesterday', 'this morning', 'during checkout')"",
+  ""urgency"": ""string (high/medium/low based on checkout status or item importance)""
+}}
+
+CRITICAL EXTRACTION RULES:
+1. Item name is REQUIRED - extract from message (e.g. ""I left my belt"" -> itemName: ""belt"")
+2. Infer category from item (belt -> Clothing, phone -> Electronics, passport -> Documents)
+3. locationLost: ONLY populate if EXPLICITLY mentioned in the message
+   - ✅ ""I lost my phone by the pool"" -> locationLost: ""pool area""
+   - ✅ ""Left my wallet in room 305"" -> locationLost: ""room 305""
+   - ❌ ""I lost my phone"" -> locationLost: null (NOT mentioned - we'll ask for it)
+   - ❌ ""Can't find my keys"" -> locationLost: null (NOT mentioned - we'll ask for it)
+4. DO NOT infer or assume location. If not explicitly stated, use null
+5. Capture color/brand if specified (""black iPhone"" -> color: ""black"", brand: ""Apple"")
+6. Timeline matters: ""during checkout today"" = high urgency, ""yesterday"" = medium
+7. High-value items (electronics, jewelry, documents) = higher urgency
+
+Return ONLY valid JSON, no markdown.";
+
+        try
+        {
+            var details = await _openAIService.GetStructuredResponseAsync<LostItemDetails>(extractionPrompt, temperature: 0.0);
+
+            _logger.LogInformation("📋 Extracted lost item details: ItemName={ItemName}, Category={Category}, Location={Location}, Color={Color}, Brand={Brand}, Description={Description}",
+                details?.ItemName ?? "(null)",
+                details?.Category ?? "(null)",
+                details?.LocationLost ?? "(null)",
+                details?.Color ?? "(null)",
+                details?.Brand ?? "(null)",
+                details?.Description ?? "(null)");
+
+            return details;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to extract lost item details from message");
+            return null;
+        }
+    }
+
+    private string GenerateLostItemReportResponse(
+        LostItem lostItem,
+        LostItemDetails details,
+        GuestStatus guestStatus,
+        bool hasHighConfidenceMatch,
+        bool isCheckedOut,
+        bool isCheckingOutToday)
+    {
+        var responseBuilder = new StringBuilder();
+
+        // 1. Empathetic acknowledgment with item-specific messaging
+        var itemType = details.Category?.ToLower() ?? "item";
+        var empathyMessage = itemType switch
+        {
+            "documents" or "jewelry" => $"I completely understand how concerning it must be to misplace your {details.ItemName}. Let me help you right away.",
+            "electronics" => $"I know how important your {details.ItemName} is. I'm here to help you locate it.",
+            _ => $"Thank you for reporting your lost {details.ItemName}. I'm here to help you find it."
+        };
+
+        responseBuilder.AppendLine(empathyMessage);
+        responseBuilder.AppendLine();
+
+        // 2. Confirmation of what was reported
+        responseBuilder.AppendLine($"✅ I've logged your report:");
+        responseBuilder.AppendLine($"• Item: {details.ItemName}");
+        if (!string.IsNullOrEmpty(details.Color)) responseBuilder.AppendLine($"• Color: {details.Color}");
+        if (!string.IsNullOrEmpty(details.Brand)) responseBuilder.AppendLine($"• Brand: {details.Brand}");
+        if (!string.IsNullOrEmpty(details.LocationLost)) responseBuilder.AppendLine($"• Last seen: {details.LocationLost}");
+        responseBuilder.AppendLine($"• Reference #: LF{lostItem.Id:D6}");
+        responseBuilder.AppendLine();
+
+        // 3. Match notification if found
+        if (hasHighConfidenceMatch)
+        {
+            responseBuilder.AppendLine("🎉 Good news! We may have already found an item matching your description. Our team is verifying it now and will contact you shortly.");
+            responseBuilder.AppendLine();
+        }
+        else
+        {
+            responseBuilder.AppendLine("🔍 I'm checking our found items database now. You'll receive an instant notification if we find a match.");
+            responseBuilder.AppendLine();
+        }
+
+        // 4. Retention policy based on category
+        var retentionDays = itemType switch
+        {
+            "documents" => 365,
+            "jewelry" or "electronics" => 180,
+            "keys" => 90,
+            _ => 90
+        };
+
+        responseBuilder.AppendLine($"📅 We'll keep your {details.ItemName} safe for {retentionDays} days once found.");
+
+        // 5. Checkout-specific messaging
+        if (isCheckingOutToday)
+        {
+            responseBuilder.AppendLine();
+            responseBuilder.AppendLine("⚡ I see you're checking out today. I've flagged this as urgent. We'll search immediately and contact you within the hour.");
+        }
+        else if (isCheckedOut)
+        {
+            responseBuilder.AppendLine();
+            responseBuilder.AppendLine("📦 Since you've already checked out, we can ship your item to you once found (shipping costs may apply). Please ensure your contact details are up to date.");
+        }
+
+        // 6. Next steps
+        responseBuilder.AppendLine();
+        responseBuilder.AppendLine("What happens next:");
+        responseBuilder.AppendLine("1. Our housekeeping team will search the area you mentioned");
+        responseBuilder.AppendLine("2. You'll get instant WhatsApp notifications if we find it");
+        responseBuilder.AppendLine("3. We'll hold it securely until you can collect it");
+
+        // 7. Verification requirements for high-value items
+        if (itemType == "electronics" || itemType == "jewelry" || itemType == "documents")
+        {
+            responseBuilder.AppendLine();
+            responseBuilder.AppendLine($"🔐 For your security, we'll need to verify ownership when you collect your {details.ItemName} (proof of identity/booking confirmation).");
+        }
+
+        return responseBuilder.ToString().Trim();
+    }
+
+    private async Task<StaffTask> CreateBookingTask(
+        TenantContext tenantContext,
+        Conversation conversation,
+        BookingInformationState bookingInfo,
+        Service? service,
+        string confirmationMessage)
+    {
+        try
+        {
+            using var scope = new TenantScope(_context, tenantContext.TenantId);
+
+            var guestStatus = await DetermineGuestStatusAsync(conversation.WaUserPhone, tenantContext.TenantId);
+
+            var title = $"Booking: {bookingInfo.ServiceName}";
+            var description = $"Guest booking request for {bookingInfo.ServiceName}\n";
+            description += $"Number of people: {bookingInfo.NumberOfPeople ?? 1}\n";
+            if (bookingInfo.RequestedDate.HasValue)
+            {
+                description += $"Date: {bookingInfo.RequestedDate:yyyy-MM-dd}\n";
+            }
+            if (bookingInfo.RequestedTime.HasValue)
+            {
+                description += $"Time: {bookingInfo.RequestedTime:HH:mm}\n";
+            }
+            if (!string.IsNullOrEmpty(bookingInfo.SpecialRequests))
+            {
+                description += $"Special requests: {bookingInfo.SpecialRequests}\n";
+            }
+            if (service != null && service.IsChargeable && service.Price.HasValue)
+            {
+                description += $"Price: {service.Currency}{service.Price} {service.PricingUnit ?? ""}\n";
+            }
+
+            // Map service category to valid department
+            var department = MapServiceCategoryToDepartment(service?.Category);
+            var priority = "Medium";
+
+            var task = new StaffTask
+            {
+                TenantId = tenantContext.TenantId,
+                Title = title,
+                Description = description,
+                Notes = confirmationMessage,
+                Priority = priority,
+                Status = "Open",
+                Department = department,
+                CreatedAt = DateTime.UtcNow,
+                EstimatedCompletionTime = DateTime.UtcNow.AddHours(2),
+                GuestPhone = conversation.WaUserPhone,
+                GuestName = guestStatus.DisplayName ?? conversation.WaUserPhone,
+                RoomNumber = guestStatus.RoomNumber,
+                Quantity = bookingInfo.NumberOfPeople ?? 1
+            };
+
+            _context.StaffTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Created booking task {TaskId}: {Title} for room {RoomNumber}",
+                task.Id, title, guestStatus.RoomNumber);
+
+            return task;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating booking task for service {ServiceName}", bookingInfo.ServiceName);
+            throw;
+        }
+    }
+
+    private string MapServiceCategoryToDepartment(string? category)
+    {
+        if (string.IsNullOrEmpty(category))
+            return "FrontDesk";
+
+        return category.ToLowerInvariant() switch
+        {
+            "local tours" or "transportation" or "activities" => "Concierge",
+            "dining" or "food service" or "room service" => "FoodService",
+            "housekeeping items" or "accommodation" => "Housekeeping",
+            "wellness" or "spa" or "massage" => "Concierge",
+            "business" or "conference" => "FrontDesk",
+            "recreation" => "Concierge",
+            _ => "FrontDesk" // Default fallback
+        };
     }
 }
