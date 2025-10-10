@@ -106,7 +106,7 @@ public class HotelInfo
     public bool EnableChatbot { get; set; } = true;
 
     [MaxLength(50)]
-    public string? Currency { get; set; } = "USD";
+    public string? Currency { get; set; } = "ZAR";
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

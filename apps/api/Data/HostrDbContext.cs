@@ -228,13 +228,7 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             entity.HasKey(e => e.Id);
             entity.HasOne(e => e.Tenant).WithMany(e => e.UpsellItems).HasForeignKey(e => e.TenantId);
             entity.Property(e => e.Categories)
-                .HasConversion(
-                    v => string.Join(',', v),
-                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                .Metadata.SetValueComparer(new ValueComparer<string[]>(
-                    (c1, c2) => c1.SequenceEqual(c2),
-                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                    c => c.ToArray()));
+                .HasColumnType("text[]"); // Use PostgreSQL array type directly
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
 

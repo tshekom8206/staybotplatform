@@ -111,6 +111,11 @@ export const MENU: MenuItem[] = [
     ]
   },
   {
+    label: 'Lost & Found',
+    icon: 'package',
+    link: '/lost-and-found'
+  },
+  {
     label: 'Management',
     isTitle: true
   },
@@ -141,6 +146,28 @@ export const MENU: MenuItem[] = [
       {
         label: 'Template Manager',
         link: '/configuration/templates'
+      }
+    ]
+  },
+  {
+    label: 'Business Rules',
+    icon: 'sliders',
+    subItems: [
+      {
+        label: 'Dashboard',
+        link: '/business-rules/dashboard'
+      },
+      {
+        label: 'Service Rules',
+        link: '/business-rules/services'
+      },
+      {
+        label: 'Upselling',
+        link: '/business-rules/upselling'
+      },
+      {
+        label: 'Audit Log',
+        link: '/business-rules/audit-log'
       }
     ]
   },

@@ -44,7 +44,7 @@
             <div class="pt-3">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="mb-0">Upsell Items Library</h6>
-                <button class="btn btn-sm btn-primary">
+                <button class="btn btn-sm btn-primary" (click)="openCreateModal()">
                   <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i>
                   Create Upsell Item
                 </button>
@@ -81,10 +81,10 @@
                         </span>
                       </td>
                       <td class="text-center">
-                        <button class="btn btn-sm btn-outline-secondary me-1" [ngbTooltip]="'Edit'">
+                        <button class="btn btn-sm btn-outline-secondary me-1" [ngbTooltip]="'Edit'" (click)="openEditModal(item)">
                           <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" [ngbTooltip]="'Delete'">
+                        <button class="btn btn-sm btn-outline-danger" [ngbTooltip]="'Delete'" (click)="deleteItem(item)">
                           <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
                         </button>
                       </td>
@@ -96,7 +96,7 @@
               <div *ngIf="upsellItems.length === 0" class="text-center text-muted py-5">
                 <i data-feather="inbox" appFeatherIcon class="icon-xxl mb-3"></i>
                 <p class="mb-0">No upsell items configured yet</p>
-                <button class="btn btn-sm btn-primary mt-2">Create First Upsell Item</button>
+                <button class="btn btn-sm btn-primary mt-2" (click)="openCreateModal()">Create First Upsell Item</button>
               </div>
             </div>
           </ng-template>
@@ -198,3 +198,100 @@
     </div>
   </div>
 </div>
+
+<!-- Upsell Item Modal -->
+<ng-template #upsellItemModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">{{ isEditMode ? 'Edit' : 'Create' }} Upsell Item</h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="upsellForm">
+      <!-- Title -->
+      <div class="mb-3">
+        <label class="form-label">Title <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="title" placeholder="e.g., Airport Transfer">
+        <div *ngIf="upsellForm.get('title')?.invalid && upsellForm.get('title')?.touched" class="text-danger small mt-1">
+          <span *ngIf="upsellForm.get('title')?.errors?.['required']">Title is required</span>
+          <span *ngIf="upsellForm.get('title')?.errors?.['maxlength']">Title must be less than 200 characters</span>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label class="form-label">Description <span class="text-danger">*</span></label>
+        <textarea class="form-control" formControlName="description" rows="3" placeholder="Describe the upsell item"></textarea>
+        <div *ngIf="upsellForm.get('description')?.invalid && upsellForm.get('description')?.touched" class="text-danger small mt-1">
+          <span *ngIf="upsellForm.get('description')?.errors?.['required']">Description is required</span>
+        </div>
+      </div>
+
+      <!-- Price and Unit -->
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Price (cents) <span class="text-danger">*</span></label>
+          <input type="number" class="form-control" formControlName="priceCents" placeholder="e.g., 85000">
+          <small class="text-muted d-block">Enter price in cents (e.g., 100 = R1.00)</small>
+          <small class="text-primary fw-bold" *ngIf="getPricePreview()">{{ getPricePreview() }}</small>
+          <div *ngIf="upsellForm.get('priceCents')?.invalid && upsellForm.get('priceCents')?.touched" class="text-danger small mt-1">
+            <span *ngIf="upsellForm.get('priceCents')?.errors?.['required']">Price is required</span>
+            <span *ngIf="upsellForm.get('priceCents')?.errors?.['min']">Price must be 0 or greater</span>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Unit <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="unit" placeholder="e.g., trip, person, item">
+          <div *ngIf="upsellForm.get('unit')?.invalid && upsellForm.get('unit')?.touched" class="text-danger small mt-1">
+            <span *ngIf="upsellForm.get('unit')?.errors?.['required']">Unit is required</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="mb-3">
+        <label class="form-label">Categories <span class="text-danger">*</span></label>
+        <div formArrayName="categories">
+          <div *ngFor="let category of categories.controls; let i = index" class="d-flex mb-2">
+            <input type="text" class="form-control me-2" [formControlName]="i" placeholder="e.g., transport, tours, wellness">
+            <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeCategory(i)" *ngIf="categories.length > 1">
+              <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
+            </button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="addCategory()">
+          <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i>
+          Add Category
+        </button>
+      </div>
+
+      <!-- Lead Time -->
+      <div class="mb-3">
+        <label class="form-label">Lead Time (minutes) <span class="text-danger">*</span></label>
+        <input type="number" class="form-control" formControlName="leadTimeMinutes" placeholder="e.g., 60">
+        <small class="text-muted d-block">How much advance notice is required for this item</small>
+        <small class="text-primary fw-bold" *ngIf="getLeadTimePreview()">{{ getLeadTimePreview() }}</small>
+        <div *ngIf="upsellForm.get('leadTimeMinutes')?.invalid && upsellForm.get('leadTimeMinutes')?.touched" class="text-danger small mt-1">
+          <span *ngIf="upsellForm.get('leadTimeMinutes')?.errors?.['required']">Lead time is required</span>
+          <span *ngIf="upsellForm.get('leadTimeMinutes')?.errors?.['min']">Lead time must be 0 or greater</span>
+        </div>
+      </div>
+
+      <!-- Active Status -->
+      <div class="mb-3">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" formControlName="isActive" id="isActiveSwitch">
+          <label class="form-check-label" for="isActiveSwitch">
+            Active (available for upselling)
+          </label>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+    <button type="button" class="btn btn-primary" (click)="saveItem()" [disabled]="upsellForm.invalid">
+      <i data-feather="save" appFeatherIcon class="icon-sm me-1"></i>
+      {{ isEditMode ? 'Update' : 'Create' }} Item
+    </button>
+  </div>
+</ng-template>

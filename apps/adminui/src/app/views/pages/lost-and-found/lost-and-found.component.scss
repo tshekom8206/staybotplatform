@@ -426,3 +426,74 @@
     padding: 0.5rem 0.75rem;
   }
 }
+
+// CRITICAL: Fix ALL containers that might clip dropdowns
+::ng-deep {
+  // Fix Bootstrap grid overflow
+  .container,
+  .container-fluid,
+  .row,
+  .col,
+  .col-lg-6,
+  .col-xl-4,
+  .col-md-6,
+  .mb-3,
+  div[class*="col-"] {
+    overflow: visible !important;
+  }
+
+  // Fix tab content overflow
+  [ngbnavoutlet],
+  .tab-content,
+  .tab-pane {
+    overflow: visible !important;
+  }
+
+  // Dropdown menu must appear above EVERYTHING
+  .dropdown-menu {
+    position: absolute !important;
+    z-index: 9999 !important;
+    transform: translate3d(0, 0, 0) !important;
+  }
+
+  // When dropdown is open, raise card z-index
+  .dropdown-fixed.show {
+    z-index: 2000 !important;
+
+    .btn {
+      z-index: 2001 !important;
+    }
+
+    .dropdown-menu {
+      z-index: 2002 !important;
+    }
+  }
+}
+
+// Ensure cards don't clip content
+.lost-item-card,
+.found-item-card {
+  overflow: visible !important;
+
+  .card {
+    overflow: visible !important;
+  }
+
+  .card-body,
+  .card-header,
+  .card-footer {
+    overflow: visible !important;
+    position: relative;
+  }
+
+  // Card footer specifically needs to allow dropdown overflow
+  .card-footer {
+    overflow: visible !important;
+    position: relative;
+  }
+}
+
+// Dropdown wrapper positioning
+.dropdown-fixed {
+  position: relative !important;
+}

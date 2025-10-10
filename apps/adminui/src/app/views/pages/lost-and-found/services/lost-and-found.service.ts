@@ -136,8 +136,23 @@ export class LostAndFoundService {
 
   // POST /api/lostandfound/found-items/{id}/find-matches
   findMatchesForFoundItem(foundItemId: number): Observable<LostAndFoundMatch[]> {
-    return this.http.post<LostAndFoundMatch[]>(`${this.apiUrl}/found-items/${foundItemId}/find-matches`, {}).pipe(
-      map(matches => matches.map(match => this.parseMatchDates(match)))
+    return this.http.post<any>(`${this.apiUrl}/found-items/${foundItemId}/find-matches`, {}).pipe(
+      map(response => {
+        // Ensure response is an array
+        const matchesArray = Array.isArray(response) ? response : [];
+        return matchesArray.map(match => this.parseMatchDates(match));
+      })
+    );
+  }
+
+  // GET /api/lostandfound/lost-items/{id}/matches
+  getMatchesForLostItem(lostItemId: number): Observable<LostAndFoundMatch[]> {
+    return this.http.get<any>(`${this.apiUrl}/lost-items/${lostItemId}/matches`).pipe(
+      map(response => {
+        // Ensure response is an array
+        const matchesArray = Array.isArray(response) ? response : [];
+        return matchesArray.map(match => this.parseMatchDates(match));
+      })
     );
   }
 
@@ -145,9 +160,12 @@ export class LostAndFoundService {
   private parseLostItemDates(item: any): LostItem {
     return {
       ...item,
-      lastSeenLocation: item.locationLost || item.lastSeenLocation || '',  // Map API's locationLost to lastSeenLocation
+      // Map API property names to frontend model
+      guestName: item.reporterName || item.guestName || 'Unknown',
+      phoneNumber: item.reporterPhone || item.phoneNumber || '',
+      lastSeenLocation: item.locationLost || item.lastSeenLocation || '',
       lastSeenDate: item.lastSeenDate ? new Date(item.lastSeenDate) : new Date(),
-      reportedDate: item.reportedDate ? new Date(item.reportedDate) : new Date(),
+      reportedDate: item.reportedAt ? new Date(item.reportedAt) : (item.reportedDate ? new Date(item.reportedDate) : new Date()),
       checkoutDate: item.checkoutDate ? new Date(item.checkoutDate) : undefined,
       createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
       updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined
@@ -157,7 +175,10 @@ export class LostAndFoundService {
   private parseFoundItemDates(item: any): FoundItem {
     return {
       ...item,
-      foundDate: item.foundDate ? new Date(item.foundDate) : new Date(),
+      // Map API property names to frontend model
+      foundBy: item.finderName || item.foundBy || 'Unknown',
+      foundLocation: item.locationFound || item.foundLocation || '',
+      foundDate: item.foundAt ? new Date(item.foundAt) : (item.foundDate ? new Date(item.foundDate) : new Date()),
       disposalDate: item.disposalDate ? new Date(item.disposalDate) : new Date(),
       createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
       updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined

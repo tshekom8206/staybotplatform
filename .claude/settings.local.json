@@ -67,7 +67,8 @@
       "Bash(Select-String \"error\")",
       "mcp__ide__getDiagnostics",
       "Bash(Select-Object -Last 50)",
-      "Bash(Where-Object {$_d -eq 27224})"
+      "Bash(Where-Object {$_d -eq 27224})",
+      "Bash(Select-String \"Exception\")"
     ],
     "deny": [],
     "ask": []
