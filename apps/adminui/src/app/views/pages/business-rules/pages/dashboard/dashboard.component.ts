@@ -141,7 +141,7 @@ export class BusinessRulesDashboardComponent implements OnInit, OnDestroy {
     if (hours < 1) return 'Just now';
     if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
     if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('en-ZA', { timeZone: 'Africa/Johannesburg' });
   }
 
   refresh(): void {
