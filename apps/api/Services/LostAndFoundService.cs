@@ -202,7 +202,7 @@ public class LostAndFoundService : ILostAndFoundService
                     LostItemId = lostItemId,
                     FoundItemId = foundItem.Id,
                     MatchScore = matchScore,
-                    Status = "PENDING",
+                    Status = "Pending",
                     MatchingReason = GenerateMatchingReason(lostItem, foundItem, matchScore),
                     CreatedAt = DateTime.UtcNow
                 };
@@ -253,7 +253,7 @@ public class LostAndFoundService : ILostAndFoundService
                     LostItemId = lostItem.Id,
                     FoundItemId = foundItemId,
                     MatchScore = matchScore,
-                    Status = "PENDING",
+                    Status = "Pending",
                     MatchingReason = GenerateMatchingReason(lostItem, foundItem, matchScore),
                     CreatedAt = DateTime.UtcNow
                 };
@@ -393,7 +393,7 @@ public class LostAndFoundService : ILostAndFoundService
         return await _context.LostAndFoundMatches
             .Include(m => m.LostItem)
             .Include(m => m.FoundItem)
-            .Where(m => m.Status == "PENDING")
+            .Where(m => m.Status == "Pending")
             .OrderByDescending(m => m.MatchScore)
             .ThenByDescending(m => m.CreatedAt)
             .ToListAsync();
@@ -753,7 +753,7 @@ public class LostAndFoundService : ILostAndFoundService
                      $"📍 Location: {match.FoundItem.LocationFound}\n" +
                      $"🕒 Available during front desk hours",
             ScheduledAt = DateTime.UtcNow,
-            Status = "PENDING"
+            Status = "Pending"
         };
 
         _context.LostAndFoundNotifications.Add(notification);
@@ -776,7 +776,7 @@ public class LostAndFoundService : ILostAndFoundService
                      $"Storage: {item.StorageLocation}\n\n" +
                      $"Scheduled for disposal on {disposalDate:yyyy-MM-dd}",
             ScheduledAt = DateTime.UtcNow,
-            Status = "PENDING"
+            Status = "Pending"
         };
 
         _context.LostAndFoundNotifications.Add(notification);

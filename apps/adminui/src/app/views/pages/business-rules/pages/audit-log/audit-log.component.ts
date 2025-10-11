@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -7,6 +7,7 @@ import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { BusinessRulesService } from '../../services/business-rules.service';
 import { AuditLogEntry, AuditLogFilter, AuditAction, EntityType } from '../../models/business-rules.models';
+import * as feather from 'feather-icons';
 
 @Component({
   selector: 'app-audit-log',
@@ -21,7 +22,7 @@ import { AuditLogEntry, AuditLogFilter, AuditAction, EntityType } from '../../mo
   templateUrl: './audit-log.component.html',
   styleUrl: './audit-log.component.scss'
 })
-export class AuditLogComponent implements OnInit, OnDestroy {
+export class AuditLogComponent implements OnInit, OnDestroy, AfterViewChecked {
   private destroy$ = new Subject<void>();
   private businessRulesService = inject(BusinessRulesService);
 
@@ -49,6 +50,10 @@ export class AuditLogComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  ngAfterViewChecked(): void {
+    feather.replace();
   }
 
   private loadAuditLog(): void {
@@ -130,23 +135,27 @@ export class AuditLogComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  getActionIcon(action: AuditAction): string {
-    switch (action) {
+  getActionIcon(action: string): string {
+    switch (action.toUpperCase()) {
       case 'CREATE': return 'plus-circle';
       case 'UPDATE': return 'edit';
       case 'DELETE': return 'trash-2';
       case 'ACTIVATE': return 'check-circle';
       case 'DEACTIVATE': return 'x-circle';
+      case 'LOGIN': return 'log-in';
+      default: return 'activity';
     }
   }
 
-  getActionClass(action: AuditAction): string {
-    switch (action) {
+  getActionClass(action: string): string {
+    switch (action.toUpperCase()) {
       case 'CREATE': return 'badge bg-success';
       case 'UPDATE': return 'badge bg-info';
       case 'DELETE': return 'badge bg-danger';
       case 'ACTIVATE': return 'badge bg-success';
       case 'DEACTIVATE': return 'badge bg-warning';
+      case 'LOGIN': return 'badge bg-secondary';
+      default: return 'badge bg-secondary';
     }
   }
 

@@ -239,16 +239,41 @@
 
       <div class="card-footer bg-transparent border-top">
         <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-outline-primary flex-grow-1" (click)="$event.stopPropagation()">
+          <button class="btn btn-sm btn-outline-primary flex-grow-1" (click)="viewMatchesForLostItem(item, $event)">
             <i appFeatherIcon="link" class="feather-icon me-1"></i>
             View Matches ({{ item.potentialMatches || 0 }})
           </button>
-          <button class="btn btn-sm btn-outline-secondary" (click)="$event.stopPropagation()">
+          <button class="btn btn-sm btn-outline-secondary" (click)="contactGuest(item, $event)" ngbTooltip="Contact Guest">
             <i appFeatherIcon="message-circle" class="feather-icon"></i>
           </button>
-          <button class="btn btn-sm btn-outline-secondary" (click)="$event.stopPropagation()">
-            <i appFeatherIcon="more-vertical" class="feather-icon"></i>
-          </button>
+          <div ngbDropdown class="d-inline-block dropdown-fixed" placement="bottom-end">
+            <button class="btn btn-sm btn-outline-secondary" ngbDropdownToggle (click)="$event.stopPropagation()" ngbTooltip="More Options">
+              <i appFeatherIcon="more-vertical" class="feather-icon"></i>
+            </button>
+            <div ngbDropdownMenu class="dropdown-menu-end">
+              <button ngbDropdownItem (click)="editLostItem(item, $event)">
+                <i appFeatherIcon="edit" class="feather-icon me-2"></i>
+                Edit Details
+              </button>
+              <button ngbDropdownItem (click)="markAsFound(item, $event)">
+                <i appFeatherIcon="check-circle" class="feather-icon me-2"></i>
+                Mark as Found
+              </button>
+              <button ngbDropdownItem (click)="viewItemDetails(item, $event)">
+                <i appFeatherIcon="eye" class="feather-icon me-2"></i>
+                View Full Details
+              </button>
+              <div class="dropdown-divider"></div>
+              <button ngbDropdownItem (click)="closeReport(item, $event)">
+                <i appFeatherIcon="x-circle" class="feather-icon me-2"></i>
+                Close Report
+              </button>
+              <button ngbDropdownItem (click)="deleteItem(item, $event)" class="text-danger">
+                <i appFeatherIcon="trash-2" class="feather-icon me-2"></i>
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -323,16 +348,41 @@
 
       <div class="card-footer bg-transparent border-top">
         <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-primary flex-grow-1" (click)="findMatchesForFoundItem(item.id)">
+          <button class="btn btn-sm btn-primary flex-grow-1" (click)="findMatchesForFoundItem(item.id); $event.stopPropagation()">
             <i appFeatherIcon="search" class="feather-icon me-1"></i>
             Find Matches
           </button>
-          <button class="btn btn-sm btn-outline-secondary">
+          <button class="btn btn-sm btn-outline-secondary" (click)="editFoundItem(item, $event)" ngbTooltip="Edit Item">
             <i appFeatherIcon="edit" class="feather-icon"></i>
           </button>
-          <button class="btn btn-sm btn-outline-secondary">
-            <i appFeatherIcon="more-vertical" class="feather-icon"></i>
-          </button>
+          <div ngbDropdown class="d-inline-block dropdown-fixed" placement="bottom-end">
+            <button class="btn btn-sm btn-outline-secondary" ngbDropdownToggle (click)="$event.stopPropagation()" ngbTooltip="More Options">
+              <i appFeatherIcon="more-vertical" class="feather-icon"></i>
+            </button>
+            <div ngbDropdownMenu class="dropdown-menu-end">
+              <button ngbDropdownItem (click)="updateStorageLocation(item, $event)">
+                <i appFeatherIcon="map-pin" class="feather-icon me-2"></i>
+                Update Storage Location
+              </button>
+              <button ngbDropdownItem (click)="markAsClaimed(item, $event)">
+                <i appFeatherIcon="user-check" class="feather-icon me-2"></i>
+                Mark as Claimed
+              </button>
+              <button ngbDropdownItem (click)="viewFoundItemDetails(item, $event)">
+                <i appFeatherIcon="eye" class="feather-icon me-2"></i>
+                View Full Details
+              </button>
+              <div class="dropdown-divider"></div>
+              <button ngbDropdownItem (click)="markAsDisposed(item, $event)" class="text-warning">
+                <i appFeatherIcon="archive" class="feather-icon me-2"></i>
+                Mark as Disposed
+              </button>
+              <button ngbDropdownItem (click)="deleteFoundItem(item, $event)" class="text-danger">
+                <i appFeatherIcon="trash-2" class="feather-icon me-2"></i>
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -574,6 +624,102 @@
   </div>
 </ng-template>
 
+<!-- Edit Found Item Modal -->
+<ng-template #editFoundItemModal let-modal>
+  <div class="modal-header bg-primary bg-opacity-10">
+    <h5 class="modal-title">
+      <i appFeatherIcon="edit" class="feather-icon me-2"></i>
+      Edit Found Item
+    </h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body" *ngIf="selectedFoundItem">
+    <form [formGroup]="editFoundItemForm">
+      <!-- Category Selection -->
+      <div class="mb-4">
+        <label class="form-label">Category</label>
+        <div class="category-grid">
+          <button
+            type="button"
+            *ngFor="let cat of categories"
+            class="category-card"
+            [class.active]="selectedCategory === cat.value"
+            (click)="selectCategory(cat.value); editFoundItemForm.patchValue({category: cat.value})">
+            <i [appFeatherIcon]="cat.icon" class="feather-icon mb-2" style="width: 32px; height: 32px;"></i>
+            <span>{{ cat.label }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Item Details -->
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Item Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="itemName" placeholder="e.g., iPhone 15 Pro">
+          <div *ngIf="editFoundItemForm.get('itemName')?.invalid && editFoundItemForm.get('itemName')?.touched" class="text-danger small mt-1">
+            Item name is required
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Color</label>
+          <input type="text" class="form-control" formControlName="color" placeholder="e.g., Black">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Brand</label>
+          <input type="text" class="form-control" formControlName="brand" placeholder="e.g., Apple, Samsung">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Found Location <span class="text-danger">*</span></label>
+          <select class="form-select" formControlName="foundLocation">
+            <option value="">Select location...</option>
+            <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Storage Location <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="storageLocation" placeholder="e.g., Locker A-12">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Found By</label>
+          <input type="text" class="form-control" formControlName="foundBy" placeholder="Staff name">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Description / Notes</label>
+          <textarea class="form-control" rows="3" formControlName="description" placeholder="Detailed description..."></textarea>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="isHighValue" id="editIsHighValue">
+            <label class="form-check-label" for="editIsHighValue">
+              High-Value Item (requires ID verification)
+            </label>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="editFoundItemForm.invalid"
+      (click)="saveFoundItemChanges()">
+      <i appFeatherIcon="save" class="feather-icon me-1"></i>
+      Save Changes
+    </button>
+  </div>
+</ng-template>
+
 <!-- Match Verification Modal -->
 <ng-template #matchVerificationModal let-modal>
   <div class="modal-header">
@@ -607,6 +753,402 @@
     <button type="button" class="btn btn-success" (click)="confirmMatch()">
       <i appFeatherIcon="check-circle" class="feather-icon me-1"></i>
       Confirm Match
+    </button>
+  </div>
+</ng-template>
+
+<!-- Contact Guest Modal -->
+<ng-template #contactGuestModal let-modal>
+  <div class="modal-header bg-primary bg-opacity-10">
+    <h5 class="modal-title">
+      <i appFeatherIcon="message-circle" class="feather-icon me-2"></i>
+      Contact Guest
+    </h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body" *ngIf="selectedLostItem">
+    <!-- Guest Info -->
+    <div class="alert alert-info d-flex align-items-start mb-3">
+      <i appFeatherIcon="user" class="feather-icon me-3 mt-1"></i>
+      <div class="flex-grow-1">
+        <h6 class="mb-1">{{ selectedLostItem.guestName }}</h6>
+        <div class="text-muted small">
+          <div><i appFeatherIcon="phone" class="feather-icon me-1" style="width: 14px; height: 14px;"></i> {{ selectedLostItem.phoneNumber }}</div>
+          <div><i appFeatherIcon="home" class="feather-icon me-1" style="width: 14px; height: 14px;"></i> Room {{ selectedLostItem.roomNumber }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item Info -->
+    <div class="card mb-3">
+      <div class="card-body py-2">
+        <small class="text-muted">Regarding:</small>
+        <h6 class="mb-0">{{ selectedLostItem.itemName }}</h6>
+        <small class="text-muted">{{ selectedLostItem.category }} - Last seen: {{ selectedLostItem.lastSeenLocation }}</small>
+      </div>
+    </div>
+
+    <form [formGroup]="contactGuestForm">
+      <!-- Message Templates -->
+      <div class="mb-3">
+        <label class="form-label">Quick Templates</label>
+        <div class="btn-group w-100" role="group">
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="useMessageTemplate('found')">
+            <i appFeatherIcon="check-circle" class="feather-icon me-1"></i>
+            Item Found
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="useMessageTemplate('need_info')">
+            <i appFeatherIcon="help-circle" class="feather-icon me-1"></i>
+            Need Info
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="useMessageTemplate('checkout_reminder')">
+            <i appFeatherIcon="clock" class="feather-icon me-1"></i>
+            Checkout Reminder
+          </button>
+        </div>
+      </div>
+
+      <!-- Message Content -->
+      <div class="mb-3">
+        <label class="form-label">Message <span class="text-danger">*</span></label>
+        <textarea
+          class="form-control"
+          rows="5"
+          formControlName="message"
+          placeholder="Type your message to the guest..."
+          maxlength="500">
+        </textarea>
+        <small class="text-muted">{{ contactGuestForm.get('message')?.value?.length || 0 }} / 500 characters</small>
+        <div *ngIf="contactGuestForm.get('message')?.invalid && contactGuestForm.get('message')?.touched" class="text-danger small mt-1">
+          Message is required
+        </div>
+      </div>
+
+      <!-- Delivery Info -->
+      <div class="alert alert-warning d-flex align-items-start mb-0">
+        <i appFeatherIcon="send" class="feather-icon me-2 mt-1"></i>
+        <div>
+          <small><strong>Message will be sent via WhatsApp to:</strong> {{ selectedLostItem.phoneNumber }}</small>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="contactGuestForm.invalid"
+      (click)="sendMessageToGuest()">
+      <i appFeatherIcon="send" class="feather-icon me-1"></i>
+      Send Message
+    </button>
+  </div>
+</ng-template>
+
+<!-- Item Details Modal -->
+<ng-template #itemDetailsModal let-modal>
+  <div class="modal-header bg-info bg-opacity-10">
+    <h5 class="modal-title">
+      <i appFeatherIcon="package" class="feather-icon me-2"></i>
+      Item Details
+    </h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body" *ngIf="selectedFoundItem">
+    <!-- Item Header -->
+    <div class="text-center mb-4">
+      <div class="item-icon-xlg bg-info bg-opacity-10 text-info rounded-circle mx-auto mb-3 d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+        <i [appFeatherIcon]="getCategoryIcon(selectedFoundItem.category)" class="feather-icon" style="width: 40px; height: 40px;"></i>
+      </div>
+      <h4 class="mb-1">{{ selectedFoundItem.itemName }}</h4>
+      <span class="badge bg-info">{{ selectedFoundItem.status }}</span>
+    </div>
+
+    <!-- Item Details Grid -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <div class="card bg-light border-0">
+          <div class="card-body py-2">
+            <small class="text-muted d-block mb-1">Category</small>
+            <div class="d-flex align-items-center">
+              <i [appFeatherIcon]="getCategoryIcon(selectedFoundItem.category)" class="feather-icon me-2 text-primary"></i>
+              <strong>{{ selectedFoundItem.category }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6" *ngIf="selectedFoundItem.color">
+        <div class="card bg-light border-0">
+          <div class="card-body py-2">
+            <small class="text-muted d-block mb-1">Color</small>
+            <strong>{{ selectedFoundItem.color }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6" *ngIf="selectedFoundItem.brand">
+        <div class="card bg-light border-0">
+          <div class="card-body py-2">
+            <small class="text-muted d-block mb-1">Brand</small>
+            <strong>{{ selectedFoundItem.brand }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card bg-light border-0">
+          <div class="card-body py-2">
+            <small class="text-muted d-block mb-1">Found Date</small>
+            <strong>{{ selectedFoundItem.foundDate | date: 'MMM d, yyyy h:mm a' }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location Details -->
+    <div class="mb-4">
+      <h6 class="mb-3">
+        <i appFeatherIcon="map-pin" class="feather-icon me-2"></i>
+        Location Information
+      </h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card border-start border-primary border-3">
+            <div class="card-body py-2">
+              <small class="text-muted d-block mb-1">Found Location</small>
+              <strong>{{ selectedFoundItem.foundLocation }}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card border-start border-success border-3">
+            <div class="card-body py-2">
+              <small class="text-muted d-block mb-1">Storage Location</small>
+              <strong>{{ selectedFoundItem.storageLocation }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finder Information -->
+    <div class="mb-4" *ngIf="selectedFoundItem.foundBy">
+      <h6 class="mb-3">
+        <i appFeatherIcon="user" class="feather-icon me-2"></i>
+        Finder Information
+      </h6>
+      <div class="card bg-light border-0">
+        <div class="card-body py-2">
+          <small class="text-muted d-block mb-1">Found By</small>
+          <strong>{{ selectedFoundItem.foundBy }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="mb-4" *ngIf="selectedFoundItem.description">
+      <h6 class="mb-2">
+        <i appFeatherIcon="file-text" class="feather-icon me-2"></i>
+        Description
+      </h6>
+      <p class="text-muted mb-0">{{ selectedFoundItem.description }}</p>
+    </div>
+
+    <!-- Notes -->
+    <div class="mb-4" *ngIf="selectedFoundItem.notes">
+      <h6 class="mb-2">
+        <i appFeatherIcon="message-square" class="feather-icon me-2"></i>
+        Notes
+      </h6>
+      <p class="text-muted mb-0">{{ selectedFoundItem.notes }}</p>
+    </div>
+
+    <!-- Disposal Warning -->
+    <div class="alert alert-warning d-flex align-items-center mb-0">
+      <i appFeatherIcon="calendar" class="feather-icon me-3"></i>
+      <div>
+        <strong>Disposal Scheduled</strong><br>
+        <small>This item will be disposed in {{ calculateDaysUntilDisposal(selectedFoundItem.disposalDate) }} days ({{ selectedFoundItem.disposalDate | date: 'MMM d, yyyy' }})</small>
+      </div>
+    </div>
+
+    <!-- High Value Badge -->
+    <div class="alert alert-info d-flex align-items-center mt-3 mb-0" *ngIf="selectedFoundItem.isHighValue">
+      <i appFeatherIcon="shield" class="feather-icon me-3"></i>
+      <div>
+        <strong>High-Value Item</strong><br>
+        <small>Requires ID verification before release</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Close</button>
+    <button type="button" class="btn btn-outline-primary" (click)="modal.dismiss(); editFoundItem(selectedFoundItem!, $event)">
+      <i appFeatherIcon="edit" class="feather-icon me-1"></i>
+      Edit Item
+    </button>
+    <button type="button" class="btn btn-primary" (click)="modal.dismiss(); findMatchesForFoundItem(selectedFoundItem!.id)">
+      <i appFeatherIcon="search" class="feather-icon me-1"></i>
+      Find Matches
+    </button>
+  </div>
+</ng-template>
+
+<!-- Lost Item Details Modal -->
+<ng-template #lostItemDetailsModal let-modal>
+  <div class="modal-header bg-warning bg-opacity-10">
+    <h5 class="modal-title">
+      <i appFeatherIcon="alert-circle" class="feather-icon me-2"></i>
+      Lost Item Report Details
+    </h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body" *ngIf="selectedLostItem">
+    <!-- Item Header -->
+    <div class="text-center mb-4">
+      <div class="item-icon-xlg bg-warning bg-opacity-10 text-warning rounded-circle mx-auto mb-3 d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+        <i [appFeatherIcon]="getCategoryIcon(selectedLostItem.category)" class="feather-icon" style="width: 40px; height: 40px;"></i>
+      </div>
+      <h4 class="mb-1">{{ selectedLostItem.itemName }}</h4>
+      <span class="badge bg-warning">{{ selectedLostItem.status }}</span>
+    </div>
+
+    <!-- Guest Information -->
+    <div class="mb-4">
+      <h6 class="mb-3">
+        <i appFeatherIcon="user" class="feather-icon me-2"></i>
+        Guest Information
+      </h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card bg-light border-0">
+            <div class="card-body py-2">
+              <small class="text-muted d-block mb-1">Guest Name</small>
+              <strong>{{ selectedLostItem.guestName }}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card bg-light border-0">
+            <div class="card-body py-2">
+              <small class="text-muted d-block mb-1">Room Number</small>
+              <strong>Room {{ selectedLostItem.roomNumber }}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card bg-light border-0">
+            <div class="card-body py-2">
+              <small class="text-muted d-block mb-1">Phone Number</small>
+              <strong>{{ selectedLostItem.phoneNumber }}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card bg-light border-0">
+            <div class="card-body py-2">
+              <small class="text-muted d-block mb-1">Reported Date</small>
+              <strong>{{ selectedLostItem.reportedDate | date: 'MMM d, yyyy h:mm a' }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item Details Grid -->
+    <div class="mb-4">
+      <h6 class="mb-3">
+        <i appFeatherIcon="package" class="feather-icon me-2"></i>
+        Item Details
+      </h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card bg-light border-0">
+            <div class="card-body py-2">
+              <small class="text-muted d-block mb-1">Category</small>
+              <div class="d-flex align-items-center">
+                <i [appFeatherIcon]="getCategoryIcon(selectedLostItem.category)" class="feather-icon me-2 text-primary"></i>
+                <strong>{{ selectedLostItem.category }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6" *ngIf="selectedLostItem.color">
+          <div class="card bg-light border-0">
+            <div class="card-body py-2">
+              <small class="text-muted d-block mb-1">Color</small>
+              <strong>{{ selectedLostItem.color }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6" *ngIf="selectedLostItem.brand">
+          <div class="card bg-light border-0">
+            <div class="card-body py-2">
+              <small class="text-muted d-block mb-1">Brand</small>
+              <strong>{{ selectedLostItem.brand }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card border-start border-warning border-3">
+            <div class="card-body py-2">
+              <small class="text-muted d-block mb-1">Last Seen Location</small>
+              <strong>{{ selectedLostItem.lastSeenLocation }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="mb-4" *ngIf="selectedLostItem.description">
+      <h6 class="mb-2">
+        <i appFeatherIcon="file-text" class="feather-icon me-2"></i>
+        Description
+      </h6>
+      <p class="text-muted mb-0">{{ selectedLostItem.description }}</p>
+    </div>
+
+    <!-- Potential Matches -->
+    <div class="mb-4" *ngIf="selectedLostItem.potentialMatches && selectedLostItem.potentialMatches > 0">
+      <div class="alert alert-success d-flex align-items-center">
+        <i appFeatherIcon="link" class="feather-icon me-3" style="width: 24px; height: 24px;"></i>
+        <div>
+          <strong>{{ selectedLostItem.potentialMatches }} Potential {{ selectedLostItem.potentialMatches === 1 ? 'Match' : 'Matches' }} Found!</strong><br>
+          <small>Click "View Matches" to review and verify potential matches</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkout Warning -->
+    <div class="alert alert-danger d-flex align-items-center mb-0" *ngIf="isCheckoutToday(selectedLostItem.checkoutDate)">
+      <i appFeatherIcon="alert-triangle" class="feather-icon me-3" style="width: 24px; height: 24px;"></i>
+      <div>
+        <strong>URGENT: Guest Checking Out Today</strong><br>
+        <small>Checkout Date: {{ selectedLostItem.checkoutDate | date: 'MMM d, yyyy' }}</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Close</button>
+    <button type="button" class="btn btn-outline-primary" (click)="modal.dismiss(); contactGuest(selectedLostItem!, $event)">
+      <i appFeatherIcon="message-circle" class="feather-icon me-1"></i>
+      Contact Guest
+    </button>
+    <button type="button" class="btn btn-primary" (click)="modal.dismiss(); viewMatchesForLostItem(selectedLostItem!, $event)">
+      <i appFeatherIcon="link" class="feather-icon me-1"></i>
+      View Matches ({{ selectedLostItem?.potentialMatches || 0 }})
     </button>
   </div>
 </ng-template>

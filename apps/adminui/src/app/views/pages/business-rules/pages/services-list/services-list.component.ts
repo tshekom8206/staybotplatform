@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, TemplateRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, inject, TemplateRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -13,6 +13,7 @@ import {
   CreateServiceRuleRequest,
   UpdateServiceRuleRequest
 } from '../../models/business-rules.models';
+import * as feather from 'feather-icons';
 
 @Component({
   selector: 'app-services-list',
@@ -29,7 +30,7 @@ import {
   templateUrl: './services-list.component.html',
   styleUrl: './services-list.component.scss'
 })
-export class ServicesListComponent implements OnInit, OnDestroy {
+export class ServicesListComponent implements OnInit, OnDestroy, AfterViewChecked {
   private destroy$ = new Subject<void>();
   private businessRulesService = inject(BusinessRulesService);
   private modalService = inject(NgbModal);
@@ -83,6 +84,10 @@ export class ServicesListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  ngAfterViewChecked(): void {
+    feather.replace();
   }
 
   private initializeForm(): void {

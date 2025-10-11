@@ -30,7 +30,7 @@ public class Service
     public decimal? Price { get; set; }
 
     [MaxLength(3)]
-    public string? Currency { get; set; } = "USD";
+    public string? Currency { get; set; } = "ZAR";
 
     [MaxLength(50)]
     public string? PricingUnit { get; set; } // per hour, per service, per person, etc.

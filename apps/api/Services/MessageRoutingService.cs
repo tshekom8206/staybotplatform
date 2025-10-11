@@ -52,6 +52,21 @@ public class ItemRequestAnalysisResult
     public string Reasoning { get; set; } = string.Empty;
 }
 
+public class QuantityClarificationAnalysis
+{
+    public bool IsQuantityClarification { get; set; }
+    public bool IsNewRequest { get; set; }
+    public bool IsCancellation { get; set; }
+    public bool IsAmbiguous { get; set; }
+    public string? ItemSlug { get; set; }
+    public string? ItemName { get; set; }
+    public int? Quantity { get; set; }
+    public string[]? PossibleItems { get; set; }
+    public string? ClarificationNeeded { get; set; }
+    public double Confidence { get; set; }
+    public string Reasoning { get; set; } = string.Empty;
+}
+
 public class LostItemDetails
 {
     public string? ItemName { get; set; }
@@ -1816,7 +1831,107 @@ Property plan: {{PLAN}}";
                 return await HandleMenuFollowUpResponse(messageText, tenantContext);
             }
 
-            // Pattern matching for quantity responses
+            // LLM-based quantity clarification detection
+            var clarificationAnalysis = await AnalyzeQuantityClarificationAsync(messageText, lastBotMessage.Content, conversationHistory);
+
+            if (clarificationAnalysis != null && clarificationAnalysis.IsQuantityClarification &&
+                clarificationAnalysis.Confidence >= 0.7 && !clarificationAnalysis.IsAmbiguous)
+            {
+                _logger.LogInformation("🔢 QUANTITY CLARIFICATION DETECTED - Item: {ItemSlug}, Quantity: {Quantity}, Confidence: {Confidence}",
+                    clarificationAnalysis.ItemSlug, clarificationAnalysis.Quantity, clarificationAnalysis.Confidence);
+
+                // Look up the RequestItem to get the RequestItemId
+                var searchTerm = clarificationAnalysis.ItemSlug?.ToLower() ?? "";
+                var requestItem = await _context.RequestItems
+                    .FirstOrDefaultAsync(r => r.TenantId == tenantContext.TenantId &&
+                                             (r.LlmVisibleName.ToLower().Contains(searchTerm) ||
+                                              r.Name.ToLower().Contains(searchTerm)));
+
+                // Check for duplicate tasks created in the last 5 minutes
+                var fiveMinutesAgo = DateTime.UtcNow.AddMinutes(-5);
+                var itemNameLower = (clarificationAnalysis.ItemName ?? "").ToLower();
+
+                StaffTask? existingTask;
+                if (requestItem != null)
+                {
+                    existingTask = await _context.StaffTasks
+                        .Where(t => t.ConversationId == conversation.Id &&
+                                    t.CreatedAt >= fiveMinutesAgo &&
+                                    (t.Status == "Open" || t.Status == "Pending" || t.Status == "InProgress") &&
+                                    t.RequestItemId == requestItem.Id)
+                        .OrderByDescending(t => t.CreatedAt)
+                        .FirstOrDefaultAsync();
+                }
+                else
+                {
+                    existingTask = await _context.StaffTasks
+                        .Where(t => t.ConversationId == conversation.Id &&
+                                    t.CreatedAt >= fiveMinutesAgo &&
+                                    (t.Status == "Open" || t.Status == "Pending" || t.Status == "InProgress") &&
+                                    t.Title.ToLower().Contains(itemNameLower))
+                        .OrderByDescending(t => t.CreatedAt)
+                        .FirstOrDefaultAsync();
+                }
+
+                if (existingTask != null)
+                {
+                    // Update the existing task with the new quantity
+                    _logger.LogInformation("📝 UPDATING EXISTING TASK #{TaskId} - Old Quantity: {OldQty}, New Quantity: {NewQty}",
+                        existingTask.Id, existingTask.Quantity, clarificationAnalysis.Quantity);
+
+                    existingTask.Quantity = clarificationAnalysis.Quantity ?? 1;
+                    existingTask.UpdatedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+
+                    // Get guest status for room number
+                    var guestStatus = await DetermineGuestStatusAsync(conversation.WaUserPhone, tenantContext.TenantId);
+
+                    // Create direct response for quantity update
+                    var updateMessage = $"Perfect! I've updated your request to {clarificationAnalysis.Quantity} {clarificationAnalysis.ItemName ?? clarificationAnalysis.ItemSlug}. " +
+                        $"They'll be delivered to {(!string.IsNullOrEmpty(guestStatus.RoomNumber) ? $"room {guestStatus.RoomNumber}" : "your room")} shortly.";
+
+                    return new MessageRoutingResponse { Reply = updateMessage };
+                }
+                else
+                {
+                    // No existing task found, create a new one
+                    _logger.LogInformation("📝 CREATING NEW TASK - Item: {ItemSlug}, Quantity: {Quantity}",
+                        clarificationAnalysis.ItemSlug, clarificationAnalysis.Quantity);
+
+                    return await CreateItemTaskResponse(
+                        clarificationAnalysis.ItemSlug ?? "unknown-item",
+                        clarificationAnalysis.ItemName ?? "item",
+                        clarificationAnalysis.Quantity ?? 1,
+                        tenantContext,
+                        conversation
+                    );
+                }
+            }
+
+            // Handle cancellations
+            if (clarificationAnalysis != null && clarificationAnalysis.IsCancellation && clarificationAnalysis.Confidence >= 0.7)
+            {
+                _logger.LogInformation("❌ CANCELLATION DETECTED - Confidence: {Confidence}", clarificationAnalysis.Confidence);
+
+                return new MessageRoutingResponse
+                {
+                    Reply = "No problem! I've cancelled that request. Let me know if you need anything else during your stay."
+                };
+            }
+
+            // Handle ambiguous cases
+            if (clarificationAnalysis != null && clarificationAnalysis.IsAmbiguous && clarificationAnalysis.Confidence >= 0.7)
+            {
+                _logger.LogInformation("⚠️ AMBIGUOUS CLARIFICATION - Asking for clarification");
+
+                return new MessageRoutingResponse
+                {
+                    Reply = clarificationAnalysis.ClarificationNeeded ??
+                            "I want to make sure I get this right - could you clarify which item you're referring to?"
+                };
+            }
+
+            // Pattern matching for quantity responses (fallback for simple cases)
             if (IsQuantityResponse(messageText) && ContainsTowelsQuestion(lastBotMessage.Content))
             {
                 return await CreateTowelsTaskResponse(messageText, tenantContext, conversation);
@@ -2272,6 +2387,46 @@ Property plan: {{PLAN}}";
         return new MessageRoutingResponse
         {
             Reply = processedTemplate.Content,
+            Action = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(taskAction)
+        };
+    }
+
+    private async Task<MessageRoutingResponse> CreateItemTaskResponse(
+        string itemSlug,
+        string itemName,
+        int quantity,
+        TenantContext tenantContext,
+        Conversation conversation)
+    {
+        _logger.LogInformation("📦 Creating item task response - ItemSlug: {ItemSlug}, ItemName: {ItemName}, Quantity: {Quantity}",
+            itemSlug, itemName, quantity);
+
+        // Get guest status to retrieve room number
+        var guestStatus = await DetermineGuestStatusAsync(conversation.WaUserPhone, tenantContext.TenantId);
+
+        var taskAction = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            type = "create_task",
+            item_slug = itemSlug,
+            quantity = quantity,
+            room_number = guestStatus.RoomNumber
+        });
+
+        // Create room-specific response
+        var variables = new Dictionary<string, object>
+        {
+            ["ItemName"] = itemName,
+            ["Quantity"] = quantity.ToString(),
+            ["RoomNumber"] = guestStatus.RoomNumber ?? "",
+            ["GuestName"] = guestStatus.DisplayName ?? ""
+        };
+
+        // Create direct response for item delivery
+        var responseMessage = $"Perfect! I'll arrange for {quantity} {itemName} to be delivered to {(!string.IsNullOrEmpty(guestStatus.RoomNumber) ? $"room {guestStatus.RoomNumber}" : "your room")} right away.";
+
+        return new MessageRoutingResponse
+        {
+            Reply = responseMessage,
             Action = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(taskAction)
         };
     }
@@ -3795,6 +3950,147 @@ Respond with this exact JSON format:
 }}
 
 CRITICAL: When a guest says ""I want X"" or ""I need X"" or ""Book me X"", where X is ANY service or item offered by the hotel, return true.";
+    }
+
+    private async Task<QuantityClarificationAnalysis?> AnalyzeQuantityClarificationAsync(
+        string messageText,
+        string lastBotMessage,
+        List<(string Role, string Content)> conversationHistory)
+    {
+        try
+        {
+            _logger.LogInformation("🤖 LLM QUANTITY CLARIFICATION - Analyzing message: '{Message}', Last bot message: '{LastBotMessage}'",
+                messageText, lastBotMessage);
+
+            // Build prompt with conversation context
+            var prompt = BuildQuantityClarificationPrompt(messageText, lastBotMessage, conversationHistory);
+
+            // Use structured response with timeout
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var response = await _openAIService.GetStructuredResponseAsync<QuantityClarificationAnalysis>(
+                prompt,
+                temperature: 0.2 // Low temperature for consistent detection
+            );
+
+            if (response == null)
+            {
+                _logger.LogWarning("🤖 LLM QUANTITY CLARIFICATION - LLM response was null");
+                return null;
+            }
+
+            _logger.LogInformation("🤖 LLM QUANTITY CLARIFICATION - Analysis complete. " +
+                "IsQuantityClarification: {IsClarification}, IsNewRequest: {IsNewRequest}, " +
+                "IsCancellation: {IsCancellation}, IsAmbiguous: {IsAmbiguous}, " +
+                "ItemSlug: {ItemSlug}, ItemName: {ItemName}, Quantity: {Quantity}, " +
+                "Confidence: {Confidence}, Reasoning: {Reasoning}",
+                response.IsQuantityClarification, response.IsNewRequest, response.IsCancellation,
+                response.IsAmbiguous, response.ItemSlug, response.ItemName, response.Quantity,
+                response.Confidence, response.Reasoning);
+
+            return response;
+        }
+        catch (TaskCanceledException)
+        {
+            _logger.LogWarning("🤖 LLM QUANTITY CLARIFICATION - Request timed out");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "🤖 LLM QUANTITY CLARIFICATION - Error analyzing quantity clarification");
+            return null;
+        }
+    }
+
+    private string BuildQuantityClarificationPrompt(
+        string messageText,
+        string lastBotMessage,
+        List<(string Role, string Content)> conversationHistory)
+    {
+        // Get last 4 messages for context (2 exchanges)
+        var recentHistory = conversationHistory.TakeLast(4).ToList();
+        var historyText = string.Join("\n", recentHistory.Select(m => $"{m.Role}: {m.Content}"));
+
+        return $@"You are an AI assistant analyzing hotel guest conversations to detect quantity clarifications.
+
+CURRENT USER MESSAGE: ""{messageText}""
+LAST BOT MESSAGE: ""{lastBotMessage}""
+
+RECENT CONVERSATION:
+{historyText}
+
+YOUR TASK:
+Determine if the user's current message is clarifying the quantity of an item from a previous request, or if it's something else entirely.
+
+QUANTITY CLARIFICATION INDICATORS (IsQuantityClarification = true):
+✅ User previously requested an item, and bot confirmed/acknowledged it
+✅ Current message contains a number
+✅ Message is short and focused on quantity (""2"", ""I need 2"", ""3 please"", ""make it 5"")
+✅ Bot message mentions item delivery, confirmation, or acknowledgment
+✅ NO new item is mentioned in current message
+
+EXAMPLES OF QUANTITY CLARIFICATIONS:
+- Bot: ""I'll have towels delivered to room 202"" → User: ""I need 2"" ✅
+- Bot: ""I'll send fresh towels right away"" → User: ""3 please"" ✅
+- Bot: ""Perfect! I'll arrange for towels"" → User: ""make it 4"" ✅
+- Bot: ""I can help with that"" → User: ""just 2"" ✅
+
+NOT QUANTITY CLARIFICATIONS (IsNewRequest = true):
+❌ Bot asked ""How many towels?"" → User: ""2"" (This is answering a direct question, not a clarification)
+❌ Bot: ""Anything else?"" → User: ""I need 2 towels"" (New request, not clarification)
+❌ User mentions a different item: ""Actually, I need pillows instead""
+❌ Message contains non-quantity numbers: ""Room 202"", ""At 2 PM"", ""Call extension 2""
+❌ More than 10 seconds between messages (timestamp decay - but you won't have timestamps, so ignore if context seems fresh)
+
+CANCELLATIONS (IsCancellation = true):
+❌ ""No, I don't need them""
+❌ ""Cancel that""
+❌ ""Never mind""
+❌ ""I changed my mind""
+
+AMBIGUOUS CASES (IsAmbiguous = true):
+⚠️ Bot mentioned multiple items, unclear which one user is referring to
+⚠️ Fuzzy quantities without clear numbers (""a couple"", ""a few"") - still mark as clarification but note ambiguity
+⚠️ Modification phrases without clear quantity (""more"", ""less"")
+
+ITEM SLUG MAPPING (use these exact slugs):
+- Towels/towel → ""towels""
+- Toilet paper → ""toilet-paper""
+- Pillows/pillow → ""pillows""
+- Blankets/blanket → ""blankets""
+- Water/bottled water → ""water""
+- Wine → ""wine""
+- Coffee → ""coffee""
+- Soap/toiletries → ""toiletries""
+- Iron → ""iron""
+- Hairdryer/hair dryer → ""hairdryer""
+
+QUANTITY EXTRACTION RULES:
+- Direct numbers: ""2"", ""3"", ""five"" → extract as integer
+- Modification words: ""make it 3"", ""change to 5"" → extract the number
+- Fuzzy quantities: ""a couple"" → 2, ""a few"" → 3, ""several"" → 4
+- Implicit single: ""just one"", ""a towel"" → 1
+
+Respond with this exact JSON format:
+{{
+    ""isQuantityClarification"": true/false,
+    ""isNewRequest"": true/false,
+    ""isCancellation"": true/false,
+    ""isAmbiguous"": true/false,
+    ""itemSlug"": ""slug-name"" or null,
+    ""itemName"": ""Item Name"" or null,
+    ""quantity"": integer or null,
+    ""possibleItems"": [""item1"", ""item2""] or null (only if ambiguous multi-item),
+    ""clarificationNeeded"": ""What to ask user"" or null (only if ambiguous),
+    ""confidence"": 0.0-1.0,
+    ""reasoning"": ""Brief explanation of analysis""
+}}
+
+CRITICAL RULES:
+1. Only set isQuantityClarification=true if user is clearly updating the quantity of an item just mentioned/confirmed by the bot
+2. Set isNewRequest=true if this is a fresh request, not a clarification
+3. Always extract itemSlug and quantity if it's a valid clarification
+4. Use confidence >= 0.7 for clear cases, < 0.7 for uncertain cases
+5. If bot explicitly asked ""how many"", it's NOT a clarification - it's answering a question (isNewRequest=true)";
     }
 
     private bool IsItemRequest(string messageText)

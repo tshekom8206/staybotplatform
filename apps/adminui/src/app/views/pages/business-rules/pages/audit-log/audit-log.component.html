@@ -109,7 +109,10 @@
                 <strong *ngIf="entry.entityName">{{ entry.entityName }}</strong>
                 <span *ngIf="!entry.entityName" class="text-muted">N/A</span>
               </td>
-              <td><code>{{ entry.ipAddress }}</code></td>
+              <td>
+                <span *ngIf="entry.ipAddress" class="text-muted font-monospace">{{ entry.ipAddress }}</span>
+                <span *ngIf="!entry.ipAddress" class="text-muted">N/A</span>
+              </td>
             </tr>
             <tr *ngIf="filteredEntries.length === 0">
               <td colspan="6" class="text-center text-muted py-4">

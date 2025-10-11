@@ -112,7 +112,7 @@ public class LostAndFoundMatch
     public decimal MatchScore { get; set; } // 0.0 to 1.0, confidence level of the match
     
     [Required, MaxLength(20)]
-    public string Status { get; set; } = "PENDING"; // PENDING, CONFIRMED, REJECTED, CLAIMED
+    public string Status { get; set; } = "Pending"; // Pending, CONFIRMED, REJECTED, CLAIMED
     
     public string? MatchingReason { get; set; } // Why this was considered a match
     
@@ -183,7 +183,7 @@ public class LostAndFoundNotification
     public string Message { get; set; } = string.Empty;
     
     [Required, MaxLength(20)]
-    public string Status { get; set; } = "PENDING"; // PENDING, SENT, DELIVERED, FAILED
+    public string Status { get; set; } = "Pending"; // Pending, SENT, DELIVERED, FAILED
     
     public DateTime ScheduledAt { get; set; }
     public DateTime? SentAt { get; set; }

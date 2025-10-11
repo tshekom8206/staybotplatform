@@ -20,7 +20,7 @@ public class WhatsAppTemplate
     public string Body { get; set; } = string.Empty;
     
     [Required, MaxLength(20)]
-    public string Status { get; set; } = "PENDING"; // PENDING|APPROVED|REJECTED
+    public string Status { get; set; } = "Pending"; // Pending|APPROVED|REJECTED
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     

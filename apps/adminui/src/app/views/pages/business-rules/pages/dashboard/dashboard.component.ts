@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
@@ -11,6 +11,7 @@ import {
   UpsellAnalytics,
   AuditLogEntry
 } from '../../models/business-rules.models';
+import * as feather from 'feather-icons';
 
 @Component({
   selector: 'app-business-rules-dashboard',
@@ -24,7 +25,7 @@ import {
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class BusinessRulesDashboardComponent implements OnInit, OnDestroy {
+export class BusinessRulesDashboardComponent implements OnInit, OnDestroy, AfterViewChecked {
   private destroy$ = new Subject<void>();
   private businessRulesService = inject(BusinessRulesService);
   private authService = inject(AuthService);
@@ -46,6 +47,10 @@ export class BusinessRulesDashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  ngAfterViewChecked(): void {
+    feather.replace();
   }
 
   private loadDashboardData(): void {
@@ -94,7 +99,7 @@ export class BusinessRulesDashboardComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(cents: number): string {
-    return `$${(cents / 100).toFixed(2)}`;
+    return `R${(cents / 100).toFixed(2)}`;
   }
 
   formatPercentage(value: number): string {

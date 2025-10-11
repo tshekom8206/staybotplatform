@@ -61,11 +61,12 @@ public class LostAndFoundController : ControllerBase
                 .CountAsync();
 
             var itemsInStorage = await _context.FoundItems
-                .Where(f => f.TenantId == tenantId && f.Status == "AVAILABLE")
+                .Where(f => f.TenantId == tenantId &&
+                       (f.Status == "AVAILABLE" || f.Status == "InStorage" || f.Status == "IN_STORAGE"))
                 .CountAsync();
 
             var pendingMatches = await _context.LostAndFoundMatches
-                .Where(m => m.TenantId == tenantId && m.Status == "PENDING")
+                .Where(m => m.TenantId == tenantId && m.Status == "Pending")
                 .CountAsync();
 
             var totalLostItems = await _context.LostItems
@@ -84,6 +85,15 @@ public class LostAndFoundController : ControllerBase
                 .Where(l => l.TenantId == tenantId && l.Status == "Claimed")
                 .CountAsync();
 
+            // Calculate urgent items (items nearing disposal or high priority)
+            var today = DateTime.UtcNow.Date;
+            var urgentItems = await _context.FoundItems
+                .Where(f => f.TenantId == tenantId &&
+                       (f.Status == "AVAILABLE" || f.Status == "InStorage" || f.Status == "IN_STORAGE") &&
+                       f.DisposalDate.HasValue &&
+                       f.DisposalDate.Value.Date <= today.AddDays(7))
+                .CountAsync();
+
             var matchSuccessRate = totalLostItems > 0
                 ? (double)totalClaimed / totalLostItems * 100
                 : 0;
@@ -93,6 +103,7 @@ public class LostAndFoundController : ControllerBase
                 openReports,
                 itemsInStorage,
                 pendingMatches,
+                urgentItems,
                 totalLostItems,
                 totalFoundItems,
                 totalMatched,
@@ -304,6 +315,75 @@ public class LostAndFoundController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Get matches for a specific lost item
+    /// </summary>
+    [HttpGet("lost-items/{id:int}/matches")]
+    public async Task<IActionResult> GetMatchesForLostItem(int id)
+    {
+        try
+        {
+            var tenantId = GetTenantId();
+
+            var lostItem = await _context.LostItems
+                .FirstOrDefaultAsync(l => l.Id == id && l.TenantId == tenantId);
+
+            if (lostItem == null)
+            {
+                return NotFound("Lost item not found");
+            }
+
+            var matches = await _context.LostAndFoundMatches
+                .Where(m => m.LostItemId == id && m.TenantId == tenantId)
+                .Include(m => m.LostItem)
+                .Include(m => m.FoundItem)
+                .OrderByDescending(m => m.MatchScore)
+                .Select(m => new
+                {
+                    m.Id,
+                    m.LostItemId,
+                    m.FoundItemId,
+                    m.MatchScore,
+                    m.Status,
+                    m.MatchingReason,
+                    m.CreatedAt,
+                    LostItem = new
+                    {
+                        m.LostItem.Id,
+                        m.LostItem.ItemName,
+                        m.LostItem.Category,
+                        m.LostItem.Description,
+                        m.LostItem.Color,
+                        m.LostItem.Brand,
+                        m.LostItem.LocationLost,
+                        m.LostItem.ReporterName,
+                        m.LostItem.RoomNumber
+                    },
+                    FoundItem = new
+                    {
+                        m.FoundItem.Id,
+                        m.FoundItem.ItemName,
+                        m.FoundItem.Category,
+                        m.FoundItem.Description,
+                        m.FoundItem.Color,
+                        m.FoundItem.Brand,
+                        m.FoundItem.LocationFound,
+                        m.FoundItem.StorageLocation
+                    }
+                })
+                .ToListAsync();
+
+            _logger.LogInformation("Retrieved {MatchCount} matches for lost item {ItemId}", matches.Count, id);
+
+            return Ok(matches);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting matches for lost item {ItemId}", id);
+            return StatusCode(500, "Error retrieving matches");
+        }
+    }
+
     #endregion
 
     #region Found Items
@@ -433,6 +513,14 @@ public class LostAndFoundController : ControllerBase
     [HttpPost("found-items")]
     public async Task<IActionResult> RegisterFoundItem([FromBody] RegisterFoundItemRequest request)
     {
+        _logger.LogInformation("[RegisterFoundItem] Request received: {@Request}", request);
+
+        if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("[RegisterFoundItem] Validation failed: {@Errors}", ModelState);
+            return BadRequest(ModelState);
+        }
+
         try
         {
             var tenantId = GetTenantId();
@@ -445,12 +533,12 @@ public class LostAndFoundController : ControllerBase
                 Description = request.Description,
                 Color = request.Color,
                 Brand = request.Brand,
-                LocationFound = request.LocationFound,
-                FoundAt = request.FoundAt,
-                FinderName = request.FinderName,
+                LocationFound = request.FoundLocation,
+                FoundAt = request.FoundDate,
+                FinderName = request.FoundBy,
                 StorageLocation = request.StorageLocation,
-                StorageNotes = request.StorageNotes,
-                Status = "AVAILABLE"
+                StorageNotes = request.Notes,
+                Status = "InStorage"
             };
 
             _context.FoundItems.Add(foundItem);
@@ -464,7 +552,21 @@ public class LostAndFoundController : ControllerBase
                 "Found item {ItemId} registered with {MatchCount} potential matches",
                 foundItem.Id, matches.Count);
 
-            return CreatedAtAction(nameof(GetFoundItemById), new { id = foundItem.Id }, foundItem);
+            return CreatedAtAction(nameof(GetFoundItemById), new { id = foundItem.Id }, new
+            {
+                foundItem.Id,
+                foundItem.ItemName,
+                foundItem.Category,
+                foundItem.Description,
+                foundItem.Color,
+                foundItem.Brand,
+                foundItem.LocationFound,
+                foundItem.FoundAt,
+                foundItem.FinderName,
+                foundItem.StorageLocation,
+                foundItem.StorageNotes,
+                foundItem.Status
+            });
         }
         catch (Exception ex)
         {
@@ -526,7 +628,9 @@ public class LostAndFoundController : ControllerBase
 
             var matches = await _lostAndFoundService.FindPotentialMatchesForFoundItemAsync(tenantId, id);
 
-            return Ok(new { matchCount = matches.Count, matches });
+            _logger.LogInformation("Found {MatchCount} matches for found item {ItemId}", matches.Count, id);
+
+            return Ok(matches);
         }
         catch (Exception ex)
         {
@@ -748,8 +852,7 @@ public class RegisterFoundItemRequest
     [Required, MaxLength(100)]
     public string ItemName { get; set; } = string.Empty;
 
-    [Required]
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; }
 
     [Required, MaxLength(50)]
     public string Category { get; set; } = string.Empty;
@@ -761,19 +864,21 @@ public class RegisterFoundItemRequest
     public string? Brand { get; set; }
 
     [Required, MaxLength(100)]
-    public string LocationFound { get; set; } = string.Empty;
+    public string FoundLocation { get; set; } = string.Empty;
 
     [Required]
-    public DateTime FoundAt { get; set; }
+    public DateTime FoundDate { get; set; }
 
     [MaxLength(100)]
-    public string? FinderName { get; set; }
+    public string? FoundBy { get; set; }
 
     [Required, MaxLength(50)]
     public string StorageLocation { get; set; } = string.Empty;
 
+    public bool IsHighValue { get; set; }
+
     [MaxLength(100)]
-    public string? StorageNotes { get; set; }
+    public string? Notes { get; set; }
 }
 
 public class UpdateFoundItemRequest
