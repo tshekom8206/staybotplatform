@@ -20,6 +20,7 @@ export class ResetPasswordComponent implements OnInit {
   error = '';
   success = false;
   email = '';
+  otp = '';
   showPassword = false;
   showConfirmPassword = false;
 
@@ -35,9 +36,10 @@ export class ResetPasswordComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Get email from localStorage
+    // Get email and OTP from localStorage
     this.email = localStorage.getItem('resetEmail') || '';
-    if (!this.email) {
+    this.otp = localStorage.getItem('resetOTP') || '';
+    if (!this.email || !this.otp) {
       this.router.navigate(['/auth/forgot-password']);
       return;
     }
@@ -76,12 +78,13 @@ export class ResetPasswordComponent implements OnInit {
 
     const { password } = this.resetPasswordForm.value;
 
-    this.authService.resetPassword(this.email, password).subscribe({
+    this.authService.resetPassword({ email: this.email, otp: this.otp, newPassword: password }).subscribe({
       next: (response) => {
         this.loading = false;
         this.success = true;
-        // Clear stored email
+        // Clear stored email and OTP
         localStorage.removeItem('resetEmail');
+        localStorage.removeItem('resetOTP');
       },
       error: (error) => {
         this.loading = false;

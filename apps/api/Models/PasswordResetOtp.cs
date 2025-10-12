@@ -15,7 +15,7 @@ public class PasswordResetOtp
 
     public bool IsUsed { get; set; } = false;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; }
 
     // Navigation property
     public virtual User User { get; set; } = null!;

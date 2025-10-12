@@ -228,7 +228,7 @@ export class AuthService {
    * Verify password reset OTP
    */
   verifyPasswordResetOTP(email: string, otp: string): Observable<any> {
-    return this.apiService.post('/auth/verify-reset-otp', { email, otp }).pipe(
+    return this.apiService.post('/auth/verify-otp', { email, otp }).pipe(
       map((response: any) => response.data),
       catchError(error => {
         return throwError(() => ({
@@ -241,8 +241,8 @@ export class AuthService {
   /**
    * Reset password with new password
    */
-  resetPassword(email: string, newPassword: string): Observable<any> {
-    return this.apiService.post('/auth/reset-password', { email, newPassword }).pipe(
+  resetPassword(payload: { email: string; otp: string; newPassword: string }): Observable<any> {
+    return this.apiService.post('/auth/reset-password', payload).pipe(
       map((response: any) => response.data),
       catchError(error => {
         return throwError(() => ({

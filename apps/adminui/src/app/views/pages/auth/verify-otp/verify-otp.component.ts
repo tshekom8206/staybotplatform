@@ -78,6 +78,8 @@ export class VerifyOTPComponent implements OnInit {
     this.authService.verifyPasswordResetOTP(this.email, otp).subscribe({
       next: (response) => {
         this.loading = false;
+        // Store OTP in localStorage for reset password page
+        localStorage.setItem('resetOTP', otp);
         // Navigate to reset password page
         this.router.navigate(['/auth/reset-password']);
       },
