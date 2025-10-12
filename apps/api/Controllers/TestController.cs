@@ -4,6 +4,7 @@ using Hostr.Api.Data;
 using Hostr.Api.Models;
 using Hostr.Api.Services;
 using Microsoft.AspNetCore.Identity;
+using Hostr.Contracts.DTOs.Auth;
 
 namespace Hostr.Api.Controllers;
 
@@ -45,7 +46,7 @@ public class TestController : ControllerBase
         {
             // Find or create conversation
             var conversation = await _context.Conversations
-                .FirstOrDefaultAsync(c => c.TenantId == request.TenantId && 
+                .FirstOrDefaultAsync(c => c.TenantId == request.TenantId &&
                                          c.WaUserPhone == request.PhoneNumber);
 
             if (conversation == null)
@@ -61,7 +62,7 @@ public class TestController : ControllerBase
                 _context.Conversations.Add(conversation);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Created new conversation for phone {Phone} and tenant {TenantId}", 
+                _logger.LogInformation("Created new conversation for phone {Phone} and tenant {TenantId}",
                     request.PhoneNumber, request.TenantId);
             }
 
@@ -170,7 +171,7 @@ public class TestController : ControllerBase
         {
             // Check if FAQ with similar question already exists
             var existingFAQ = await _context.FAQs
-                .FirstOrDefaultAsync(f => f.TenantId == request.TenantId && 
+                .FirstOrDefaultAsync(f => f.TenantId == request.TenantId &&
                                          f.Question.ToLower() == request.Question.ToLower());
 
             if (existingFAQ != null)
@@ -191,7 +192,7 @@ public class TestController : ControllerBase
             _context.FAQs.Add(faq);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Added new FAQ for tenant {TenantId}: {Question}", 
+            _logger.LogInformation("Added new FAQ for tenant {TenantId}: {Question}",
                 request.TenantId, request.Question);
 
             return Ok(new
@@ -248,9 +249,9 @@ public class TestController : ControllerBase
         try
         {
             _logger.LogInformation("Testing guest status for phone number: {PhoneNumber}", phoneNumber);
-            
+
             var guestStatus = await _messageRoutingService.DetermineGuestStatusAsync(phoneNumber, 1); // Tenant ID 1
-            
+
             var result = new
             {
                 OriginalPhoneNumber = phoneNumber,
@@ -287,7 +288,7 @@ public class TestController : ControllerBase
             var logger = HttpContext.RequestServices.GetRequiredService<ILogger<TestController>>();
 
             var tenantId = 1; // Use existing panoramaview tenant ID
-            
+
             // Validate message type
             var validTypes = new[] { "emergency", "power_outage", "water_outage", "internet_down", "custom" };
             if (!validTypes.Contains(request.MessageType.ToLower()))
@@ -313,7 +314,7 @@ public class TestController : ControllerBase
             if (success)
             {
                 logger.LogInformation("TEST: Emergency broadcast initiated by tenant {TenantId}: {BroadcastId}", tenantId, broadcastId);
-                
+
                 return Ok(new
                 {
                     Success = true,
@@ -632,10 +633,4 @@ public class AddFAQRequest
     public string Answer { get; set; } = string.Empty;
     public string? Language { get; set; }
     public string[]? Tags { get; set; }
-}
-
-public class ResetPasswordRequest
-{
-    public string Email { get; set; } = string.Empty;
-    public string NewPassword { get; set; } = string.Empty;
 }

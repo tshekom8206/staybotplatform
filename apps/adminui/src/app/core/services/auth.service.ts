@@ -209,4 +209,46 @@ export class AuthService {
     const userRole = this.getUserRole();
     return userRole ? roles.includes(userRole) : false;
   }
+
+  /**
+   * Send password reset OTP to email
+   */
+  sendPasswordResetOTP(email: string): Observable<any> {
+    return this.apiService.post('/auth/forgot-password', { email }).pipe(
+      map((response: any) => response.data),
+      catchError(error => {
+        return throwError(() => ({
+          message: error.error?.message || 'Failed to send reset code'
+        }));
+      })
+    );
+  }
+
+  /**
+   * Verify password reset OTP
+   */
+  verifyPasswordResetOTP(email: string, otp: string): Observable<any> {
+    return this.apiService.post('/auth/verify-reset-otp', { email, otp }).pipe(
+      map((response: any) => response.data),
+      catchError(error => {
+        return throwError(() => ({
+          message: error.error?.message || 'Invalid verification code'
+        }));
+      })
+    );
+  }
+
+  /**
+   * Reset password with new password
+   */
+  resetPassword(email: string, newPassword: string): Observable<any> {
+    return this.apiService.post('/auth/reset-password', { email, newPassword }).pipe(
+      map((response: any) => response.data),
+      catchError(error => {
+        return throwError(() => ({
+          message: error.error?.message || 'Failed to reset password'
+        }));
+      })
+    );
+  }
 }
