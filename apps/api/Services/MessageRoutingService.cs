@@ -254,6 +254,23 @@ public class MessageRoutingService : IMessageRoutingService
             };
         }
 
+        // Step 1.15: Check if we're waiting for a booking modification clarification response
+        var recentMessages = await _context.Messages
+            .Where(m => m.ConversationId == conversation.Id)
+            .OrderByDescending(m => m.CreatedAt)
+            .Take(3)
+            .ToListAsync();
+
+        var lastBotMessage = recentMessages.FirstOrDefault(m => m.Direction == "Outbound")?.Body ?? "";
+        var waitingForBookingClarification = lastBotMessage.Contains("What would you like to change?") ||
+                                              lastBotMessage.Contains("what aspect of your booking");
+
+        if (waitingForBookingClarification)
+        {
+            _logger.LogInformation("🔄 User is responding to booking modification clarification, routing to booking handler");
+            return await HandleBookingModificationRequest(tenantContext, conversation, normalizedMessage);
+        }
+
         // Step 1.2: Check FAQ knowledge base for quick answers (before transfer detection to avoid false positives)
         try
         {
@@ -399,6 +416,13 @@ public class MessageRoutingService : IMessageRoutingService
                 conversation.Id,
                 guestStatus);
 
+            // Handle special intents FIRST, before ambiguity checks
+            if (intentAnalysis.Intent == "BOOKING_CHANGE" && intentAnalysis.Confidence >= 0.6)
+            {
+                _logger.LogInformation("LLM detected booking change request, checking existing bookings");
+                return await HandleBookingModificationRequest(tenantContext, conversation, normalizedMessage);
+            }
+
             if (intentAnalysis.IsAmbiguous && intentAnalysis.Confidence >= 0.6)
             {
                 _logger.LogInformation("LLM detected ambiguity in message. Intent: {Intent}, Category: {Category}, Specificity: {Specificity}",
@@ -433,9 +457,9 @@ public class MessageRoutingService : IMessageRoutingService
                 }
                 else if (intentAnalysis.Intent == "BOOKING_CHANGE")
                 {
-                    _logger.LogInformation("LLM detected booking change request, starting booking information gathering");
-                    // Directly trigger booking information gathering flow
-                    return await HandleBookingInformationGathering(tenantContext, conversation, normalizedMessage, null);
+                    _logger.LogInformation("LLM detected booking change request, checking existing bookings");
+                    // Handle room reservation modifications (not service bookings)
+                    return await HandleBookingModificationRequest(tenantContext, conversation, normalizedMessage);
                 }
                 else if (intentAnalysis.Intent == "LOST_AND_FOUND")
                 {
@@ -6205,6 +6229,173 @@ Return only the classification word (TIMING_RESPONSE, GREETING, SERVICE_REQUEST,
                 ActionType = "error"
             };
         }
+    }
+
+    private async Task<MessageRoutingResponse> HandleBookingModificationRequest(
+        TenantContext tenantContext,
+        Conversation conversation,
+        string normalizedMessage)
+    {
+        try
+        {
+            _logger.LogInformation("🔄 Handling booking modification request for conversation {ConversationId}", conversation.Id);
+
+            // Get all bookings for this guest
+            var guestBookings = await _context.Bookings
+                .Where(b => b.TenantId == tenantContext.TenantId &&
+                           b.Phone == conversation.WaUserPhone &&
+                           (b.Status == "CheckedIn" || b.Status == "Confirmed" || b.Status == "Reserved"))
+                .OrderByDescending(b => b.CheckinDate)
+                .ToListAsync();
+
+            _logger.LogInformation("Found {Count} active bookings for guest {Phone}",
+                guestBookings.Count, conversation.WaUserPhone);
+
+            // CASE 1: No bookings found
+            if (guestBookings.Count == 0)
+            {
+                _logger.LogInformation("No active bookings found for guest");
+                return new MessageRoutingResponse
+                {
+                    Reply = "I don't see any active bookings under your contact information. If you believe this is an error, please contact our front desk at your earliest convenience, and they'll be happy to assist you.",
+                    ActionType = "no_bookings_found"
+                };
+            }
+
+            // CASE 2: Multiple bookings - Ask for clarification (AMBIGUITY!)
+            if (guestBookings.Count > 1)
+            {
+                _logger.LogInformation("⚠️ Multiple bookings detected - asking for clarification");
+
+                var bookingsList = guestBookings.Select((b, index) =>
+                    $"{index + 1}. Room {b.RoomNumber} - {b.CheckinDate:MMM dd} to {b.CheckoutDate:MMM dd} ({b.Status})").ToList();
+
+                var clarificationQuestion = $"I see you have {guestBookings.Count} bookings with us:\n\n" +
+                    string.Join("\n", bookingsList) +
+                    "\n\nWhich booking would you like to modify?";
+
+                return new MessageRoutingResponse
+                {
+                    Reply = clarificationQuestion,
+                    ActionType = "booking_clarification_needed"
+                };
+            }
+
+            // CASE 3: Single booking - Check if specific details provided or ask for clarification
+            var booking = guestBookings.First();
+            _logger.LogInformation("Single booking found: Booking {BookingId}, Room {Room}, Dates: {CheckIn} to {CheckOut}",
+                booking.Id, booking.RoomNumber, booking.CheckinDate, booking.CheckoutDate);
+
+            // Check if message contains specific modification details
+            var hasSpecificDetails = ContainsBookingModificationDetails(normalizedMessage);
+
+            // Get recent messages to check if we already asked what to change
+            var recentMessages = await _context.Messages
+                .Where(m => m.ConversationId == conversation.Id)
+                .OrderByDescending(m => m.CreatedAt)
+                .Take(5)
+                .ToListAsync();
+
+            var lastBotMessage = recentMessages.FirstOrDefault(m => m.Direction == "Outbound")?.Body ?? "";
+            var askedForDetails = lastBotMessage.Contains("What would you like to change") ||
+                                  lastBotMessage.Contains("what aspect of your booking");
+
+            // If vague request and we haven't asked for details yet, ask for clarification
+            if (!hasSpecificDetails && !askedForDetails)
+            {
+                _logger.LogInformation("📋 Vague booking modification request - asking for clarification");
+
+                var clarificationQuestion = $"I'd be happy to help you modify your booking for Room {booking.RoomNumber} " +
+                    $"({booking.CheckinDate:MMM dd, yyyy} to {booking.CheckoutDate:MMM dd, yyyy}).\n\n" +
+                    $"What would you like to change?\n" +
+                    $"• Check-out date\n" +
+                    $"• Check-in date\n" +
+                    $"• Room type or number\n" +
+                    $"• Number of guests\n" +
+                    $"• Something else";
+
+                return new MessageRoutingResponse
+                {
+                    Reply = clarificationQuestion,
+                    ActionType = "booking_modification_clarification_needed"
+                };
+            }
+
+            // Create a task for the front desk with specific details (if provided)
+            var task = new StaffTask
+            {
+                TenantId = tenantContext.TenantId,
+                BookingId = booking.Id,
+                ConversationId = conversation.Id,
+                TaskType = "Booking Modification",
+                Priority = "Medium",
+                Status = "Pending",
+                Description = $"Guest has requested to modify their booking.\n\n" +
+                             $"Booking Details:\n" +
+                             $"- Room: {booking.RoomNumber}\n" +
+                             $"- Current Check-in: {booking.CheckinDate:MMM dd, yyyy}\n" +
+                             $"- Current Check-out: {booking.CheckoutDate:MMM dd, yyyy}\n" +
+                             $"- Booking Status: {booking.Status}\n\n" +
+                             $"Guest's Request: {normalizedMessage}\n\n" +
+                             $"Please contact the guest to confirm the modification details and process the change.",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.StaffTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("✅ Created booking modification task {TaskId} for booking {BookingId}",
+                task.Id, booking.Id);
+
+            // Notify front desk staff
+            await _notificationService.NotifyTaskCreatedAsync(tenantContext.TenantId, task);
+
+            var confirmationMessage = $"Thank you! I've notified our front desk team about your request to modify " +
+                $"your booking for Room {booking.RoomNumber}. " +
+                $"A member of our team will review your request and contact you shortly to confirm the changes.";
+
+            return new MessageRoutingResponse
+            {
+                Reply = confirmationMessage,
+                ActionType = "booking_modification_task_created",
+                Action = JsonSerializer.SerializeToElement(new { bookingId = booking.Id, taskId = task.Id, roomNumber = booking.RoomNumber })
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling booking modification request for conversation {ConversationId}", conversation.Id);
+
+            return new MessageRoutingResponse
+            {
+                Reply = "I'm sorry, I encountered an issue while trying to access your booking information. Please contact our front desk directly, and they'll be happy to help you with your booking modification.",
+                ActionType = "error"
+            };
+        }
+    }
+
+    private bool ContainsBookingModificationDetails(string message)
+    {
+        // Check if the message contains specific modification details
+        var detailKeywords = new[]
+        {
+            "checkout", "check-out", "check out",
+            "checkin", "check-in", "check in",
+            "room", "suite", "upgrade", "downgrade",
+            "date", "dates", "day", "days", "night", "nights",
+            "extend", "extension", "shorten", "earlier", "later",
+            "guest", "guests", "person", "people", "adult", "adults", "child", "children",
+            "tomorrow", "today", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+            "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
+            "1st", "2nd", "3rd", "4th", "5th", "10th", "15th", "20th", "25th", "30th", "31st"
+        };
+
+        var lowerMessage = message.ToLower();
+
+        // Check for date patterns (e.g., "10/15", "15th", "october 15")
+        var hasDatePattern = System.Text.RegularExpressions.Regex.IsMatch(lowerMessage, @"\d{1,2}[/-]\d{1,2}") ||
+                             System.Text.RegularExpressions.Regex.IsMatch(lowerMessage, @"\d{1,2}(st|nd|rd|th)");
+
+        return detailKeywords.Any(keyword => lowerMessage.Contains(keyword)) || hasDatePattern;
     }
 
     private async Task<MessageRoutingResponse> HandleLostItemReporting(

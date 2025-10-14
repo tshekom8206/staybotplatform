@@ -11,7 +11,6 @@ namespace Hostr.Api.Services;
 public interface IWhatsAppApiClient
 {
     Task<bool> SendMessageAsync(string phoneNumberId, OutboundMessage message, string accessToken);
-    Task<bool> SendTwilioMessageAsync(string toPhone, string message);
     Task<bool> VerifyWebhookAsync(string mode, string verifyToken, string challenge);
 }
 
@@ -94,78 +93,10 @@ public class WhatsAppApiClient : IWhatsAppApiClient
         }
     }
 
-    public async Task<bool> SendTwilioMessageAsync(string toPhone, string messageText)
-    {
-        try
-        {
-            var accountSid = _configuration["Twilio:AccountSid"];
-            var authToken = _configuration["Twilio:AuthToken"];
-            var fromWhatsApp = _configuration["Twilio:FromWhatsApp"];
-
-            var url = $"https://api.twilio.com/2010-04-01/Accounts/{accountSid}/Messages.json";
-
-            _httpClient.DefaultRequestHeaders.Clear();
-
-            // Twilio uses Basic Authentication with AccountSid and AuthToken
-            var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{accountSid}:{authToken}"));
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {credentials}");
-
-            // Normalize phone number to proper international format
-            var formattedToPhone = NormalizePhoneNumber(toPhone);
-
-            // CRITICAL: WhatsApp has a 1600 character limit - split into multiple messages if needed
-            var chunks = SplitMessageIntoChunks(messageText, 1500);
-
-            bool allSuccess = true;
-            for (int i = 0; i < chunks.Count; i++)
-            {
-                _logger.LogInformation("Sending Twilio message part {Part}/{Total}: From=whatsapp:{FromPhone}, To=whatsapp:{ToPhone}, Body length={Length}",
-                    i + 1, chunks.Count, fromWhatsApp, formattedToPhone, chunks[i].Length);
-
-                var formParams = new List<KeyValuePair<string, string>>
-                {
-                    new KeyValuePair<string, string>("From", $"whatsapp:{fromWhatsApp}"),
-                    new KeyValuePair<string, string>("To", $"whatsapp:{formattedToPhone}"),
-                    new KeyValuePair<string, string>("Body", chunks[i])
-                };
-
-                var content = new FormUrlEncodedContent(formParams);
-                var response = await _httpClient.PostAsync(url, content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    _logger.LogInformation("Twilio WhatsApp message part {Part}/{Total} sent successfully to {Phone}",
-                        i + 1, chunks.Count, toPhone);
-
-                    // Small delay between messages to avoid rate limiting
-                    if (i < chunks.Count - 1)
-                    {
-                        await Task.Delay(200);
-                    }
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("Failed to send Twilio WhatsApp message part {Part}/{Total} to {Phone}. Status: {Status}, Error: {Error}",
-                        i + 1, chunks.Count, toPhone, response.StatusCode, errorContent);
-                    allSuccess = false;
-                }
-            }
-
-            return allSuccess;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Exception sending Twilio WhatsApp message to {Phone}", toPhone);
-            return false;
-        }
-    }
-
     public Task<bool> VerifyWebhookAsync(string mode, string verifyToken, string challenge)
     {
-        // For Twilio, webhook verification is usually done differently
-        // For now, we'll just return true for testing
-        return Task.FromResult(true);
+        var configuredToken = _configuration["WhatsApp:VerifyToken"];
+        return Task.FromResult(mode == "subscribe" && verifyToken == configuredToken);
     }
 
     private string NormalizePhoneNumber(string phoneNumber)
@@ -384,16 +315,19 @@ public class WhatsAppService : IWhatsAppService
             // Set tenant context for EF queries
             using var scope = new TenantScope(_context, tenantContext.TenantId);
 
+            // Normalize phone number to ensure it has + prefix
+            var normalizedPhone = NormalizePhoneNumber(message.From);
+
             // Find or create conversation
             var conversation = await _context.Conversations
-                .FirstOrDefaultAsync(c => c.WaUserPhone == message.From);
+                .FirstOrDefaultAsync(c => c.WaUserPhone == normalizedPhone);
 
             if (conversation == null)
             {
                 conversation = new Conversation
                 {
                     TenantId = tenantContext.TenantId,
-                    WaUserPhone = message.From,
+                    WaUserPhone = normalizedPhone,
                     Status = "Active"
                 };
 
@@ -421,11 +355,11 @@ public class WhatsAppService : IWhatsAppService
             if (!string.IsNullOrEmpty(response.Reply))
             {
                 // Send reply and ensure it's saved to conversation history
-                var sendSuccess = await SendTextMessageAsync(tenantContext.TenantId, message.From, response.Reply);
-                
+                var sendSuccess = await SendTextMessageAsync(tenantContext.TenantId, normalizedPhone, response.Reply);
+
                 if (sendSuccess)
                 {
-                    _logger.LogInformation("Bot response saved to conversation {ConversationId}: '{Reply}'", 
+                    _logger.LogInformation("Bot response saved to conversation {ConversationId}: '{Reply}'",
                         conversation.Id, response.Reply);
                 }
 
@@ -444,40 +378,66 @@ public class WhatsAppService : IWhatsAppService
         }
     }
 
+    private string NormalizePhoneNumber(string phoneNumber)
+    {
+        if (string.IsNullOrEmpty(phoneNumber))
+        {
+            return phoneNumber;
+        }
+
+        // Remove all spaces and special characters except + and numbers
+        var cleaned = phoneNumber.Trim().Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
+
+        // If it starts with +, keep it as is
+        if (cleaned.StartsWith("+"))
+        {
+            return cleaned;
+        }
+
+        // If it starts with 27 (South Africa country code without +), add the +
+        if (cleaned.StartsWith("27") && cleaned.Length >= 11)
+        {
+            return "+" + cleaned;
+        }
+
+        // If it starts with 0 (local SA number), replace with +27
+        if (cleaned.StartsWith("0") && cleaned.Length >= 10)
+        {
+            return "+27" + cleaned.Substring(1);
+        }
+
+        // If it's just digits without country code, assume SA and add +27
+        if (cleaned.All(char.IsDigit) && cleaned.Length >= 9 && cleaned.Length <= 10)
+        {
+            return "+27" + cleaned;
+        }
+
+        // Return as is if we can't determine the format
+        _logger.LogWarning("Unable to normalize phone number format: {Phone}", phoneNumber);
+        return phoneNumber;
+    }
+
     public async Task<bool> SendTextMessageAsync(int tenantId, string toPhone, string messageText)
     {
         try
         {
-            var provider = _configuration["WhatsApp:Provider"];
-            bool success;
+            // Get WhatsApp number for tenant (WhatsApp Cloud API)
+            var waNumber = await _context.WhatsAppNumbers
+                .FirstOrDefaultAsync(w => w.TenantId == tenantId && w.Status == "Active");
 
-            // Note: The API clients (SendTwilioMessageAsync and SendMessageAsync) now handle
-            // message splitting internally, so we save the full original message to the database
-
-            if (provider == "Twilio")
+            if (waNumber == null)
             {
-                success = await _whatsAppClient.SendTwilioMessageAsync(toPhone, messageText);
+                _logger.LogError("No active WhatsApp number found for tenant {TenantId}", tenantId);
+                return false;
             }
-            else
+
+            var message = new OutboundMessage
             {
-                // Get WhatsApp number for tenant (Facebook Graph API)
-                var waNumber = await _context.WhatsAppNumbers
-                    .FirstOrDefaultAsync(w => w.TenantId == tenantId && w.Status == "Active");
+                To = toPhone,
+                Text = new OutboundText { Body = messageText }
+            };
 
-                if (waNumber == null)
-                {
-                    _logger.LogError("No active WhatsApp number found for tenant {TenantId}", tenantId);
-                    return false;
-                }
-
-                var message = new OutboundMessage
-                {
-                    To = toPhone,
-                    Text = new OutboundText { Body = messageText }
-                };
-
-                success = await _whatsAppClient.SendMessageAsync(waNumber.PhoneNumberId, message, waNumber.PageAccessToken);
-            }
+            var success = await _whatsAppClient.SendMessageAsync(waNumber.PhoneNumberId, message, waNumber.PageAccessToken);
 
             // Save FULL outbound message to database (even if split into multiple WhatsApp messages)
             // This maintains conversation history integrity
