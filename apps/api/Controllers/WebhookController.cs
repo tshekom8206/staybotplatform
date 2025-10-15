@@ -4,6 +4,7 @@ using Hostr.Api.Services;
 using Hostr.Api.Data;
 using Hostr.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Hostr.Api.Controllers;
 
@@ -11,27 +12,30 @@ namespace Hostr.Api.Controllers;
 [Route("[controller]")]
 public class WebhookController : ControllerBase
 {
-    private readonly IWhatsAppService _whatsAppService;
     private readonly IWhatsAppApiClient _whatsAppClient;
     private readonly IRatingService _ratingService;
     private readonly HostrDbContext _context;
     private readonly IConfiguration _configuration;
     private readonly ILogger<WebhookController> _logger;
+    private readonly IMemoryCache _cache;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public WebhookController(
-        IWhatsAppService whatsAppService,
         IWhatsAppApiClient whatsAppClient,
         IRatingService ratingService,
         HostrDbContext context,
         IConfiguration configuration,
-        ILogger<WebhookController> logger)
+        ILogger<WebhookController> logger,
+        IMemoryCache cache,
+        IServiceScopeFactory serviceScopeFactory)
     {
-        _whatsAppService = whatsAppService;
         _whatsAppClient = whatsAppClient;
         _ratingService = ratingService;
         _context = context;
         _configuration = configuration;
         _logger = logger;
+        _cache = cache;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     [HttpGet]
@@ -54,136 +58,59 @@ public class WebhookController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> ReceiveMessage([FromBody] WebhookPayload payload)
+    public IActionResult ReceiveMessage([FromBody] WebhookPayload payload)
     {
         try
         {
             _logger.LogInformation("Received webhook payload with {EntryCount} entries", payload.Entry.Count);
-            
-            var (success, response) = await _whatsAppService.ProcessInboundMessageAsync(payload);
-            
-            if (success)
-            {
-                return Ok(new { success = true, response = response ?? "Message processed" });
-            }
-            
-            return StatusCode(500, "Failed to process message");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing webhook message");
-            return StatusCode(500, "Internal server error");
-        }
-    }
 
-    [HttpPost("twilio")]
-    public async Task<IActionResult> ReceiveTwilioMessage()
-    {
-        try
-        {
-            var form = await Request.ReadFormAsync();
-            
-            var messageBody = form["Body"].FirstOrDefault();
-            var fromNumber = form["From"].FirstOrDefault()?.Replace("whatsapp:", "");
-            var toNumber = form["To"].FirstOrDefault()?.Replace("whatsapp:", "");
+            // Extract all message IDs for deduplication
+            var messageIds = payload.Entry
+                .SelectMany(e => e.Changes)
+                .SelectMany(c => c.Value.Messages)
+                .Select(m => m.Id)
+                .Where(id => !string.IsNullOrEmpty(id))
+                .ToList();
 
-            // Ensure phone numbers have proper format for database lookup
-            if (!string.IsNullOrEmpty(toNumber) && !toNumber.StartsWith("+"))
+            // Check if any of these messages have already been processed
+            var alreadyProcessed = messageIds.Any(msgId => _cache.TryGetValue($"msg_{msgId}", out _));
+
+            if (alreadyProcessed)
             {
-                toNumber = "+" + toNumber.TrimStart();
-            }
-            if (!string.IsNullOrEmpty(fromNumber) && !fromNumber.StartsWith("+"))
-            {
-                fromNumber = "+" + fromNumber.TrimStart();
+                _logger.LogInformation("Duplicate webhook detected, message IDs: {MessageIds}", string.Join(", ", messageIds));
+                return Ok(new { success = true, message = "Already processed" });
             }
 
-            _logger.LogInformation("Received Twilio webhook: From={From}, To={To}, Body={Body}", fromNumber, toNumber, messageBody);
-            
-            if (string.IsNullOrEmpty(messageBody) || string.IsNullOrEmpty(fromNumber))
+            // Mark messages as being processed (cache for 5 minutes)
+            foreach (var msgId in messageIds)
             {
-                return BadRequest("Missing required fields");
+                _cache.Set($"msg_{msgId}", true, TimeSpan.FromMinutes(5));
             }
 
-            // Convert Twilio webhook to our internal format
-            var payload = new WebhookPayload
-            {
-                Entry = new List<WebhookEntry>
-                {
-                    new WebhookEntry
-                    {
-                        Changes = new List<WebhookChange>
-                        {
-                            new WebhookChange
-                            {
-                                Field = "messages",
-                                Value = new WebhookValue
-                                {
-                                    Metadata = new WebhookMetadata
-                                    {
-                                        PhoneNumberId = toNumber ?? "unknown"
-                                    },
-                                    Messages = new List<WebhookMessage>
-                                    {
-                                        new WebhookMessage
-                                        {
-                                            From = fromNumber,
-                                            Type = "text",
-                                            Text = new WebhookText { Body = messageBody }
-                                        }
-                                    },
-                                    Contacts = new List<WebhookContact>()
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-            
-            var (success, response) = await _whatsAppService.ProcessInboundMessageAsync(payload);
+            // Return 200 OK immediately to prevent Facebook retries
+            var response = Ok(new { success = true, message = "Processing" });
 
-            // Try to extract rating from the message after processing
-            if (success && !string.IsNullOrEmpty(messageBody))
+            // Process the message in the background with a new scope
+            _ = Task.Run(async () =>
             {
                 try
                 {
-                    // Get the conversation for rating extraction
-                    var conversation = await GetConversationByPhoneAsync(fromNumber);
-                    if (conversation != null)
-                    {
-                        // Use RatingService's comprehensive rating extraction (handles both numbers and words)
-                        var rating = await _ratingService.CollectRatingFromChatAsync(
-                            conversation.TenantId,
-                            conversation.Id,
-                            messageBody);
-
-                        if (rating != null)
-                        {
-                            _logger.LogInformation("GuestRating collected via webhook: {Rating}/5 for conversation {ConversationId}, task {TaskId}, guest {GuestName} room {RoomNumber}",
-                                rating.Rating, rating.ConversationId, rating.TaskId, rating.GuestName, rating.RoomNumber);
-                        }
-                    }
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var whatsAppService = scope.ServiceProvider.GetRequiredService<IWhatsAppService>();
+                    await whatsAppService.ProcessInboundMessageAsync(payload);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error collecting rating from message: {Message}", ex.Message);
-                    // Continue - don't fail the webhook processing
+                    _logger.LogError(ex, "Error processing webhook message in background");
                 }
-            }
+            });
 
-            if (success)
-            {
-                // Twilio expects TwiML response - empty response to acknowledge receipt
-                // Actual reply will be sent via Twilio API in SendTextMessageAsync
-                var twiml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>";
-                return Content(twiml, "application/xml");
-            }
-
-            return StatusCode(500, "Failed to process message");
+            return response;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing Twilio webhook message");
-            return StatusCode(500, "Internal server error");
+            _logger.LogError(ex, "Error handling webhook");
+            return Ok(new { success = true, message = "Error logged" }); // Still return 200 to prevent retries
         }
     }
 

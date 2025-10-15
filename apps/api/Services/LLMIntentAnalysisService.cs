@@ -623,14 +623,43 @@ Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.
 
             if (intent.AvailableOptions.Count > 0)
             {
-                var serviceDetails = await GetServiceDetailsAsync(intent.AvailableOptions, hotelContext);
-                result.WarmResponse = await GenerateWarmResponseAsync(
-                    originalMessage,
-                    serviceDetails,
-                    hotelContext.HotelName ?? "our property",
-                    hotelContext.TenantId,
-                    guestContext.ConversationId,
-                    intent.Category);
+                // CRITICAL: Check for ambiguity before generating response
+                // If ambiguous with multiple options, ask for clarification instead
+                if (result.IsAmbiguous && intent.AvailableOptions.Count > 1 &&
+                    (intent.Intent == "REQUEST_ITEM" || intent.Intent == "REQUEST_SERVICE" || intent.Intent == "BOOKING_CHANGE"))
+                {
+                    // Generate clarification question for ambiguous requests
+                    var clarificationQuestion = aiResponse.ClarificationNeeded?.Question;
+
+                    // If LLM provided a clarification question, use it; otherwise generate one
+                    if (string.IsNullOrEmpty(clarificationQuestion))
+                    {
+                        var optionsList = string.Join(", ", intent.AvailableOptions.Select((opt, idx) =>
+                            idx == intent.AvailableOptions.Count - 1 && intent.AvailableOptions.Count > 1
+                                ? $"or {opt}"
+                                : opt));
+                        clarificationQuestion = $"I'd be happy to help! We have {optionsList}. Which one would you prefer?";
+                    }
+
+                    result.ClarificationQuestion = clarificationQuestion;
+                    result.WarmResponse = clarificationQuestion;
+
+                    _logger.LogInformation(
+                        "Ambiguous {Intent} detected with {Count} options. Asking clarification: '{Question}'",
+                        intent.Intent, intent.AvailableOptions.Count, clarificationQuestion);
+                }
+                else
+                {
+                    // Not ambiguous or only one option - generate normal response
+                    var serviceDetails = await GetServiceDetailsAsync(intent.AvailableOptions, hotelContext);
+                    result.WarmResponse = await GenerateWarmResponseAsync(
+                        originalMessage,
+                        serviceDetails,
+                        hotelContext.HotelName ?? "our property",
+                        hotelContext.TenantId,
+                        guestContext.ConversationId,
+                        intent.Category);
+                }
             }
             else if (intent.Intent == "GREETING")
             {
