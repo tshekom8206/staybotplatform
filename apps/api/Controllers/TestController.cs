@@ -71,7 +71,7 @@ public class TestController : ControllerBase
                 ConversationId = conversation.Id,
                 TenantId = request.TenantId,
                 MessageType = "text",
-                Body = request.Message,
+                Body = request.MessageText,
                 Direction = "Inbound",
                 CreatedAt = DateTime.UtcNow
             };
@@ -522,6 +522,64 @@ public class TestController : ControllerBase
         }
     }
 
+    [HttpPost("seed-aromatherapy-massage")]
+    public async Task<IActionResult> SeedAromatherapyMassage()
+    {
+        try
+        {
+            // Check if Aromatherapy Massage already exists
+            var existing = await _context.Services
+                .FirstOrDefaultAsync(s => s.TenantId == 1 && s.Name == "Aromatherapy Massage");
+
+            if (existing != null)
+            {
+                return Ok(new
+                {
+                    success = true,
+                    message = "Aromatherapy Massage already exists",
+                    serviceId = existing.Id
+                });
+            }
+
+            // Add Aromatherapy Massage service
+            var aromatherapyMassage = new Service
+            {
+                TenantId = 1,
+                Name = "Aromatherapy Massage",
+                Description = "Therapeutic massage using essential oils and aromatherapy techniques",
+                Category = "Wellness",
+                IsAvailable = true,
+                IsChargeable = true,
+                Price = 480.00m,
+                Currency = "ZAR",
+                PricingUnit = "per session",
+                AvailableHours = "9:00 AM - 8:00 PM",
+                ContactInfo = "+27 13 795 5555",
+                RequiresAdvanceBooking = true,
+                AdvanceBookingHours = 2,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.Services.Add(aromatherapyMassage);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Added Aromatherapy Massage service with ID {Id}", aromatherapyMassage.Id);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Aromatherapy Massage service added successfully",
+                serviceId = aromatherapyMassage.Id
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding Aromatherapy Massage service");
+            return StatusCode(500, new { success = false, error = ex.Message });
+        }
+    }
+
     [HttpPost("test-email")]
     public async Task<IActionResult> TestEmail([FromBody] TestEmailRequest request)
     {
@@ -614,7 +672,14 @@ public class SimulateMessageRequest
 {
     public int TenantId { get; set; }
     public string PhoneNumber { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
+    public string MessageText { get; set; } = string.Empty;
+
+    // Support both MessageText and Message for backwards compatibility
+    public string Message
+    {
+        get => string.IsNullOrEmpty(MessageText) ? string.Empty : MessageText;
+        set => MessageText = value;
+    }
 }
 
 public class TestBroadcastRequest

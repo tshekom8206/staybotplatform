@@ -96,7 +96,19 @@ public class WhatsAppApiClient : IWhatsAppApiClient
     public Task<bool> VerifyWebhookAsync(string mode, string verifyToken, string challenge)
     {
         var configuredToken = _configuration["WhatsApp:VerifyToken"];
-        return Task.FromResult(mode == "subscribe" && verifyToken == configuredToken);
+
+        _logger.LogInformation("Webhook verification: mode={Mode}, receivedToken={ReceivedToken}, configuredToken={ConfiguredToken}, tokensMatch={Match}",
+            mode, verifyToken, configuredToken, verifyToken == configuredToken);
+
+        var isValid = mode == "subscribe" && verifyToken == configuredToken;
+
+        if (!isValid)
+        {
+            _logger.LogWarning("Verification failed - mode: {Mode}, tokensMatch: {Match}",
+                mode, verifyToken == configuredToken);
+        }
+
+        return Task.FromResult(isValid);
     }
 
     private string NormalizePhoneNumber(string phoneNumber)

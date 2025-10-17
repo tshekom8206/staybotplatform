@@ -452,7 +452,7 @@ Analyze this message and respond with the following JSON structure:
     ""clarificationNeeded"": {{
         ""required"": true/false,
         ""type"": ""OPTION_SELECTION | QUANTITY | TIME | DETAILS | NONE"",
-        ""question"": ""Warm clarification question if needed""
+        ""question"": ""Warm clarification question if needed - CRITICAL: NEVER use vague language like 'and more', 'etc.', 'such as', or similar phrases. List ALL available options explicitly from the configuration.""
     }}
 }}
 
@@ -571,6 +571,86 @@ Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.
         return prompt;
     }
 
+    /// <summary>
+    /// CRITICAL ANTI-HALLUCINATION METHOD
+    /// Validates LLM-provided available options against actual hotel configuration
+    /// Filters out any hallucinated items that don't exist in the database
+    /// </summary>
+    private List<string> ValidateAvailableOptions(List<string> llmOptions, HotelConfigurationContext hotelContext, string intentType)
+    {
+        _logger.LogWarning("===== VALIDATE AVAILABLE OPTIONS CALLED =====");
+        _logger.LogWarning("LLM Options Count: {Count}, Options: {Options}", llmOptions?.Count ?? 0, string.Join(", ", llmOptions ?? new List<string>()));
+
+        if (llmOptions == null || llmOptions.Count == 0)
+            return new List<string>();
+
+        try
+        {
+            // Get all valid item/service names from hotel configuration
+            var validNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // Add RequestItems names
+            if (hotelContext.RequestItems != null)
+            {
+                // First serialize to JSON, then deserialize - handles anonymous types
+                var requestItemsJson = JsonSerializer.Serialize(hotelContext.RequestItems);
+                var requestItems = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(requestItemsJson);
+                if (requestItems != null)
+                {
+                    foreach (var item in requestItems)
+                    {
+                        if (item.ContainsKey("Name"))
+                        {
+                            validNames.Add(item["Name"].GetString() ?? "");
+                        }
+                    }
+                }
+            }
+
+            // Add Services names
+            if (hotelContext.AvailableServices != null)
+            {
+                // First serialize to JSON, then deserialize - handles anonymous types
+                var servicesJson = JsonSerializer.Serialize(hotelContext.AvailableServices);
+                var services = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(servicesJson);
+                if (services != null)
+                {
+                    foreach (var service in services)
+                    {
+                        if (service.ContainsKey("Name"))
+                        {
+                            validNames.Add(service["Name"].GetString() ?? "");
+                        }
+                    }
+                }
+            }
+
+            // Filter LLM options to only include items that exist in hotel configuration
+            var validatedOptions = llmOptions
+                .Where(option => validNames.Contains(option))
+                .ToList();
+
+            // Log if hallucinations were detected
+            var hallucinatedOptions = llmOptions.Except(validatedOptions, StringComparer.OrdinalIgnoreCase).ToList();
+            if (hallucinatedOptions.Any())
+            {
+                _logger.LogWarning(
+                    "ANTI-HALLUCINATION: Removed {Count} hallucinated items from LLM response: {Items}. " +
+                    "Valid items: {ValidItems}",
+                    hallucinatedOptions.Count,
+                    string.Join(", ", hallucinatedOptions),
+                    string.Join(", ", validatedOptions));
+            }
+
+            return validatedOptions;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating available options, returning original list");
+            return llmOptions; // Fallback to original list if validation fails
+        }
+    }
+
     private async Task<IntentAnalysisResult> ProcessAnalysisResponseAsync(
         IntentAnalysisResponse aiResponse,
         HotelConfigurationContext hotelContext,
@@ -585,17 +665,33 @@ Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.
         // Convert ExtractedIntent list to DetectedIntent list
         if (aiResponse.Intents != null && aiResponse.Intents.Count > 0)
         {
+            _logger.LogWarning("===== PROCESSING {Count} INTENTS FROM LLM =====", aiResponse.Intents.Count);
+            foreach (var i in aiResponse.Intents)
+            {
+                _logger.LogWarning("LLM Intent: {Intent}, AvailableOptions from LLM: {Options}",
+                    i.Intent, string.Join(", ", i.AvailableOptions ?? new List<string>()));
+            }
+
             result.DetectedIntents = aiResponse.Intents.Select(i => new DetectedIntent
             {
                 Intent = i.Intent,
                 Category = i.Category,
                 SpecificityLevel = i.SpecificityLevel,
-                AvailableOptions = i.AvailableOptions ?? new List<string>(),
+                // CRITICAL ANTI-HALLUCINATION: Validate availableOptions against actual hotel configuration
+                // Filter out any items that don't exist in the database
+                AvailableOptions = ValidateAvailableOptions(i.AvailableOptions ?? new List<string>(), hotelContext, i.Intent),
                 EntityType = i.EntityType ?? "",
                 OriginalText = i.OriginalText ?? "",
                 Confidence = i.Confidence,
                 RequestedQuantity = i.RequestedQuantity
             }).ToList();
+
+            _logger.LogWarning("===== AFTER VALIDATION =====");
+            foreach (var di in result.DetectedIntents)
+            {
+                _logger.LogWarning("DetectedIntent: {Intent}, AvailableOptions AFTER validation: {Options}",
+                    di.Intent, string.Join(", ", di.AvailableOptions));
+            }
 
             // Set primary intent/category for backward compatibility (use first intent)
             var primaryIntent = result.DetectedIntents.First();
@@ -609,6 +705,7 @@ Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.
         // Generate warm response based on detected intents
         if (result.DetectedIntents.Count > 1)
         {
+            _logger.LogWarning("===== RESPONSE PATH: MULTI-INTENT =====");
             // MULTI-INTENT: Handle each intent and combine responses
             result.WarmResponse = await GenerateMultiIntentResponseAsync(
                 result.DetectedIntents,
@@ -621,25 +718,27 @@ Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.
             // SINGLE INTENT: Use existing logic
             var intent = result.DetectedIntents.First();
 
+            _logger.LogWarning("===== RESPONSE PATH: SINGLE INTENT =====");
+            _logger.LogWarning("Intent: {Intent}, Category: {Category}, AvailableOptions Count: {Count}",
+                intent.Intent, intent.Category, intent.AvailableOptions.Count);
+            _logger.LogWarning("AvailableOptions: {Options}", string.Join(", ", intent.AvailableOptions));
+            _logger.LogWarning("IsAmbiguous: {IsAmbiguous}", result.IsAmbiguous);
+
             if (intent.AvailableOptions.Count > 0)
             {
                 // CRITICAL: Check for ambiguity before generating response
                 // If ambiguous with multiple options, ask for clarification instead
                 if (result.IsAmbiguous && intent.AvailableOptions.Count > 1 &&
-                    (intent.Intent == "REQUEST_ITEM" || intent.Intent == "REQUEST_SERVICE" || intent.Intent == "BOOKING_CHANGE"))
+                    (intent.Intent == "REQUEST_ITEM" || intent.Intent == "REQUEST_SERVICE" || intent.Intent == "REQUEST_SERVICE"))
                 {
-                    // Generate clarification question for ambiguous requests
-                    var clarificationQuestion = aiResponse.ClarificationNeeded?.Question;
-
-                    // If LLM provided a clarification question, use it; otherwise generate one
-                    if (string.IsNullOrEmpty(clarificationQuestion))
-                    {
-                        var optionsList = string.Join(", ", intent.AvailableOptions.Select((opt, idx) =>
-                            idx == intent.AvailableOptions.Count - 1 && intent.AvailableOptions.Count > 1
-                                ? $"or {opt}"
-                                : opt));
-                        clarificationQuestion = $"I'd be happy to help! We have {optionsList}. Which one would you prefer?";
-                    }
+                    _logger.LogWarning("===== TAKING CLARIFICATION PATH (lines 583-597) =====");
+                    // CRITICAL ANTI-HALLUCINATION: Always generate clarification from AvailableOptions
+                    // NEVER trust LLM's question as it may hallucinate items not in the database
+                    var optionsList = string.Join(", ", intent.AvailableOptions.Select((opt, idx) =>
+                        idx == intent.AvailableOptions.Count - 1 && intent.AvailableOptions.Count > 1
+                            ? $"or {opt}"
+                            : opt));
+                    var clarificationQuestion = $"I'd be happy to help! We have {optionsList}. Which one would you prefer?";
 
                     result.ClarificationQuestion = clarificationQuestion;
                     result.WarmResponse = clarificationQuestion;
