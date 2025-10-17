@@ -88,7 +88,7 @@ public class MenuService : IMenuService
         {
             var businessInfo = new[]
             {
-                new BusinessInfo { TenantId = tenantId, Category = "hours", Title = "Opening Hours", Content = "Monday-Friday: 7:00 AM - 10:00 PM\nSaturday-Sunday: 8:00 AM - 11:00 PM\nBreakfast: 7:00 AM - 11:00 AM\nLunch: 12:00 PM - 3:00 PM\nDinner: 6:00 PM - 10:00 PM", Tags = new[] { "hours", "schedule" } },
+                new BusinessInfo { TenantId = tenantId, Category = "hours", Title = "Opening Hours", Content = "Monday-Friday: 7:00 AM - 10:00 PM\nSaturday-Sunday: 8:00 AM - 11:00 PM\nBreakfast: 7:00 AM - 11:00 AM\nLunch: 12:00 PM - 3:00 PM\nDinner: 6:00 PM - 9:00 PM", Tags = new[] { "hours", "schedule" } },
                 new BusinessInfo { TenantId = tenantId, Category = "location", Title = "Location", Content = "Please contact our front desk for location details and directions to our hotel. We're easily accessible by car or public transport.", Tags = new[] { "location", "directions" } },
                 new BusinessInfo { TenantId = tenantId, Category = "amenities", Title = "Amenities", Content = "Free WiFi, outdoor seating, wheelchair accessible, child-friendly, pet-friendly patio", Tags = new[] { "wifi", "accessibility", "family" } }
             };
