@@ -161,6 +161,18 @@ public class OpenAIService : IOpenAIService
 
             _logger.LogInformation("OpenAI Response Content: {ResponseContent}", responseContent);
 
+            // Extract Chain-of-Thought response if present
+            var (thinkingContent, userFacingResponse) = ExtractChainOfThoughtResponse(responseContent);
+
+            // Log thinking process for debugging (not shown to user)
+            if (!string.IsNullOrEmpty(thinkingContent))
+            {
+                _logger.LogInformation("CoT Thinking Process: {Thinking}", thinkingContent);
+            }
+
+            // Use the user-facing response for further processing
+            responseContent = userFacingResponse;
+
             // Handle function calls - parse JSON from response
             JsonElement? action = null;
             JsonElement[]? actions = null;
@@ -308,6 +320,35 @@ public class OpenAIService : IOpenAIService
         return new ActionParseResult(null, null);
     }
 
+    private static (string thinking, string response) ExtractChainOfThoughtResponse(string responseContent)
+    {
+        if (string.IsNullOrEmpty(responseContent))
+            return (string.Empty, responseContent);
+
+        // Extract <thinking> section (for logging, not shown to user)
+        var thinkingMatch = System.Text.RegularExpressions.Regex.Match(
+            responseContent,
+            @"<thinking>(.*?)</thinking>",
+            System.Text.RegularExpressions.RegexOptions.Singleline | System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+
+        string thinkingContent = thinkingMatch.Success ? thinkingMatch.Groups[1].Value.Trim() : string.Empty;
+
+        // Extract <response> section (user-facing content)
+        var responseMatch = System.Text.RegularExpressions.Regex.Match(
+            responseContent,
+            @"<response>(.*?)</response>",
+            System.Text.RegularExpressions.RegexOptions.Singleline | System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+
+        // If <response> section exists, use it; otherwise use the full content (backward compatibility)
+        string userFacingResponse = responseMatch.Success
+            ? responseMatch.Groups[1].Value.Trim()
+            : responseContent;
+
+        return (thinkingContent, userFacingResponse);
+    }
+
     private static string CleanMarkdownCodeBlocks(string responseContent)
     {
         if (string.IsNullOrEmpty(responseContent))
@@ -332,6 +373,22 @@ public class OpenAIService : IOpenAIService
 
         // First clean markdown code blocks
         responseContent = CleanMarkdownCodeBlocks(responseContent);
+
+        // CRITICAL: Remove any remaining <thinking> or <response> XML tags that leaked through
+        // This is a safety net in case ExtractChainOfThoughtResponse() missed them
+        responseContent = System.Text.RegularExpressions.Regex.Replace(
+            responseContent,
+            @"<thinking>.*?</thinking>",
+            "",
+            System.Text.RegularExpressions.RegexOptions.Singleline | System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+
+        responseContent = System.Text.RegularExpressions.Regex.Replace(
+            responseContent,
+            @"</?response>",
+            "",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
 
         // Remove JSON blocks that start with "JSON:" and contain action objects
         var lines = responseContent.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);

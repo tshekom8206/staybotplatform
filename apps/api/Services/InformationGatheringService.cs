@@ -37,7 +37,8 @@ public interface IInformationGatheringService
 
     Task<string> GenerateNextQuestion(
         BookingInformationState state,
-        string conversationHistory);
+        string conversationHistory,
+        int tenantId);
 
     Task<bool> IsReadyToBook(
         BookingInformationState state,
@@ -158,6 +159,8 @@ CRITICAL SERVICE NAME RULE:
 - Match the guest's intent to the closest service in the list
 - Use the EXACT name from the list (e.g., if guest says ""Kruger Safari"" and list has ""Kruger National Park Day Trip"", use ""Kruger National Park Day Trip"")
 - If no close match exists, set serviceName to null
+- **AMBIGUITY RULE**: If the guest's message is GENERIC/AMBIGUOUS and could match MULTIPLE services (e.g., ""spa treatment"" when list has ""Traditional Massage"" AND ""Aromatherapy Massage""), set serviceName to NULL and add to uncertainties: ""Guest said '[their phrase]' which could refer to multiple services - need to ask which specific one""
+- Only pick a specific service if the guest explicitly mentioned it by name or there's only ONE matching service
 
 SMART EXTRACTION RULES:
 
@@ -231,6 +234,32 @@ Return ONLY valid JSON, no other text.";
             state.ExtractionConfidence = extracted.ExtractionConfidence;
             state.ExtractionReasoning = extracted.Reasoning;
             state.LastUpdated = DateTime.UtcNow;
+
+            // CRITICAL: Post-extraction validation to prevent LLM from guessing services
+            // If serviceName was extracted, check if user explicitly mentioned it
+            if (!string.IsNullOrEmpty(state.ServiceName) && availableServices != null && availableServices.Any())
+            {
+                // Check if user's message contains the extracted service name
+                bool userMentionedService = message.Contains(state.ServiceName, StringComparison.OrdinalIgnoreCase);
+
+                if (!userMentionedService)
+                {
+                    // User didn't explicitly mention the service - check if there are multiple similar services
+                    // Look for services with similar names (e.g., "Traditional Massage", "Aromatherapy Massage")
+                    var servicesWithSimilarNames = availableServices
+                        .Where(s => s.Name.Contains("Massage", StringComparison.OrdinalIgnoreCase) ||
+                                   s.Name.Contains("Spa", StringComparison.OrdinalIgnoreCase) ||
+                                   s.Name.Contains(state.ServiceCategory ?? "", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+
+                    if (servicesWithSimilarNames.Count > 1)
+                    {
+                        _logger.LogWarning("LLM extracted serviceName '{ServiceName}' but user said '{Message}' - user didn't explicitly mention this service. Found {Count} similar services: {Services}. Nullifying to force option listing.",
+                            state.ServiceName, message, servicesWithSimilarNames.Count, string.Join(", ", servicesWithSimilarNames.Select(s => s.Name)));
+                        state.ServiceName = null;
+                    }
+                }
+            }
 
             // Update provided fields list
             state.ProvidedFields.Clear();
@@ -513,14 +542,86 @@ Return ONLY valid JSON.";
         }
     }
 
+    private async Task<Dictionary<string, List<string>>> LoadAvailableServicesByCategory(int tenantId)
+    {
+        try
+        {
+            using var scope = new TenantScope(_context, tenantId);
+
+            var services = await _context.Services
+                .Where(s => s.TenantId == tenantId && s.IsAvailable)
+                .Select(s => new { s.Name, s.Category })
+                .ToListAsync();
+
+            var grouped = services
+                .GroupBy(s => ServiceCategoryConstants.NormalizeCategory(s.Category))
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(s => s.Name).ToList()
+                );
+
+            _logger.LogInformation("Loaded services for tenant {TenantId}: {Categories} categories, {Total} total services",
+                tenantId, grouped.Keys.Count, services.Count);
+
+            return grouped;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading available services for tenant {TenantId}", tenantId);
+            return new Dictionary<string, List<string>>();
+        }
+    }
+
+    private string GetCategoryLabel(string category)
+    {
+        return category switch
+        {
+            "LOCAL_TOURS" => "tour",
+            "MASSAGE" => "massage type",
+            "SPA" => "spa service",
+            "CONFERENCE_ROOM" => "room",
+            "DINING" => "dining option",
+            "ACTIVITIES" => "activity",
+            _ => "service"
+        };
+    }
+
     public async Task<string> GenerateNextQuestion(
         BookingInformationState state,
-        string conversationHistory)
+        string conversationHistory,
+        int tenantId)
     {
         try
         {
             var stateJson = JsonSerializer.Serialize(state);
             var missingFields = string.Join(", ", state.MissingRequiredFields);
+
+            // Load actual services from database
+            var availableServicesByCategory = await LoadAvailableServicesByCategory(tenantId);
+
+            // Build dynamic service examples
+            var serviceOptionsSection = new System.Text.StringBuilder();
+            serviceOptionsSection.AppendLine("4. Show available options when asking about serviceName:");
+
+            if (state.ServiceCategory != null && availableServicesByCategory.ContainsKey(state.ServiceCategory))
+            {
+                var services = availableServicesByCategory[state.ServiceCategory];
+                if (services.Any())
+                {
+                    var servicesList = string.Join(", ", services);
+                    serviceOptionsSection.AppendLine($"   - For {state.ServiceCategory}: \"Which {GetCategoryLabel(state.ServiceCategory)} would you like? We have: {servicesList}\"");
+                }
+                else
+                {
+                    // No services in this category - fall back to asking for people count
+                    serviceOptionsSection.AppendLine($"   - For {state.ServiceCategory}: \"How many people will be joining?\" (Note: Specific service selection will be handled by staff)");
+                }
+            }
+            else
+            {
+                // Category unknown or no services - show generic guidance
+                serviceOptionsSection.AppendLine("   - If serviceName is missing, ask: \"Which service would you like to book?\" without suggesting specific options");
+            }
 
             var prompt = $@"You are generating the next clarifying question for a booking.
 
@@ -549,12 +650,7 @@ RULES:
 3. If this is attempt #{state.QuestionAttempts + 1} and {BookingInformationState.MAX_QUESTIONS} is max:
    - If last attempt, offer to connect with staff
 
-4. Show available options when relevant for serviceName:
-   - For LOCAL_TOURS: ""Which tour would you like? We offer Kruger Safari, Blyde Canyon Tour, Cultural Village Experience, and Waterfalls Tour.""
-   - For MASSAGE: ""Which type of massage? We offer Traditional Massage, Hot Stone Massage, Deep Tissue Massage, and Aromatherapy.""
-   - For SPA: ""Which spa service? We offer spa packages, facials, body treatments, and wellness programs.""
-   - For CONFERENCE_ROOM: ""Which room would you like? We have small meeting rooms and large conference facilities.""
-   - For DINING: ""Which restaurant? We have fine dining, casual dining, and private dining options.""
+{serviceOptionsSection}
 
 5. Use context from conversation history to make question more natural
 

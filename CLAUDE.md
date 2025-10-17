@@ -60,8 +60,25 @@ curl -X POST "http://localhost:5000/api/message/route" -H "Content-Type: applica
 - `EmergencyIncidents` - Emergency incident tracking
 - `RequestItems` - Available hotel items/services
 
+## WhatsApp Cloud API Integration
+
+For complete instructions on setting up WhatsApp Business for multiple tenants, see:
+
+**📘 [WhatsApp Multi-Tenant Setup Guide](WHATSAPP_MULTI_TENANT_SETUP.md)**
+
+This comprehensive guide includes:
+- Screenshots from Meta dashboard showing exactly where to find credentials
+- Step-by-step phone number addition process for each tenant
+- Database configuration with SQL examples
+- Troubleshooting for common webhook and authentication issues
+- Production deployment considerations
+
 ## Recent Changes
 
+- **Migrated from Twilio to WhatsApp Cloud API** (October 2025)
+- Removed Twilio-specific code and configuration
+- Implemented proper webhook verification for Cloud API
+- Updated EmergencyContactService to use WhatsAppService
 - Added `RoomNumber` column to `Bookings` table
 - Updated all response methods to include specific room numbers
 - Enhanced notification system with room-specific messaging
