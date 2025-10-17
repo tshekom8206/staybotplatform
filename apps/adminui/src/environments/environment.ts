@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://localhost:5000/api',
+  apiUrl: 'https://staybot-api.azurewebsites.net/api',
   hubUrl: 'https://localhost:5000/hubs/stafftask',
   tenantId: null,
   locale: 'en-ZA', // South African English
