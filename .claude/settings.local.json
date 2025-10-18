@@ -84,7 +84,18 @@
       "Bash(Select-String \"LLM extracted serviceName\",\"servicesWithSimilarNames\",\"T-005\",\"spa treatment\" -Context 0,2)",
       "Bash(Where-Object {$_d})",
       "Bash(Select-String \"Overall|Average|SUMMARY|Spanish|multilingual|Guest:|Bot \\(Live\\)|Verdict:\" -Context 0,1)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(PGPASSWORD='5tayB0t2025Prod' psql:*)",
+      "Bash(python:*)",
+      "Bash(PGPASSWORD='5tayB0t2025Prod' psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot -c \"UPDATE \"\"Bookings\"\" SET \"\"Status\"\" = ''CheckedIn'' WHERE \"\"GuestPhone\"\" IN (''+27783776207'', ''+27821234567'', ''+27821234572'', ''+27987654321'', ''+27555123456'', ''+27722379433'', ''+27766285636'', ''+27763189291'', ''+27123456789'', ''+27737008983'', ''+27444789012'', ''+27821234570'', ''+27821234571'', ''+27821234568'', ''+27821234573'', ''+27832006425'', ''+27683297512'', ''+27823232602'', ''+27683297515'', ''+27823228933'');\")",
+      "Bash(Select-String \"Build succeeded|Build FAILED|error\")",
+      "Bash(PGPASSWORD='5tayB0t2025Prod' psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot -c \"\nSELECT \n    c.\"\"Id\"\" as conversation_id,\n    c.\"\"GuestPhone\"\",\n    c.\"\"Status\"\",\n    c.\"\"Mode\"\",\n    COUNT(m.\"\"Id\"\") as message_count\nFROM \"\"Conversations\"\" c\nLEFT JOIN \"\"Messages\"\" m ON m.\"\"ConversationId\"\" = c.\"\"Id\"\"\nWHERE c.\"\"GuestPhone\"\" = ''+27987654321''\nGROUP BY c.\"\"Id\"\", c.\"\"GuestPhone\"\", c.\"\"Status\"\", c.\"\"Mode\"\"\nORDER BY c.\"\"CreatedAt\"\" DESC;\n\")",
+      "Bash(PGPASSWORD='5tayB0t2025Prod' psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot -c \"\nSELECT \n    m.\"\"Id\"\",\n    m.\"\"Direction\"\",\n    m.\"\"Body\"\",\n    m.\"\"IntentClassification\"\",\n    m.\"\"CreatedAt\"\",\n    c.\"\"Mode\"\",\n    c.\"\"Status\"\"\nFROM \"\"Messages\"\" m\nJOIN \"\"Conversations\"\" c ON c.\"\"Id\"\" = m.\"\"ConversationId\"\"\nWHERE m.\"\"From\"\" = ''+27987654321'' OR m.\"\"To\"\" = ''+27987654321''\nORDER BY m.\"\"CreatedAt\"\" ASC\nLIMIT 50;\n\")",
+      "Bash(PGPASSWORD='5tayB0t2025Prod' psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot -c \"SELECT COUNT(*) FROM \"\"Messages\"\";\")",
+      "Bash(PGPASSWORD='5tayB0t2025Prod' psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot -c \"\\d \"\"Bookings\"\"\")",
+      "Bash(Select-String \"Build succeeded|Build FAILED|error CS\")",
+      "Bash(PGPASSWORD='5tayB0t2025Prod' psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot -c \"\\d \"\"StaffTasks\"\"\")",
+      "Bash(PGPASSWORD='5tayB0t2025Prod' psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot -c 'SELECT \"\"Id\"\", \"\"Name\"\" FROM \"\"Tenants\"\" LIMIT 5;')"
     ],
     "deny": [],
     "ask": []

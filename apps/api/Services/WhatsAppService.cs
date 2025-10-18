@@ -324,9 +324,6 @@ public class WhatsAppService : IWhatsAppService
     {
         try
         {
-            // Set tenant context for EF queries
-            using var scope = new TenantScope(_context, tenantContext.TenantId);
-
             // Normalize phone number to ensure it has + prefix
             var normalizedPhone = NormalizePhoneNumber(message.From);
 
@@ -358,12 +355,41 @@ public class WhatsAppService : IWhatsAppService
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Messages.Add(inboundMessage);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Messages.Add(inboundMessage);
+                _logger.LogInformation("📥 Adding inbound message to context. ConversationId={ConversationId}, Body='{Body}'",
+                    conversation.Id, inboundMessage.Body);
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Saved inbound message {MessageId} to database", inboundMessage.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ FAILED to save inbound message for conversation {ConversationId}", conversation.Id);
+                throw;
+            }
 
             // Route message and get response
             var response = await _messageRouter.RouteMessageAsync(tenantContext, conversation, inboundMessage);
-            
+
+            // Update message with intent classification if available
+            if (!string.IsNullOrEmpty(response.IntentClassification))
+            {
+                try
+                {
+                    inboundMessage.IntentClassification = response.IntentClassification;
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("✅ Saved intent classification '{Intent}' for message {MessageId}",
+                        response.IntentClassification, inboundMessage.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ FAILED to save intent classification for message {MessageId}", inboundMessage.Id);
+                }
+            }
+
             if (!string.IsNullOrEmpty(response.Reply))
             {
                 // Send reply and ensure it's saved to conversation history
@@ -460,29 +486,38 @@ public class WhatsAppService : IWhatsAppService
 
             if (conversation != null)
             {
-                var outboundMessage = new Message
+                try
                 {
-                    TenantId = tenantId,
-                    ConversationId = conversation.Id,
-                    Direction = "Outbound",
-                    MessageType = "text",
-                    Body = messageText, // Save full original message
-                    CreatedAt = DateTime.UtcNow
-                };
+                    var outboundMessage = new Message
+                    {
+                        TenantId = tenantId,
+                        ConversationId = conversation.Id,
+                        Direction = "Outbound",
+                        MessageType = "text",
+                        Body = messageText, // Save full original message
+                        CreatedAt = DateTime.UtcNow
+                    };
 
-                _context.Messages.Add(outboundMessage);
+                    _context.Messages.Add(outboundMessage);
+                    _logger.LogInformation("📤 Adding outbound message to context. ConversationId={ConversationId}, Length={Length}",
+                        conversation.Id, messageText.Length);
 
-                // Update conversation in the same transaction
-                conversation.LastBotReplyAt = DateTime.UtcNow;
+                    // Update conversation in the same transaction
+                    conversation.LastBotReplyAt = DateTime.UtcNow;
 
-                await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Saved full outbound message ({Length} chars) to conversation {ConversationId}",
-                    messageText.Length, conversation.Id);
+                    _logger.LogInformation("✅ Saved outbound message {MessageId} ({Length} chars) to conversation {ConversationId}",
+                        outboundMessage.Id, messageText.Length, conversation.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ FAILED to save outbound message for conversation {ConversationId}", conversation.Id);
+                }
             }
             else
             {
-                _logger.LogWarning("No conversation found for phone {Phone} when saving outbound message", toPhone);
+                _logger.LogWarning("⚠️ No conversation found for phone {Phone} when saving outbound message", toPhone);
             }
 
             return success;

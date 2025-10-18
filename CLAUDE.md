@@ -10,14 +10,14 @@
 - **Host**: `localhost`
 - **Port**: `5432`
 
-**Connection String**: `Host=localhost;Database=hostr;Username=postgres;Password=postgres`
+**Connection String**: `Host=staybot-prod-psql.postgres.database.azure.com;Database=staybot;Username=staybot_admin;Password=5tayB0t2025Prod;SSL Mode=Require;`
 
 ## Common Commands
 
 ### Database Operations
 ```bash
 # Connect to PostgreSQL
-psql -h localhost -U postgres -d hostr
+psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot
 
 # Run EF migrations
 cd "C:\Users\Administrator\Downloads\hostr\apps\api"

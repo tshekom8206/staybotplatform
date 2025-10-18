@@ -467,6 +467,37 @@ public class OpenAIService : IOpenAIService
         return cleanResponse;
     }
 
+    private static string FixInvalidJsonEscaping(string json)
+    {
+        if (string.IsNullOrEmpty(json))
+            return json;
+
+        // FIRST: Apply regex fix for common LLM-generated issues
+        // Fix unescaped backslashes that aren't part of valid escape sequences
+        // Replace single backslashes with double backslashes, but preserve valid escape sequences
+        var fixedJson = System.Text.RegularExpressions.Regex.Replace(
+            json,
+            @"\\(?![""\\\/bfnrtu])",  // Match backslash NOT followed by valid escape chars
+            @"\\\\"  // Replace with double backslash
+        );
+
+        // THEN: Try to parse and re-serialize to ensure valid JSON
+        try
+        {
+            using var doc = JsonDocument.Parse(fixedJson);
+            return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions
+            {
+                WriteIndented = false,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            });
+        }
+        catch
+        {
+            // If still failing, return the regex-fixed version
+            return fixedJson;
+        }
+    }
+
     public async Task<T?> GetStructuredResponseAsync<T>(string prompt, double temperature = 0.0) where T : class
     {
         try
@@ -490,6 +521,9 @@ public class OpenAIService : IOpenAIService
 
             // Clean the response content
             var cleanedContent = CleanMarkdownCodeBlocks(responseContent);
+
+            // Fix invalid JSON escaping that LLM sometimes generates
+            cleanedContent = FixInvalidJsonEscaping(cleanedContent);
 
             _logger.LogInformation("Cleaned JSON content for type {Type}: {Content}", typeof(T).Name, cleanedContent);
 

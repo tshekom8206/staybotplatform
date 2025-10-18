@@ -421,6 +421,9 @@ GUEST CONTEXT:
 - Room: {guestContext.RoomNumber ?? "Not specified"}
 - Guest Name: {guestContext.GuestName ?? "Not specified"}
 
+CONVERSATION HISTORY (for context):
+{conversationHistory}
+
 GUEST MESSAGE: ""{message}""
 
 MULTI-INTENT DETECTION:
@@ -430,7 +433,7 @@ Analyze this message and respond with the following JSON structure:
 {{
     ""intents"": [
         {{
-            ""intent"": ""REQUEST_ITEM | REQUEST_SERVICE | INQUIRY | COMPLAINT | BOOKING_CHANGE | GREETING | LOST_AND_FOUND | OTHER"",
+            ""intent"": ""REQUEST_ITEM | REQUEST_SERVICE | INQUIRY | COMPLAINT | BOOKING_CHANGE | BOOKING_INQUIRY | BOOKING_CONFIRMATION | GREETING | LOST_AND_FOUND | OTHER"",
             ""category"": ""BEVERAGE | FOOD | HOUSEKEEPING | MAINTENANCE | AMENITIES | DINING | LOST_ITEMS | OTHER"",
             ""specificityLevel"": ""SPECIFIC | VAGUE | UNCLEAR"",
             ""availableOptions"": [""List ONLY the actual available options from hotel configuration that match the request""],
@@ -565,6 +568,24 @@ IMPORTANT: When detecting LOST_AND_FOUND:
 - Extract: WHAT (item), WHERE (location if mentioned), WHEN (timeline if mentioned)
 - Color/Brand details in citations
 - Urgency: checkout today = urgent
+
+BOOKING INQUIRY & CONFIRMATION EXAMPLES (CRITICAL - must detect booking enquiries):
+22. Guest: ""What bookings do I have?"" -> intents: [{{intent: BOOKING_INQUIRY, category: OTHER, entityType: ""booking list"", originalText: ""What bookings do I have?"", citations: {{intent: ""What bookings""}}, assumptions: [""User wants to see all their bookings""], uncertainties: []}}]
+23. Guest: ""Do I have a dinner reservation tonight?"" -> intents: [{{intent: BOOKING_CONFIRMATION, category: DINING, entityType: ""dinner reservation"", originalText: ""Do I have a dinner reservation tonight?"", citations: {{intent: ""Do I have"", entity: ""dinner reservation"", timeframe: ""tonight""}}}}]
+24. Guest: ""Did I book a massage?"" -> intents: [{{intent: BOOKING_CONFIRMATION, category: OTHER, entityType: ""massage booking"", originalText: ""Did I book a massage?"", citations: {{intent: ""Did I book"", entity: ""massage""}}}}]
+25. Guest: ""Can you check my reservations?"" -> intents: [{{intent: BOOKING_INQUIRY, category: OTHER, entityType: ""reservations list"", originalText: ""Can you check my reservations?""}}]
+26. Guest: ""What time is my dinner booking?"" -> intents: [{{intent: BOOKING_INQUIRY, category: DINING, entityType: ""dinner booking time"", originalText: ""What time is my dinner booking?""}}]
+
+BOOKING CHANGE EXAMPLES (CRITICAL - must distinguish from BOOKING_INQUIRY):
+27. Guest: ""Can I change my dinner booking to 8pm instead?"" -> intents: [{{intent: BOOKING_CHANGE, category: DINING, entityType: ""dinner reservation"", originalText: ""Can I change my dinner booking to 8pm instead?"", citations: {{intent: ""change my dinner booking"", newTime: ""8pm""}}}}]
+28. Guest: ""I want to modify my spa appointment"" -> intents: [{{intent: BOOKING_CHANGE, category: OTHER, entityType: ""spa appointment"", originalText: ""I want to modify my spa appointment""}}]
+29. Guest: ""Can I cancel my massage?"" -> intents: [{{intent: BOOKING_CHANGE, category: OTHER, entityType: ""massage booking"", originalText: ""Can I cancel my massage?"", citations: {{intent: ""cancel my massage""}}}}]
+
+BOOKING INTENT CLASSIFICATION RULES:
+- Use BOOKING_INQUIRY when guest asks ""what bookings..."", ""do I have..."", ""show me..."", ""check my...""
+- Use BOOKING_CONFIRMATION when guest asks ""do I have [specific booking]?"", ""did I book..."", ""is my [booking] confirmed?""
+- Use BOOKING_CHANGE when guest says ""change..."", ""modify..."", ""cancel..."", ""update..."", ""move..."" regarding existing bookings
+- Use REQUEST_SERVICE when guest is CREATING a NEW booking (e.g., ""Can I book a table for 4 tonight?"")
 
 Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.";
 

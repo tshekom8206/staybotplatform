@@ -85,7 +85,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Agent", (string)null);
+                    b.ToTable("Agent");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.AgentSession", b =>
@@ -132,7 +132,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("AgentSession", (string)null);
+                    b.ToTable("AgentSession");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.AuditLog", b =>
@@ -176,7 +176,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("AuditLogs", (string)null);
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.Booking", b =>
@@ -278,7 +278,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Bookings", (string)null);
+                    b.ToTable("Bookings");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.BookingChangeHistory", b =>
@@ -329,7 +329,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("BookingChangeHistory", (string)null);
+                    b.ToTable("BookingChangeHistory");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.BookingModification", b =>
@@ -427,7 +427,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("BookingModifications", (string)null);
+                    b.ToTable("BookingModifications");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.BroadcastMessage", b =>
@@ -483,7 +483,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("BroadcastMessages", (string)null);
+                    b.ToTable("BroadcastMessages");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.BroadcastRecipient", b =>
@@ -531,7 +531,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("ConversationId");
 
-                    b.ToTable("BroadcastRecipients", (string)null);
+                    b.ToTable("BroadcastRecipients");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.BroadcastTemplate", b =>
@@ -588,7 +588,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("BroadcastTemplates", (string)null);
+                    b.ToTable("BroadcastTemplates");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.BusinessInfo", b =>
@@ -635,7 +635,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("BusinessInfo", (string)null);
+                    b.ToTable("BusinessInfo");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ConciergeService", b =>
@@ -696,7 +696,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ConciergeServices", (string)null);
+                    b.ToTable("ConciergeServices");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.Conversation", b =>
@@ -763,7 +763,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId", "WaUserPhone");
 
-                    b.ToTable("Conversations", (string)null);
+                    b.ToTable("Conversations");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ConversationFlow", b =>
@@ -811,7 +811,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ConversationFlows", (string)null);
+                    b.ToTable("ConversationFlows");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ConversationStateRecord", b =>
@@ -860,7 +860,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ConversationStateRecords", (string)null);
+                    b.ToTable("ConversationStateRecords");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ConversationTransfer", b =>
@@ -922,7 +922,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId", "Status");
 
-                    b.ToTable("ConversationTransfers", (string)null);
+                    b.ToTable("ConversationTransfers");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.EmergencyContact", b =>
@@ -981,7 +981,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("EmergencyContacts", (string)null);
+                    b.ToTable("EmergencyContacts");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.EmergencyContactAttempt", b =>
@@ -1035,7 +1035,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("EmergencyContactAttempts", (string)null);
+                    b.ToTable("EmergencyContactAttempts");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.EmergencyIncident", b =>
@@ -1108,7 +1108,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("EmergencyIncidents", (string)null);
+                    b.ToTable("EmergencyIncidents");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.EmergencyProtocol", b =>
@@ -1177,7 +1177,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("EmergencyProtocols", (string)null);
+                    b.ToTable("EmergencyProtocols");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.EmergencyType", b =>
@@ -1230,7 +1230,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("EmergencyTypes", (string)null);
+                    b.ToTable("EmergencyTypes");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.FAQ", b =>
@@ -1275,7 +1275,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("FAQs", (string)null);
+                    b.ToTable("FAQs");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.FlowStep", b =>
@@ -1325,7 +1325,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("ConversationFlowId");
 
-                    b.ToTable("FlowSteps", (string)null);
+                    b.ToTable("FlowSteps");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.FoundItem", b =>
@@ -1403,7 +1403,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("FoundItems", (string)null);
+                    b.ToTable("FoundItems");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.GuestBusinessMetrics", b =>
@@ -1467,7 +1467,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId", "TotalStays");
 
-                    b.ToTable("GuestBusinessMetrics", (string)null);
+                    b.ToTable("GuestBusinessMetrics");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.GuestRating", b =>
@@ -1541,7 +1541,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId", "Rating");
 
-                    b.ToTable("GuestRatings", (string)null);
+                    b.ToTable("GuestRatings");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.GuideItem", b =>
@@ -1584,7 +1584,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("GuideItems", (string)null);
+                    b.ToTable("GuideItems");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.HotelCategory", b =>
@@ -1613,7 +1613,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("HotelCategories", (string)null);
+                    b.ToTable("HotelCategories");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.HotelFeature", b =>
@@ -1645,7 +1645,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("HotelFeatures", (string)null);
+                    b.ToTable("HotelFeatures");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.HotelInfo", b =>
@@ -1790,7 +1790,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("HotelInfos", (string)null);
+                    b.ToTable("HotelInfos");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.InformationItem", b =>
@@ -1846,7 +1846,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("InformationItems", (string)null);
+                    b.ToTable("InformationItems");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.KnowledgeBaseChunk", b =>
@@ -1893,7 +1893,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("KnowledgeBaseChunks", (string)null);
+                    b.ToTable("KnowledgeBaseChunks");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.LocalProvider", b =>
@@ -1969,7 +1969,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("LocalProviders", (string)null);
+                    b.ToTable("LocalProviders");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.LostAndFoundCategory", b =>
@@ -2018,7 +2018,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("LostAndFoundCategories", (string)null);
+                    b.ToTable("LostAndFoundCategories");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.LostAndFoundMatch", b =>
@@ -2082,7 +2082,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("VerifiedBy");
 
-                    b.ToTable("LostAndFoundMatches", (string)null);
+                    b.ToTable("LostAndFoundMatches");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.LostAndFoundNotification", b =>
@@ -2154,7 +2154,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("LostAndFoundNotifications", (string)null);
+                    b.ToTable("LostAndFoundNotifications");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.LostItem", b =>
@@ -2237,7 +2237,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("LostItems", (string)null);
+                    b.ToTable("LostItems");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.MaintenanceHistory", b =>
@@ -2298,7 +2298,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("MaintenanceHistory", (string)null);
+                    b.ToTable("MaintenanceHistory");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.MaintenanceItem", b =>
@@ -2366,7 +2366,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("MaintenanceItems", (string)null);
+                    b.ToTable("MaintenanceItems");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.MaintenanceRequest", b =>
@@ -2448,7 +2448,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("MaintenanceRequests", (string)null);
+                    b.ToTable("MaintenanceRequests");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.MenuCategory", b =>
@@ -2491,7 +2491,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("MenuCategories", (string)null);
+                    b.ToTable("MenuCategories");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.MenuItem", b =>
@@ -2567,7 +2567,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("MenuItems", (string)null);
+                    b.ToTable("MenuItems");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.MenuSpecial", b =>
@@ -2629,7 +2629,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("MenuSpecials", (string)null);
+                    b.ToTable("MenuSpecials");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.Message", b =>
@@ -2656,6 +2656,10 @@ namespace Hostr.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
+
+                    b.Property<string>("IntentClassification")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("MessageType")
                         .IsRequired()
@@ -2684,7 +2688,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId", "ConversationId", "CreatedAt");
 
-                    b.ToTable("Messages", (string)null);
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.PostStaySurvey", b =>
@@ -2795,7 +2799,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId", "SentSuccessfully");
 
-                    b.ToTable("PostStaySurveys", (string)null);
+                    b.ToTable("PostStaySurveys");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.PushSubscription", b =>
@@ -2840,7 +2844,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("PushSubscriptions", (string)null);
+                    b.ToTable("PushSubscriptions");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.QuickReply", b =>
@@ -2872,7 +2876,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("QuickReplies", (string)null);
+                    b.ToTable("QuickReplies");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.Rating", b =>
@@ -2934,7 +2938,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId", "Source");
 
-                    b.ToTable("Ratings", (string)null);
+                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.RequestItem", b =>
@@ -3027,7 +3031,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("RequestItems", (string)null);
+                    b.ToTable("RequestItems");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.RequestItemRule", b =>
@@ -3115,7 +3119,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex(new[] { "TenantId" }, "IX_RequestItemRules_Tenant");
 
-                    b.ToTable("RequestItemRules", (string)null);
+                    b.ToTable("RequestItemRules");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ResponseTemplate", b =>
@@ -3164,7 +3168,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ResponseTemplates", (string)null);
+                    b.ToTable("ResponseTemplates");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ResponseVariable", b =>
@@ -3201,7 +3205,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ResponseVariables", (string)null);
+                    b.ToTable("ResponseVariables");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.Service", b =>
@@ -3289,7 +3293,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Services", (string)null);
+                    b.ToTable("Services");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ServiceBusinessRule", b =>
@@ -3364,7 +3368,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex(new[] { "TenantId" }, "IX_ServiceBusinessRules_Tenant");
 
-                    b.ToTable("ServiceBusinessRules", (string)null);
+                    b.ToTable("ServiceBusinessRules");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ServiceCategory", b =>
@@ -3409,7 +3413,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ServiceCategories", (string)null);
+                    b.ToTable("ServiceCategories");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ServiceDepartmentMapping", b =>
@@ -3472,7 +3476,7 @@ namespace Hostr.Api.Migrations
                     b.HasIndex("TenantId", "ServiceCategory")
                         .IsUnique();
 
-                    b.ToTable("ServiceDepartmentMappings", (string)null);
+                    b.ToTable("ServiceDepartmentMappings");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.ServiceIcon", b =>
@@ -3505,7 +3509,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ServiceIcons", (string)null);
+                    b.ToTable("ServiceIcons");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.StaffTask", b =>
@@ -3625,7 +3629,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("StaffTasks", (string)null);
+                    b.ToTable("StaffTasks");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.StockEvent", b =>
@@ -3661,7 +3665,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("StockEvents", (string)null);
+                    b.ToTable("StockEvents");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.SupportedCurrency", b =>
@@ -3694,7 +3698,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SupportedCurrencies", (string)null);
+                    b.ToTable("SupportedCurrencies");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.SupportedLanguage", b =>
@@ -3723,7 +3727,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SupportedLanguages", (string)null);
+                    b.ToTable("SupportedLanguages");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.Tenant", b =>
@@ -3777,7 +3781,7 @@ namespace Hostr.Api.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Tenants", (string)null);
+                    b.ToTable("Tenants");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.TenantDepartment", b =>
@@ -3832,7 +3836,7 @@ namespace Hostr.Api.Migrations
                     b.HasIndex("TenantId", "DepartmentName")
                         .IsUnique();
 
-                    b.ToTable("TenantDepartments", (string)null);
+                    b.ToTable("TenantDepartments");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.UpsellItem", b =>
@@ -3843,9 +3847,9 @@ namespace Hostr.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Categories")
+                    b.Property<string[]>("Categories")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text[]");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -3882,7 +3886,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("UpsellItems", (string)null);
+                    b.ToTable("UpsellItems");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.UpsellMetric", b =>
@@ -3948,7 +3952,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("UpsellMetrics", (string)null);
+                    b.ToTable("UpsellMetrics");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.UsageDaily", b =>
@@ -3990,7 +3994,7 @@ namespace Hostr.Api.Migrations
                     b.HasIndex("TenantId", "Date")
                         .IsUnique();
 
-                    b.ToTable("UsageDaily", (string)null);
+                    b.ToTable("UsageDaily");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.User", b =>
@@ -4102,7 +4106,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserNotificationReads", (string)null);
+                    b.ToTable("UserNotificationReads");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.UserTenant", b =>
@@ -4127,7 +4131,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("UserTenants", (string)null);
+                    b.ToTable("UserTenants");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.WelcomeMessage", b =>
@@ -4170,7 +4174,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("WelcomeMessages", (string)null);
+                    b.ToTable("WelcomeMessages");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.WhatsAppNumber", b =>
@@ -4213,7 +4217,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("WhatsAppNumbers", (string)null);
+                    b.ToTable("WhatsAppNumbers");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.WhatsAppTemplate", b =>
@@ -4260,7 +4264,7 @@ namespace Hostr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("WhatsAppTemplates", (string)null);
+                    b.ToTable("WhatsAppTemplates");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>

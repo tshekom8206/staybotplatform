@@ -65,9 +65,12 @@ public class Message
     
     public int? TokensPrompt { get; set; }
     public int? TokensCompletion { get; set; }
-    
+
+    [MaxLength(50)]
+    public string? IntentClassification { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
     // Navigation properties
     public virtual Tenant Tenant { get; set; } = null!;
     public virtual Conversation Conversation { get; set; } = null!;
