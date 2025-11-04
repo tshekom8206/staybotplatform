@@ -433,7 +433,7 @@ Analyze this message and respond with the following JSON structure:
 {{
     ""intents"": [
         {{
-            ""intent"": ""REQUEST_ITEM | REQUEST_SERVICE | INQUIRY | COMPLAINT | BOOKING_CHANGE | BOOKING_INQUIRY | BOOKING_CONFIRMATION | GREETING | LOST_AND_FOUND | OTHER"",
+            ""intent"": ""REQUEST_ITEM | REQUEST_SERVICE | INQUIRY | COMPLAINT | BOOKING_CHANGE | BOOKING_INQUIRY | BOOKING_CONFIRMATION | GREETING | ACKNOWLEDGMENT | LOST_AND_FOUND | CANCELLATION | CHECK_IN_OUT | LATE_CHECKOUT | DIRECTIONS | FEEDBACK | RECOMMENDATION | OTHER"",
             ""category"": ""BEVERAGE | FOOD | HOUSEKEEPING | MAINTENANCE | AMENITIES | DINING | LOST_ITEMS | OTHER"",
             ""specificityLevel"": ""SPECIFIC | VAGUE | UNCLEAR"",
             ""availableOptions"": [""List ONLY the actual available options from hotel configuration that match the request""],
@@ -518,6 +518,47 @@ CRITICAL ANALYSIS RULES:
     - Examples: ""hi"", ""hello"", ""hey"", ""good morning"", ""greetings"", ""👋"", ""hi there"", ""hola"", ""bonjour"", ""guten tag""
     - Include multilingual greetings and emoji-based greetings
     - Do NOT classify questions like ""how are you doing?"" as GREETING if they seem like service inquiries
+12. ACKNOWLEDGMENT intent: Thank you messages, confirmations, or polite responses to bot actions should be classified as ACKNOWLEDGMENT
+    - Examples: ""thanks"", ""thank you"", ""perfect"", ""great"", ""sounds good"", ""that works"", ""okay"", ""ok"", ""sure"", ""alright"", ""appreciate it"", ""wonderful""
+    - Combined acknowledgments: ""Sure, that would be great!"", ""Perfect, thanks!"", ""Okay, thank you!"", ""Yes, that's great!""
+    - Include expressions of gratitude, satisfaction, or agreement in response to bot messages
+    - Do NOT classify as ACKNOWLEDGMENT if the message contains an actual request (e.g., ""Thanks! Can I also get towels?"" should be REQUEST_ITEM)
+    - ACKNOWLEDGMENT messages typically follow bot confirmations or completions of actions
+13. CANCELLATION intent: Guest wants to cancel an existing booking, reservation, or service request
+    - Examples: ""I need to cancel my spa booking"", ""Cancel my dinner reservation"", ""I can't make it tonight"", ""Please cancel my massage""
+    - Trigger phrases: ""cancel"", ""need to cancel"", ""want to cancel"", ""can't make it"", ""won't be able to""
+    - Extract: WHAT (service/booking type), WHEN (which booking if multiple exist)
+    - Do NOT classify as CANCELLATION if asking about cancellation POLICY (use INQUIRY instead)
+    - CANCELLATION is for actual cancellation requests, not policy questions
+14. CHECK_IN_OUT intent: Guest asking about check-in or check-out times, procedures (general inquiries, NOT specific late checkout requests)
+    - Examples: ""What time is check-in?"", ""When do I need to check out?"", ""Can I get early check-in?"", ""What's the standard check-out time?""
+    - Trigger phrases: ""check in"", ""check-in"", ""check out"", ""checkout"", ""early check-in"", ""arrival time"", ""departure time""
+    - Extract: TYPE (check-in vs check-out)
+    - Include questions about check-in/out procedures and requirements
+    - Do NOT use for specific late checkout requests with time mentioned (use LATE_CHECKOUT instead)
+15. LATE_CHECKOUT intent: Guest specifically requesting late checkout, asking if late checkout is available, or requesting a specific checkout time later than standard
+    - Examples: ""Can I checkout at 2pm?"", ""Is late checkout available?"", ""I need to checkout at 3pm"", ""Can we leave later?"", ""Extend checkout time""
+    - Trigger phrases: ""late checkout"", ""checkout at [time]"", ""stay until [time]"", ""extend checkout"", ""leave later""
+    - Extract: REQUESTED_TIME (specific checkout time if mentioned), IS_INQUIRY (asking availability vs requesting specific time)
+    - CRITICAL: This requires front desk approval - create StaffTask for approval workflow
+    - Distinguish from CHECK_IN_OUT: LATE_CHECKOUT is for SPECIFIC late requests, CHECK_IN_OUT is for GENERAL time inquiries
+16. DIRECTIONS intent: Guest asking for directions, location information, or how to find hotel facilities/amenities
+    - Examples: ""Where is the pool?"", ""How do I get to the restaurant?"", ""Where's the gym located?"", ""Directions to the spa please""
+    - Trigger phrases: ""where is"", ""where's"", ""how do I get to"", ""directions to"", ""location of"", ""how to find""
+    - Extract: DESTINATION (what facility/amenity), CURRENT_LOCATION (if mentioned)
+    - Include requests for maps, navigation, or finding specific areas
+16. FEEDBACK intent: Guest providing positive or negative feedback, reviews, compliments, or complaints about their experience
+    - Examples: ""The room is amazing!"", ""Service was terrible"", ""Love the breakfast!"", ""My room is dirty""
+    - Sentiment detection: POSITIVE (compliments, praise), NEGATIVE (complaints, issues), NEUTRAL (observations)
+    - Extract: SUBJECT (what they're commenting on), SENTIMENT (positive/negative/neutral), SEVERITY (for negative feedback)
+    - Do NOT confuse with COMPLAINT intent (COMPLAINT is for specific issues needing immediate action, FEEDBACK is for general reviews/comments)
+    - FEEDBACK can be proactive reviews; COMPLAINT is always about a problem needing resolution
+17. RECOMMENDATION intent: Guest asking for suggestions, recommendations, or advice about hotel services, dining, or amenities
+    - Examples: ""What do you recommend for dinner?"", ""Best spa treatment?"", ""Any good drinks?"", ""What should I try?""
+    - Trigger phrases: ""recommend"", ""suggest"", ""what should I"", ""what's good"", ""what do you recommend"", ""any suggestions""
+    - Extract: CATEGORY (dining/spa/activities/etc), PREFERENCES (if mentioned like dietary restrictions, occasion)
+    - Only recommend hotel property amenities - NEVER external restaurants or attractions
+    - Use context: time of day, guest history, special occasions
 
 EXAMPLES:
 
@@ -526,6 +567,13 @@ SINGLE-INTENT EXAMPLES:
 2. Guest: ""still water"", Config has: [""Still Water""] -> intents: [{{intent: REQUEST_ITEM, entityType: ""still water"", availableOptions: [""Still Water""]}}], isAmbiguous: false
 3. Guest: ""help"" -> intents: [{{intent: INQUIRY, entityType: ""assistance"", originalText: ""help""}}], clarificationNeeded.question: ""I'd be happy to assist you! What can I help you with today?""
 4. Guest: ""Hi"" -> intents: [{{intent: GREETING, entityType: ""greeting"", originalText: ""Hi""}}], isAmbiguous: false
+
+ACKNOWLEDGMENT EXAMPLES (CRITICAL - must detect gratitude/confirmation messages):
+4a. Guest: ""Thank you!"" -> intents: [{{intent: ACKNOWLEDGMENT, category: OTHER, entityType: ""gratitude"", originalText: ""Thank you!"", confidence: 0.95}}], isAmbiguous: false
+4b. Guest: ""Sure, that would be great! Thanks!"" -> intents: [{{intent: ACKNOWLEDGMENT, category: OTHER, entityType: ""confirmation and gratitude"", originalText: ""Sure, that would be great! Thanks!"", confidence: 0.95}}], isAmbiguous: false
+4c. Guest: ""Perfect, thanks!"" -> intents: [{{intent: ACKNOWLEDGMENT, category: OTHER, entityType: ""satisfaction and gratitude"", originalText: ""Perfect, thanks!"", confidence: 0.95}}], isAmbiguous: false
+4d. Guest: ""Okay"" -> intents: [{{intent: ACKNOWLEDGMENT, category: OTHER, entityType: ""confirmation"", originalText: ""Okay"", confidence: 0.9}}], isAmbiguous: false
+4e. Guest: ""Sounds good!"" -> intents: [{{intent: ACKNOWLEDGMENT, category: OTHER, entityType: ""agreement"", originalText: ""Sounds good!"", confidence: 0.95}}], isAmbiguous: false
 
 MULTI-INTENT EXAMPLES (CRITICAL):
 5. Guest: ""I need towels and also what time is breakfast?"" -> intents: [
@@ -581,11 +629,55 @@ BOOKING CHANGE EXAMPLES (CRITICAL - must distinguish from BOOKING_INQUIRY):
 28. Guest: ""I want to modify my spa appointment"" -> intents: [{{intent: BOOKING_CHANGE, category: OTHER, entityType: ""spa appointment"", originalText: ""I want to modify my spa appointment""}}]
 29. Guest: ""Can I cancel my massage?"" -> intents: [{{intent: BOOKING_CHANGE, category: OTHER, entityType: ""massage booking"", originalText: ""Can I cancel my massage?"", citations: {{intent: ""cancel my massage""}}}}]
 
+CANCELLATION EXAMPLES (CRITICAL - must detect cancellation requests):
+30. Guest: ""I need to cancel my spa booking"" -> intents: [{{intent: CANCELLATION, category: OTHER, entityType: ""spa booking"", originalText: ""I need to cancel my spa booking"", confidence: 0.95}}]
+31. Guest: ""Cancel my dinner reservation please"" -> intents: [{{intent: CANCELLATION, category: DINING, entityType: ""dinner reservation"", originalText: ""Cancel my dinner reservation please"", confidence: 0.95}}]
+32. Guest: ""I can't make it tonight"" -> intents: [{{intent: CANCELLATION, category: OTHER, entityType: ""booking"", originalText: ""I can't make it tonight"", confidence: 0.85}}]
+33. Guest: ""Please cancel my massage for tomorrow"" -> intents: [{{intent: CANCELLATION, category: OTHER, entityType: ""massage"", originalText: ""Please cancel my massage for tomorrow"", confidence: 0.95}}]
+34. Guest: ""Won't be able to attend dinner tonight"" -> intents: [{{intent: CANCELLATION, category: DINING, entityType: ""dinner"", originalText: ""Won't be able to attend dinner tonight"", confidence: 0.9}}]
+
+CHECK_IN_OUT EXAMPLES (CRITICAL - must detect check-in/out inquiries):
+35. Guest: ""What time is check-in?"" -> intents: [{{intent: CHECK_IN_OUT, category: OTHER, entityType: ""check-in time"", originalText: ""What time is check-in?"", confidence: 0.95}}]
+36. Guest: ""When do I need to check out?"" -> intents: [{{intent: CHECK_IN_OUT, category: OTHER, entityType: ""check-out time"", originalText: ""When do I need to check out?"", confidence: 0.95}}]
+37. Guest: ""Can I get early check-in?"" -> intents: [{{intent: CHECK_IN_OUT, category: OTHER, entityType: ""early check-in request"", originalText: ""Can I get early check-in?"", confidence: 0.95}}]
+38. Guest: ""What's the arrival time?"" -> intents: [{{intent: CHECK_IN_OUT, category: OTHER, entityType: ""check-in time"", originalText: ""What's the arrival time?"", confidence: 0.9}}]
+
+LATE_CHECKOUT EXAMPLES (CRITICAL - must detect late checkout requests specifically):
+39. Guest: ""Can I checkout at 2pm instead?"" -> intents: [{{intent: LATE_CHECKOUT, category: OTHER, entityType: ""late checkout request"", originalText: ""Can I checkout at 2pm instead?"", confidence: 0.95}}]
+40. Guest: ""Is late checkout available?"" -> intents: [{{intent: LATE_CHECKOUT, category: OTHER, entityType: ""late checkout availability"", originalText: ""Is late checkout available?"", confidence: 0.95}}]
+41. Guest: ""I need to checkout at 3pm"" -> intents: [{{intent: LATE_CHECKOUT, category: OTHER, entityType: ""late checkout time request"", originalText: ""I need to checkout at 3pm"", confidence: 0.95}}]
+42. Guest: ""Can I stay until 1pm tomorrow?"" -> intents: [{{intent: LATE_CHECKOUT, category: OTHER, entityType: ""late checkout request"", originalText: ""Can I stay until 1pm tomorrow?"", confidence: 0.95}}]
+43. Guest: ""Late checkout possible?"" -> intents: [{{intent: LATE_CHECKOUT, category: OTHER, entityType: ""late checkout inquiry"", originalText: ""Late checkout possible?"", confidence: 0.95}}]
+44. Guest: ""I'd like to extend my checkout time to 4pm"" -> intents: [{{intent: LATE_CHECKOUT, category: OTHER, entityType: ""checkout extension request"", originalText: ""I'd like to extend my checkout time to 4pm"", confidence: 0.95}}]
+45. Guest: ""Can we leave later than normal?"" -> intents: [{{intent: LATE_CHECKOUT, category: OTHER, entityType: ""late checkout request"", originalText: ""Can we leave later than normal?"", confidence: 0.9}}]
+
+DIRECTIONS EXAMPLES (CRITICAL - must detect location/direction requests):
+40. Guest: ""Where is the pool?"" -> intents: [{{intent: DIRECTIONS, category: AMENITIES, entityType: ""pool"", originalText: ""Where is the pool?"", confidence: 0.95}}]
+41. Guest: ""How do I get to the restaurant?"" -> intents: [{{intent: DIRECTIONS, category: DINING, entityType: ""restaurant"", originalText: ""How do I get to the restaurant?"", confidence: 0.95}}]
+42. Guest: ""Where's the gym located?"" -> intents: [{{intent: DIRECTIONS, category: AMENITIES, entityType: ""gym"", originalText: ""Where's the gym located?"", confidence: 0.95}}]
+43. Guest: ""Directions to the spa please"" -> intents: [{{intent: DIRECTIONS, category: AMENITIES, entityType: ""spa"", originalText: ""Directions to the spa please"", confidence: 0.95}}]
+44. Guest: ""How do I find the conference room?"" -> intents: [{{intent: DIRECTIONS, category: AMENITIES, entityType: ""conference room"", originalText: ""How do I find the conference room?"", confidence: 0.95}}]
+
+FEEDBACK EXAMPLES (CRITICAL - must detect feedback with sentiment):
+45. Guest: ""The room is amazing!"" -> intents: [{{intent: FEEDBACK, category: OTHER, entityType: ""room quality|POSITIVE"", originalText: ""The room is amazing!"", confidence: 0.95}}]
+46. Guest: ""Service was terrible"" -> intents: [{{intent: FEEDBACK, category: OTHER, entityType: ""service quality|NEGATIVE"", originalText: ""Service was terrible"", confidence: 0.95}}]
+47. Guest: ""Love the breakfast!"" -> intents: [{{intent: FEEDBACK, category: DINING, entityType: ""breakfast|POSITIVE"", originalText: ""Love the breakfast!"", confidence: 0.95}}]
+48. Guest: ""My room is dirty"" -> intents: [{{intent: FEEDBACK, category: HOUSEKEEPING, entityType: ""room cleanliness|NEGATIVE"", originalText: ""My room is dirty"", confidence: 0.95}}]
+49. Guest: ""Everything was perfect, thank you!"" -> intents: [{{intent: FEEDBACK, category: OTHER, entityType: ""overall experience|POSITIVE"", originalText: ""Everything was perfect, thank you!"", confidence: 0.95}}]
+
+RECOMMENDATION EXAMPLES (CRITICAL - must detect recommendation requests):
+50. Guest: ""What do you recommend for dinner?"" -> intents: [{{intent: RECOMMENDATION, category: DINING, entityType: ""dinner recommendation"", originalText: ""What do you recommend for dinner?"", confidence: 0.95}}]
+51. Guest: ""Best spa treatment?"" -> intents: [{{intent: RECOMMENDATION, category: OTHER, entityType: ""spa treatment recommendation"", originalText: ""Best spa treatment?"", confidence: 0.95}}]
+52. Guest: ""Any good drinks?"" -> intents: [{{intent: RECOMMENDATION, category: BEVERAGE, entityType: ""drink recommendation"", originalText: ""Any good drinks?"", confidence: 0.95}}]
+53. Guest: ""What should I try at the restaurant?"" -> intents: [{{intent: RECOMMENDATION, category: DINING, entityType: ""restaurant menu recommendation"", originalText: ""What should I try at the restaurant?"", confidence: 0.95}}]
+54. Guest: ""Suggestions for activities?"" -> intents: [{{intent: RECOMMENDATION, category: AMENITIES, entityType: ""activity recommendation"", originalText: ""Suggestions for activities?"", confidence: 0.95}}]
+
 BOOKING INTENT CLASSIFICATION RULES:
 - Use BOOKING_INQUIRY when guest asks ""what bookings..."", ""do I have..."", ""show me..."", ""check my...""
 - Use BOOKING_CONFIRMATION when guest asks ""do I have [specific booking]?"", ""did I book..."", ""is my [booking] confirmed?""
 - Use BOOKING_CHANGE when guest says ""change..."", ""modify..."", ""cancel..."", ""update..."", ""move..."" regarding existing bookings
 - Use REQUEST_SERVICE when guest is CREATING a NEW booking (e.g., ""Can I book a table for 4 tonight?"")
+- Use CANCELLATION when guest wants to CANCEL (not change) a booking (e.g., ""Cancel my dinner"", ""I can't make it"")
 
 Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.";
 
@@ -802,13 +894,20 @@ Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.
             }
             else if (intent.Intent == "INQUIRY")
             {
-                // Check if this is an amenities/services list inquiry
+                // Check if this is an amenities/services list inquiry OR dining/menu inquiry
                 if (intent.Category == "AMENITIES" ||
+                    intent.Category == "DINING" ||
                     intent.EntityType?.Contains("amenities") == true ||
                     intent.EntityType?.Contains("services") == true ||
-                    intent.EntityType?.Contains("list") == true)
+                    intent.EntityType?.Contains("list") == true ||
+                    intent.EntityType?.Contains("menu") == true ||
+                    intent.EntityType?.Contains("vegetarian") == true ||
+                    intent.EntityType?.Contains("vegan") == true ||
+                    intent.EntityType?.Contains("food") == true ||
+                    intent.EntityType?.Contains("price") == true ||
+                    intent.EntityType?.Contains("pricing") == true)
                 {
-                    // Generate proper amenities list response
+                    // Generate proper inquiry response (amenities, menu, dining, etc.)
                     result.WarmResponse = await GenerateInquiryResponseAsync(intent, hotelContext);
                 }
                 else
@@ -820,6 +919,20 @@ Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.
             else if (intent.Intent == "GREETING")
             {
                 result.WarmResponse = "Hello! Welcome to our hotel. How may I assist you today?";
+            }
+            else if (intent.Intent == "OTHER" &&
+                     (intent.EntityType?.Contains("farewell", StringComparison.OrdinalIgnoreCase) == true ||
+                      intent.EntityType?.Contains("goodbye", StringComparison.OrdinalIgnoreCase) == true ||
+                      intent.EntityType?.Contains("bye", StringComparison.OrdinalIgnoreCase) == true ||
+                      intent.EntityType?.Contains("closing", StringComparison.OrdinalIgnoreCase) == true ||
+                      intent.EntityType?.Contains("remark", StringComparison.OrdinalIgnoreCase) == true ||
+                      originalMessage.ToLower().Contains("bye") ||
+                      originalMessage.ToLower().Contains("goodbye") ||
+                      originalMessage.ToLower().Contains("see you") ||
+                      originalMessage.ToLower().Contains("take care")))
+            {
+                // Handle farewells gracefully
+                result.WarmResponse = "Thank you for chatting with us! If you need anything else, feel free to reach out. Have a wonderful day!";
             }
             else
             {
@@ -1157,12 +1270,16 @@ Generate a natural, warm response:";
 
         // Smoking Policy Detection (with edge cases)
         var smokingKeywords = new[] {
-            "smok", "cigarette", "cigar", "vape", "vaping", "e-cigarette", "tobacco",
+            "cigarette", "cigar", "vape", "vaping", "e-cigarette", "tobacco",
             "smoking room", "can i smoke", "is smoking allowed", "smoke free", "non-smoking",
             "designated smoking", "where can i smoke", "smoking area", "ash tray"
         };
 
-        if (smokingKeywords.Any(k => messageLower.Contains(k)))
+        // Special handling for "smok" and "smoke" - only match as whole words to avoid false positives like "smoked salmon"
+        var hasSmokingKeyword = System.Text.RegularExpressions.Regex.IsMatch(messageLower, @"\b(smok|smoke|smoking)\b");
+        var hasOtherSmokingKeyword = smokingKeywords.Any(k => messageLower.Contains(k));
+
+        if (hasSmokingKeyword || hasOtherSmokingKeyword)
         {
             if (!string.IsNullOrEmpty(hotelContext.SmokingPolicy))
             {
@@ -1176,12 +1293,16 @@ Generate a natural, warm response:";
 
         // Pet Policy Detection (with edge cases)
         var petKeywords = new[] {
-            "pet", "dog", "cat", "animal", "puppy", "kitten", "service animal",
+            "puppy", "kitten", "service animal",
             "emotional support", "bring my dog", "bring my cat", "pet friendly",
             "allow pets", "pet fee", "pet deposit", "dog friendly", "can i bring"
         };
 
-        if (petKeywords.Any(k => messageLower.Contains(k)))
+        // Use word boundary matching for short keywords that could match common words
+        var hasPetKeyword = System.Text.RegularExpressions.Regex.IsMatch(messageLower, @"\b(pet|dog|cat|animal)\b");
+        var hasOtherPetKeyword = petKeywords.Any(k => messageLower.Contains(k));
+
+        if (hasPetKeyword || hasOtherPetKeyword)
         {
             if (!string.IsNullOrEmpty(hotelContext.PetPolicy))
             {
@@ -1195,12 +1316,16 @@ Generate a natural, warm response:";
 
         // Cancellation Policy Detection (with edge cases)
         var cancellationKeywords = new[] {
-            "cancel", "cancellation", "refund", "change booking", "modify reservation",
+            "cancel", "cancellation", "change booking", "modify reservation",
             "cancel my booking", "cancel reservation", "cancellation fee", "free cancellation",
             "cancel my stay", "cancellation policy", "reschedule", "postpone"
         };
 
-        if (cancellationKeywords.Any(k => messageLower.Contains(k)))
+        // Check if this is explicitly about cancellation policy
+        var isExplicitCancellationInquiry = cancellationKeywords.Any(k => messageLower.Contains(k));
+
+        // Only return cancellation policy if the message explicitly asks about it
+        if (isExplicitCancellationInquiry)
         {
             if (!string.IsNullOrEmpty(hotelContext.CancellationPolicy))
             {
@@ -1215,11 +1340,15 @@ Generate a natural, warm response:";
         // Child Policy Detection (with edge cases)
         var childKeywords = new[] {
             "child", "children", "kid", "kids", "baby", "infant", "toddler",
-            "crib", "cot", "child bed", "kids stay free", "age", "minor",
+            "crib", "cot", "child bed", "kids stay free", "minor",
             "family room", "children allowed", "kids meal", "babysitting"
         };
 
-        if (childKeywords.Any(k => messageLower.Contains(k)))
+        // Special handling for "age" - only match as whole word to avoid false positives like "manager", "package", etc.
+        var hasAgeKeyword = System.Text.RegularExpressions.Regex.IsMatch(messageLower, @"\bage\b");
+        var hasChildKeyword = childKeywords.Any(k => messageLower.Contains(k));
+
+        if (hasChildKeyword || hasAgeKeyword)
         {
             if (!string.IsNullOrEmpty(hotelContext.ChildPolicy))
             {

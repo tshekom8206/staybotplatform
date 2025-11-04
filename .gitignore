@@ -78,3 +78,11 @@ deploy-*.ps1
 # Worker outputs
 workers_output.log
 adminui_output.log
+ 
+# Allow docs manual and screenshots
+!docs/
+!docs/StayBot-User-Guide.md
+!docs/screenshots/
+!docs/screenshots/**
+!docs/manual/
+!docs/manual/**

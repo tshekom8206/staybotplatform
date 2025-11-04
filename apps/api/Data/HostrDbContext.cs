@@ -124,6 +124,14 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     // User Notification Read tracking
     public DbSet<UserNotificationRead> UserNotificationReads { get; set; }
 
+    // Intent Management models
+    public DbSet<PropertyDirection> PropertyDirections { get; set; }
+    public DbSet<IntentSetting> IntentSettings { get; set; }
+
+    // NEW: Tenant Settings and Maintenance Urgency Rules
+    public DbSet<TenantSetting> TenantSettings { get; set; }
+    public DbSet<MaintenanceUrgencyRule> MaintenanceUrgencyRules { get; set; }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

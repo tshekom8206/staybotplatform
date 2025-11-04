@@ -29,8 +29,22 @@ public class ResponseTemplate
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    // NEW: Additional fields for maintenance urgency responses
+    [MaxLength(50)]
+    public string? IntentName { get; set; } // LATE_CHECKOUT, MAINTENANCE, etc.
+
+    [MaxLength(20)]
+    public string? UrgencyLevel { get; set; } // EMERGENCY, URGENT, HIGH, NORMAL, LOW
+
+    [MaxLength(500)]
+    public string? AvailablePlaceholders { get; set; } // JSON array of available placeholders
+
+    [MaxLength(50)]
+    public string? TemplateType { get; set; } // acknowledgement|confirmation|error|instruction
+
     // Navigation properties
     public virtual Tenant Tenant { get; set; } = null!;
+    public virtual ICollection<MaintenanceUrgencyRule> MaintenanceUrgencyRules { get; set; } = new List<MaintenanceUrgencyRule>();
 }
 
 public class ResponseVariable

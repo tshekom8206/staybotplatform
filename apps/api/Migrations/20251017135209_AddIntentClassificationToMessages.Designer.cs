@@ -4,6 +4,7 @@ using System.Text.Json;
 using Hostr.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Pgvector;
@@ -13,9 +14,11 @@ using Pgvector;
 namespace Hostr.Api.Migrations
 {
     [DbContext(typeof(HostrDbContext))]
-    partial class HostrDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251017135209_AddIntentClassificationToMessages")]
+    partial class AddIntentClassificationToMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -340,23 +343,6 @@ namespace Hostr.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ApprovalReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("ApprovalStatus")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("ApprovedBy")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("ApprovedByUserId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("BookingId")
                         .HasColumnType("integer");
 
@@ -395,9 +381,6 @@ namespace Hostr.Api.Migrations
                     b.Property<string>("OriginalPhone")
                         .HasColumnType("text");
 
-                    b.Property<decimal?>("PricingImpact")
-                        .HasColumnType("numeric");
-
                     b.Property<DateTime?>("ProcessedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -423,9 +406,6 @@ namespace Hostr.Api.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<TimeSpan?>("RequestedCheckOutTime")
-                        .HasColumnType("interval");
-
                     b.Property<bool>("RequiresApproval")
                         .HasColumnType("boolean");
 
@@ -441,8 +421,6 @@ namespace Hostr.Api.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ApprovedByUserId");
 
                     b.HasIndex("BookingId");
 
@@ -1874,76 +1852,6 @@ namespace Hostr.Api.Migrations
                     b.ToTable("InformationItems");
                 });
 
-            modelBuilder.Entity("Hostr.Api.Models.IntentSetting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AdditionalConfig")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("AssignedDepartment")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<bool>("AutoResolve")
-                        .HasColumnType("boolean");
-
-                    b.Property<int?>("AutoResolveDelayMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CustomResponse")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<bool>("EnableUpselling")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("IntentName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<bool>("IsEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("NotifyStaff")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("RequiresStaffApproval")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("TaskPriority")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpsellStrategy")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("IntentSettings");
-                });
-
             modelBuilder.Entity("Hostr.Api.Models.KnowledgeBaseChunk", b =>
                 {
                     b.Property<int>("Id")
@@ -2472,9 +2380,6 @@ namespace Hostr.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("ActualResolutionTime")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int?>("AssignedTo")
                         .HasColumnType("integer");
 
@@ -2498,12 +2403,6 @@ namespace Hostr.Api.Migrations
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("EscalatedToManager")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("HabitabilityImpact")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("Location")
                         .HasMaxLength(100)
@@ -2529,16 +2428,10 @@ namespace Hostr.Api.Migrations
                     b.Property<string>("ResolutionNotes")
                         .HasColumnType("text");
 
-                    b.Property<bool>("SafetyRisk")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
-
-                    b.Property<DateTime?>("TargetResolutionTime")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("integer");
@@ -2547,10 +2440,6 @@ namespace Hostr.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<string>("UrgencyLevel")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
 
@@ -2563,85 +2452,6 @@ namespace Hostr.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("MaintenanceRequests");
-                });
-
-            modelBuilder.Entity("Hostr.Api.Models.MaintenanceUrgencyRule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Category")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsHabitabilityImpact")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsSafetyRisk")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Keyword")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("KeywordType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("RequiresManagerEscalation")
-                        .HasColumnType("boolean");
-
-                    b.Property<int?>("ResponseTemplateId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SafetyInstructions")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<int>("TargetMinutesToResolve")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TaskPriority")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UrgencyLevel")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ResponseTemplateId");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("MaintenanceUrgencyRules");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.MenuCategory", b =>
@@ -2995,79 +2805,6 @@ namespace Hostr.Api.Migrations
                     b.ToTable("PostStaySurveys");
                 });
 
-            modelBuilder.Entity("Hostr.Api.Models.PropertyDirection", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AdditionalInfo")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Directions")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("FacilityName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Floor")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Hours")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Landmarks")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("LocationDescription")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Wing")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("PropertyDirections");
-                });
-
             modelBuilder.Entity("Hostr.Api.Models.PushSubscription", b =>
                 {
                     b.Property<int>("Id")
@@ -3396,10 +3133,6 @@ namespace Hostr.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AvailablePlaceholders")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -3407,10 +3140,6 @@ namespace Hostr.Api.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("IntentName")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -3432,19 +3161,11 @@ namespace Hostr.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("TemplateType")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
                     b.Property<int>("TenantId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UrgencyLevel")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
 
@@ -4121,58 +3842,6 @@ namespace Hostr.Api.Migrations
                     b.ToTable("TenantDepartments");
                 });
 
-            modelBuilder.Entity("Hostr.Api.Models.TenantSetting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<TimeSpan?>("BusinessHoursEnd")
-                        .HasColumnType("interval");
-
-                    b.Property<TimeSpan?>("BusinessHoursStart")
-                        .HasColumnType("interval");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DefaultCurrency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
-
-                    b.Property<decimal?>("EarlyCheckInFeePerHour")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal?>("LateCheckoutFeePerHour")
-                        .HasColumnType("numeric");
-
-                    b.Property<TimeSpan>("StandardCheckInTime")
-                        .HasColumnType("interval");
-
-                    b.Property<TimeSpan>("StandardCheckOutTime")
-                        .HasColumnType("interval");
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Timezone")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("TenantSettings");
-                });
-
             modelBuilder.Entity("Hostr.Api.Models.UpsellItem", b =>
                 {
                     b.Property<int>("Id")
@@ -4832,10 +4501,6 @@ namespace Hostr.Api.Migrations
 
             modelBuilder.Entity("Hostr.Api.Models.BookingModification", b =>
                 {
-                    b.HasOne("Hostr.Api.Models.User", "ApprovedByUser")
-                        .WithMany()
-                        .HasForeignKey("ApprovedByUserId");
-
                     b.HasOne("Hostr.Api.Models.Booking", "Booking")
                         .WithMany()
                         .HasForeignKey("BookingId")
@@ -4855,8 +4520,6 @@ namespace Hostr.Api.Migrations
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ApprovedByUser");
 
                     b.Navigation("Booking");
 
@@ -5202,17 +4865,6 @@ namespace Hostr.Api.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Hostr.Api.Models.IntentSetting", b =>
-                {
-                    b.HasOne("Hostr.Api.Models.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
-                });
-
             modelBuilder.Entity("Hostr.Api.Models.KnowledgeBaseChunk", b =>
                 {
                     b.HasOne("Hostr.Api.Models.Tenant", "Tenant")
@@ -5404,23 +5056,6 @@ namespace Hostr.Api.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Hostr.Api.Models.MaintenanceUrgencyRule", b =>
-                {
-                    b.HasOne("Hostr.Api.Models.ResponseTemplate", "ResponseTemplate")
-                        .WithMany("MaintenanceUrgencyRules")
-                        .HasForeignKey("ResponseTemplateId");
-
-                    b.HasOne("Hostr.Api.Models.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ResponseTemplate");
-
-                    b.Navigation("Tenant");
-                });
-
             modelBuilder.Entity("Hostr.Api.Models.MenuCategory", b =>
                 {
                     b.HasOne("Hostr.Api.Models.Tenant", "Tenant")
@@ -5496,17 +5131,6 @@ namespace Hostr.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Booking");
-                });
-
-            modelBuilder.Entity("Hostr.Api.Models.PropertyDirection", b =>
-                {
-                    b.HasOne("Hostr.Api.Models.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.PushSubscription", b =>
@@ -5744,17 +5368,6 @@ namespace Hostr.Api.Migrations
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.TenantDepartment", b =>
-                {
-                    b.HasOne("Hostr.Api.Models.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("Hostr.Api.Models.TenantSetting", b =>
                 {
                     b.HasOne("Hostr.Api.Models.Tenant", "Tenant")
                         .WithMany()
@@ -6016,11 +5629,6 @@ namespace Hostr.Api.Migrations
                     b.Navigation("StaffTasks");
 
                     b.Navigation("StockEvents");
-                });
-
-            modelBuilder.Entity("Hostr.Api.Models.ResponseTemplate", b =>
-                {
-                    b.Navigation("MaintenanceUrgencyRules");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.Service", b =>

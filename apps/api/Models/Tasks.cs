@@ -211,7 +211,21 @@ public class MaintenanceRequest
     
     public string? ResolutionNotes { get; set; }
     public decimal? Cost { get; set; }
-    
+
+    // NEW: Urgency classification fields
+    [MaxLength(20)]
+    public string? UrgencyLevel { get; set; } // EMERGENCY, URGENT, HIGH, NORMAL, LOW
+
+    public bool SafetyRisk { get; set; } = false;
+
+    public bool HabitabilityImpact { get; set; } = false;
+
+    public bool EscalatedToManager { get; set; } = false;
+
+    public DateTime? TargetResolutionTime { get; set; } // Based on SLA
+
+    public DateTime? ActualResolutionTime { get; set; }
+
     // Navigation properties
     public virtual Tenant Tenant { get; set; } = null!;
     public virtual MaintenanceItem? MaintenanceItem { get; set; }

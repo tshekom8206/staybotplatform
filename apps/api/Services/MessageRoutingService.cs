@@ -306,14 +306,21 @@ public class MessageRoutingService : IMessageRoutingService
         }
 
         // Step 1.2: Check FAQ knowledge base for quick answers (before transfer detection to avoid false positives)
-        try
+        // CRITICAL: Skip FAQ matching for late checkout requests with specific times - let them go to intent-based handling
+        var msgLowerForFaq = normalizedMessage.ToLower();
+        var isLateCheckoutRequest = msgLowerForFaq.Contains("checkout at") || msgLowerForFaq.Contains("check-out at") || msgLowerForFaq.Contains("check out at") ||
+            (msgLowerForFaq.Contains("late") && (msgLowerForFaq.Contains("checkout") || msgLowerForFaq.Contains("check-out") || msgLowerForFaq.Contains("check out")));
+
+        if (!isLateCheckoutRequest)
         {
-            var faqResults = await _faqService.SearchFAQsAsync(normalizedMessage, tenantContext.TenantId, null, 3);
-            if (faqResults.Any() && faqResults[0].RelevanceScore >= 0.65)
+            try
             {
-                var topFAQ = faqResults[0];
-                _logger.LogInformation("FAQ match found for question '{Question}' with relevance score {Score}",
-                    topFAQ.Question, topFAQ.RelevanceScore);
+                var faqResults = await _faqService.SearchFAQsAsync(normalizedMessage, tenantContext.TenantId, null, 3);
+                if (faqResults.Any() && faqResults[0].RelevanceScore >= 0.65)
+                {
+                    var topFAQ = faqResults[0];
+                    _logger.LogInformation("FAQ match found for question '{Question}' with relevance score {Score}",
+                        topFAQ.Question, topFAQ.RelevanceScore);
 
                 var faqResponse = $"**{topFAQ.Question}**\n\n{topFAQ.Answer}";
 
@@ -335,11 +342,16 @@ public class MessageRoutingService : IMessageRoutingService
                     Reply = faqResponse
                 };
             }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching FAQs for tenant {TenantId}", tenantContext.TenantId);
+                // Continue to normal processing if FAQ search fails
+            }
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Error searching FAQs for tenant {TenantId}", tenantContext.TenantId);
-            // Continue to normal processing if FAQ search fails
+            _logger.LogInformation("🔄 Skipping FAQ matching for late checkout request - will use intent-based handler");
         }
 
         // Step 2: Check for human transfer requests - after FAQ check to reduce false positives
@@ -522,6 +534,59 @@ public class MessageRoutingService : IMessageRoutingService
                     _logger.LogInformation("LLM detected booking confirmation request, checking specific booking");
                     // Handle confirmation of specific booking (e.g., "Do I have a dinner reservation tonight?")
                     return await HandleBookingConfirmation(normalizedMessage, conversation, tenantContext);
+                }
+                else if (intentAnalysis.Intent == "GREETING")
+                {
+                    _logger.LogInformation("LLM detected greeting message");
+                    var greetingResponse = await CreateGreetingResponseAsync(tenantContext, conversation, normalizedMessage);
+                    return greetingResponse;
+                }
+                else if (intentAnalysis.Intent == "ACKNOWLEDGMENT")
+                {
+                    _logger.LogInformation("LLM detected acknowledgment/gratitude message");
+                    // Respond warmly to acknowledgment
+                    var acknowledgmentResponses = new[]
+                    {
+                        "You're very welcome! I'm here anytime you need assistance.",
+                        "My pleasure! Feel free to reach out if you need anything else.",
+                        "Happy to help! Don't hesitate to contact me if you have any other requests.",
+                        "You're welcome! I'm always here to assist you.",
+                        "Glad I could help! Let me know if there's anything else you need."
+                    };
+
+                    var random = new Random();
+                    var acknowledgmentReply = acknowledgmentResponses[random.Next(acknowledgmentResponses.Length)];
+
+                    await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, acknowledgmentReply);
+
+                    return new MessageRoutingResponse
+                    {
+                        Reply = acknowledgmentReply
+                    };
+                }
+                else if (intentAnalysis.Intent == "CANCELLATION")
+                {
+                    return await HandleCancellationAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
+                }
+                else if (intentAnalysis.Intent == "CHECK_IN_OUT")
+                {
+                    return await HandleCheckInOutAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
+                }
+                else if (intentAnalysis.Intent == "DIRECTIONS")
+                {
+                    return await HandleDirectionsAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
+                }
+                else if (intentAnalysis.Intent == "FEEDBACK")
+                {
+                    return await HandleFeedbackAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
+                }
+                else if (intentAnalysis.Intent == "RECOMMENDATION")
+                {
+                    return await HandleRecommendationAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
+                }
+                else if (intentAnalysis.Intent == "LATE_CHECKOUT")
+                {
+                    return await HandleLateCheckoutRequest(tenantContext, conversation, normalizedMessage);
                 }
                 else
                 {
@@ -2168,6 +2233,15 @@ Property plan: {{PLAN}}";
     {
         try
         {
+            // CRITICAL: Skip pattern matching for late checkout requests - let them go to intent-based handling
+            var msgLower = messageText.ToLower();
+            if (msgLower.Contains("checkout at") || msgLower.Contains("check-out at") || msgLower.Contains("check out at") ||
+                (msgLower.Contains("late") && (msgLower.Contains("checkout") || msgLower.Contains("check-out") || msgLower.Contains("check out"))))
+            {
+                _logger.LogInformation("🔄 Skipping contextual response for late checkout request - will use intent-based handler");
+                return null;
+            }
+
             // Debug: Log conversation history
             _logger.LogInformation("ProcessContextualResponse: Conversation history has {Count} messages", conversationHistory.Count);
             foreach (var (role, content) in conversationHistory)
@@ -2617,6 +2691,12 @@ Property plan: {{PLAN}}";
     {
         var messageLower = message.Trim().ToLower();
 
+        // Excitement/enthusiasm indicators - these are acknowledgments even if they have other words
+        var excitementKeywords = new[] { "can't wait", "cant wait", "cannot wait", "can not wait", "so excited", "looking forward", "excited" };
+        var hasExcitement = excitementKeywords.Any(k => messageLower.Contains(k));
+
+        _logger.LogDebug("IsAcknowledgmentOrFarewell: message='{Message}', hasExcitement={HasExcitement}", messageLower, hasExcitement);
+
         // Acknowledgment keywords
         var acknowledgmentKeywords = new[] {
             "ok", "okay", "thanks", "thank you", "thank you!", "thanks!", "thx", "ty",
@@ -2631,9 +2711,31 @@ Property plan: {{PLAN}}";
             "goodnight", "good night", "see you later", "see you soon", "see you tonight"
         };
 
-        // Check if message contains any acknowledgment or farewell keywords
+        // Check if message contains acknowledgment or farewell keywords
         var allKeywords = acknowledgmentKeywords.Concat(farewellKeywords);
-        return allKeywords.Any(keyword => messageLower.Contains(keyword));
+        var hasAckOrFarewell = allKeywords.Any(keyword => messageLower.Contains(keyword));
+
+        _logger.LogDebug("IsAcknowledgmentOrFarewell: hasAckOrFarewell={HasAckOrFarewell}, hasExcitement={HasExcitement}", hasAckOrFarewell, hasExcitement);
+
+        // If there's excitement + thanks, it's definitely an acknowledgment
+        if (hasExcitement && hasAckOrFarewell)
+        {
+            _logger.LogInformation("IsAcknowledgmentOrFarewell: Detected excitement + acknowledgment combination - returning TRUE");
+            return true;
+        }
+
+        // Question indicators that suggest this is NOT just an acknowledgment
+        var questionIndicators = new[] { "?", "what", "when", "where", "who", "why", "how", "can you", "could you", "would you", "do you", "are you", "is there", "tell me" };
+        var hasQuestion = questionIndicators.Any(indicator => messageLower.Contains(indicator));
+
+        // If this looks like a question, it's not just an acknowledgment
+        if (hasQuestion)
+        {
+            return false;
+        }
+
+        // Return true if it has acknowledgment or farewell keywords
+        return hasAckOrFarewell;
     }
 
     private bool ContainsFrontDeskConnection(string message)
@@ -4020,6 +4122,14 @@ Return ONLY valid JSON.";
                 "room booking", "spa booking", "tour booking", "massage"
             };
 
+            // Food/dining complaint keywords that should NOT be treated as maintenance issues
+            var foodComplaintKeywords = new[]
+            {
+                "food", "meal", "order", "dish", "plate", "cuisine", "menu",
+                "refund", "taste", "flavor", "undercooked", "overcooked", "raw",
+                "burnt", "quality", "portion", "service slow", "wrong order"
+            };
+
             var messageLower = messageText.ToLower();
 
             // Check if this is a policy inquiry first
@@ -4028,6 +4138,9 @@ Return ONLY valid JSON.";
             // Check if this is a booking-related request (even if it contains frustration words like "stuck")
             var isBookingRelated = bookingKeywords.Any(keyword => messageLower.Contains(keyword));
 
+            // Check if this is a food/dining complaint (e.g., "food is cold")
+            var isFoodComplaint = foodComplaintKeywords.Any(keyword => messageLower.Contains(keyword));
+
             // Special handling for "smoking" - only treat as maintenance if not asking about policy
             var containsSmoking = messageLower.Contains("smoking");
             var isSmokingPolicyInquiry = containsSmoking && isPolicyInquiry;
@@ -4035,20 +4148,45 @@ Return ONLY valid JSON.";
             // Check for maintenance keywords, but exclude:
             // 1. Policy inquiries (smoking)
             // 2. Booking-related requests (even with frustration words like "stuck")
+            // 3. Food/dining complaints (e.g., "food is cold" should not be maintenance)
             var hasMaintenanceIssue = (maintenanceKeywords.Any(keyword => messageLower.Contains(keyword)) ||
                                       (containsSmoking && !isSmokingPolicyInquiry)) &&
-                                      !isBookingRelated;
+                                      !isBookingRelated &&
+                                      !isFoodComplaint;
 
             if (hasMaintenanceIssue)
             {
                 _logger.LogInformation("Maintenance issue detected in message: '{MessageText}' for tenant {TenantId}", messageText, tenantContext.TenantId);
-                
-                // Create a maintenance task
+
+                // Classify urgency before creating task
+                var classification = await ClassifyMaintenanceUrgency(messageText, tenantContext.TenantId);
+
+                // Create a maintenance task (which now includes the classification)
                 await CreateMaintenanceTask(tenantContext, conversation, messageText);
 
-                // Determine the type of issue for a more specific response
-                var issueType = DetermineIssueType(messageText);
-                var response = await GenerateMaintenanceResponseAsync(issueType, tenantContext.TenantId);
+                // Use customizable response template if available, otherwise use default
+                string response;
+                if (!string.IsNullOrEmpty(classification.ResponseTemplate))
+                {
+                    // Replace placeholders in the template
+                    response = classification.ResponseTemplate
+                        .Replace("{ISSUE}", $"the {classification.Category.ToLower()}")
+                        .Replace("{SLA_MINUTES}", classification.TargetMinutes.ToString())
+                        .Replace("{SLA_HOURS}", (classification.TargetMinutes / 60.0).ToString("0.#"))
+                        .Replace("{SAFETY_INSTRUCTIONS}", classification.SafetyInstructions ?? "");
+
+                    // Add safety instructions at the beginning if this is a safety risk
+                    if (classification.SafetyRisk && !string.IsNullOrEmpty(classification.SafetyInstructions))
+                    {
+                        response = $"{classification.SafetyInstructions}\n\n{response}";
+                    }
+                }
+                else
+                {
+                    // Fallback to old method
+                    var issueType = DetermineIssueType(messageText);
+                    response = await GenerateMaintenanceResponseAsync(issueType, tenantContext.TenantId);
+                }
 
                 return new MessageRoutingResponse
                 {
@@ -4070,9 +4208,12 @@ Return ONLY valid JSON.";
         try
         {
             using var scope = new TenantScope(_context, tenantContext.TenantId);
-            
-            var issueType = DetermineIssueType(messageText);
-            var priority = DeterminePriority(messageText);
+
+            // Use database-driven urgency classification
+            var classification = await ClassifyMaintenanceUrgency(messageText, tenantContext.TenantId);
+
+            var issueType = classification.Category;
+            var priority = classification.TaskPriority;
 
             // Get guest status to retrieve room number
             var guestStatus = await DetermineGuestStatusAsync(conversation.WaUserPhone, tenantContext.TenantId);
@@ -4092,32 +4233,58 @@ Return ONLY valid JSON.";
                     RequiresQuantity = false,
                     RequiresRoomDelivery = true,
                     IsAvailable = true,
-                    SlaMinutes = GetPriorityHours(priority) * 60
+                    SlaMinutes = classification.TargetMinutes // Use database-driven SLA
                 };
-                
+
                 _context.RequestItems.Add(maintenanceItem);
                 await _context.SaveChangesAsync();
             }
+
+            // Create MaintenanceRequest with urgency classification
+            var maintenanceRequest = new MaintenanceRequest
+            {
+                TenantId = tenantContext.TenantId,
+                ConversationId = conversation.Id,
+                Title = $"{issueType} - {classification.UrgencyLevel}",
+                Description = messageText,
+                Category = issueType,
+                Priority = priority,
+                Status = "Open",
+                Location = guestStatus.RoomNumber ?? "Unknown",
+                ReportedBy = conversation.WaUserPhone,
+                ReportedAt = DateTime.UtcNow,
+                UrgencyLevel = classification.UrgencyLevel,
+                SafetyRisk = classification.SafetyRisk,
+                HabitabilityImpact = classification.HabitabilityImpact,
+                EscalatedToManager = classification.RequiresManagerEscalation,
+                TargetResolutionTime = DateTime.UtcNow.AddMinutes(classification.TargetMinutes)
+            };
+
+            _context.MaintenanceRequests.Add(maintenanceRequest);
+            await _context.SaveChangesAsync();
 
             var task = new StaffTask
             {
                 TenantId = tenantContext.TenantId,
                 ConversationId = conversation.Id,
                 RequestItemId = maintenanceItem.Id,
+                MaintenanceRequestId = maintenanceRequest.Id,
                 TaskType = "maintenance",
                 Quantity = 1,
                 Status = "Open",
                 Priority = priority,
                 RoomNumber = guestStatus.RoomNumber, // Use room number from guest status
                 Notes = $"{issueType}: Guest reported - {messageText}",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                EstimatedCompletionTime = maintenanceRequest.TargetResolutionTime,
+                Department = "Maintenance"
             };
 
             _context.StaffTasks.Add(task);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Created maintenance task {TaskId} for tenant {TenantId}: {IssueType} - {MessageText}", 
-                task.Id, tenantContext.TenantId, issueType, messageText);
+            _logger.LogInformation("Created maintenance request {RequestId} and task {TaskId} for tenant {TenantId}: {UrgencyLevel} {IssueType} - {MessageText}",
+                maintenanceRequest.Id, task.Id, tenantContext.TenantId, classification.UrgencyLevel, issueType, messageText);
 
             // Send notification for the created maintenance task
             await _notificationService.NotifyTaskCreatedAsync(tenantContext.TenantId, task, maintenanceItem.Name);
@@ -5371,20 +5538,32 @@ CRITICAL RULES:
             "hi", "hello", "hey", "good morning", "good afternoon", "good evening",
             "greetings", "howdy", "yo", "hiya", "good day", "hi there", "hello there"
         };
-        
-        var isGreeting = greetingKeywords.Any(greeting => 
-            messageLower == greeting || 
+
+        var isGreeting = greetingKeywords.Any(greeting =>
+            messageLower == greeting ||
             messageLower.StartsWith(greeting + " ") ||
             messageLower.StartsWith(greeting + "!") ||
             messageLower.StartsWith(greeting + ".") ||
             messageLower.StartsWith(greeting + ","));
-            
-        if (isGreeting)
+
+        // Check if this is a greeting followed by a question - if so, it's not just a greeting
+        bool hasQuestionAfterGreeting = isGreeting && (
+            messageLower.Contains("?") ||
+            messageLower.Contains(" do you ") ||
+            messageLower.Contains(" can you ") ||
+            messageLower.Contains(" what ") ||
+            messageLower.Contains(" how ") ||
+            messageLower.Contains(" when ") ||
+            messageLower.Contains(" where ") ||
+            messageLower.Contains(" which ") ||
+            messageLower.Contains(" who "));
+
+        if (isGreeting && !hasQuestionAfterGreeting)
         {
-            return new MessageIntentResult 
-            { 
-                Intent = MessageIntent.Greeting, 
-                Confidence = 0.7, 
+            return new MessageIntentResult
+            {
+                Intent = MessageIntent.Greeting,
+                Confidence = 0.7,
                 Source = "regex",
                 Reasoning = "Greeting keywords detected"
             };
@@ -8220,4 +8399,879 @@ Return ONLY valid JSON, no markdown.";
         instructions.AppendLine("\n🎯 REGENERATE YOUR RESPONSE following these corrections EXACTLY.");
         return instructions.ToString();
     }
+
+    #region Phase 1 New Intent Handlers
+
+    /// <summary>
+    /// Handles CANCELLATION intent - Creates staff task for review instead of auto-canceling
+    /// Includes intelligent upselling (reschedule suggestions or alternative services)
+    /// </summary>
+    private async Task<MessageRoutingResponse> HandleCancellationAsync(
+        Conversation conversation,
+        IntentAnalysisResult intentAnalysis,
+        string guestMessage,
+        TenantContext tenantContext)
+    {
+        try
+        {
+            _logger.LogInformation("🚫 Handling cancellation request for conversation {ConversationId}", conversation.Id);
+
+            // Extract cancellation details using LLM
+            var extractionPrompt = $@"Extract cancellation details from the guest message:
+
+Guest message: ""{guestMessage}""
+
+Return JSON:
+{{
+  ""serviceType"": ""dinner|spa|massage|room|other"",
+  ""specificService"": ""string or null"",
+  ""timeframe"": ""tonight|tomorrow|today|specific date or null"",
+  ""reason"": ""string or null"",
+  ""confidence"": 0.0-1.0
+}}";
+
+            var cancellationDetails = await _openAIService.GetStructuredResponseAsync<dynamic>(extractionPrompt, 0.3);
+
+            // Create high-priority staff task for cancellation review
+            var cancellationTask = new StaffTask
+            {
+                TenantId = tenantContext.TenantId,
+                ConversationId = conversation.Id,
+                Title = $"Cancellation Request: {cancellationDetails?.serviceType ?? "Booking"}",
+                Description = $"Guest Phone: {conversation.WaUserPhone}\nMessage: {guestMessage}\n{(cancellationDetails?.reason != null ? $"Reason: {cancellationDetails.reason}" : "")}",
+                Department = "Management",
+                Status = "Pending",
+                Priority = "High",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.StaffTasks.Add(cancellationTask);
+            await _context.SaveChangesAsync();
+
+            // Notify staff via SignalR
+            await _notificationService.NotifyTaskCreatedAsync(tenantContext.TenantId, cancellationTask);
+
+            // Generate intelligent upsell response
+            string baseResponse = "I've forwarded your cancellation request to our team for review. They'll process this and confirm shortly.";
+            string upsellSuggestion = "";
+
+            // Database-driven upselling based on service type
+            if (cancellationDetails?.serviceType == "dinner")
+            {
+                // Dinner cancellation → Offer reschedule (generic message, no hardcoded availability)
+                upsellSuggestion = "\n\nWould you like to reschedule for another time? I can help you find an alternative slot.";
+            }
+            else if (cancellationDetails?.serviceType == "spa" || cancellationDetails?.serviceType == "massage")
+            {
+                // Spa cancellation → Offer alternative treatments from database
+                var expressService = await _context.Services
+                    .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                             s.IsAvailable &&
+                                             s.Category == "Spa" &&
+                                             (s.Name.Contains("Express", StringComparison.OrdinalIgnoreCase) ||
+                                              s.Name.Contains("Quick", StringComparison.OrdinalIgnoreCase) ||
+                                              s.Description.Contains("express", StringComparison.OrdinalIgnoreCase)));
+
+                if (expressService != null)
+                {
+                    upsellSuggestion = $"\n\nIf timing is the issue, we also offer {expressService.Name.ToLower()} that might work better for your schedule.";
+                }
+                else
+                {
+                    upsellSuggestion = "\n\nIf timing is the issue, we have alternative treatment options. Would you like to see what's available?";
+                }
+            }
+
+            var reply = baseResponse + upsellSuggestion;
+
+            await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, reply);
+
+            return new MessageRoutingResponse
+            {
+                Reply = reply
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling cancellation request");
+            return new MessageRoutingResponse
+            {
+                Reply = "I understand you'd like to cancel. Let me connect you with our team to assist with this right away."
+            };
+        }
+    }
+
+    /// <summary>
+    /// Handles CHECK_IN_OUT intent - Provides check-in/out times with intelligent upselling
+    /// </summary>
+    private async Task<MessageRoutingResponse> HandleCheckInOutAsync(
+        Conversation conversation,
+        IntentAnalysisResult intentAnalysis,
+        string guestMessage,
+        TenantContext tenantContext)
+    {
+        try
+        {
+            _logger.LogInformation("🏨 Handling check-in/out inquiry for conversation {ConversationId}", conversation.Id);
+
+            // Get hotel information for check-in/out times
+            var hotelInfo = await _context.HotelInfos
+                .FirstOrDefaultAsync(h => h.TenantId == tenantContext.TenantId);
+
+            var entityType = intentAnalysis.DetectedIntents?.FirstOrDefault()?.EntityType?.ToLower() ?? "";
+            bool isEarlyCheckIn = entityType.Contains("early check");
+            bool isLateCheckOut = entityType.Contains("late checkout") || entityType.Contains("late check-out") || entityType.Contains("late checkout request");
+            bool isCheckOut = entityType.Contains("check-out") || entityType.Contains("checkout") || entityType.Contains("departure");
+
+            // CRITICAL: Delegate to new database-driven late checkout handler
+            // Check for specific checkout time requests (e.g., "checkout at 2pm", "check-out at 14:00")
+            if (isLateCheckOut || guestMessage.Contains("checkout at") || guestMessage.Contains("check-out at") || guestMessage.Contains("check out at"))
+            {
+                _logger.LogInformation("🔄 Delegating to HandleLateCheckoutRequest for proper task creation");
+                return await HandleLateCheckoutRequest(tenantContext, conversation, guestMessage);
+            }
+
+            string baseResponse = "";
+            string upsellSuggestion = "";
+
+            if (isEarlyCheckIn)
+            {
+                baseResponse = hotelInfo?.CheckInTime != null
+                    ? $"Our standard check-in time is {hotelInfo.CheckInTime}. I can request early check-in for you."
+                    : "I can request early check-in for you. Let me connect you with our front desk.";
+
+                // Database-driven upsell: Early check-in → Luggage/concierge service
+                var luggageService = await _context.Services
+                    .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                             s.IsAvailable &&
+                                             (s.Name.Contains("Luggage", StringComparison.OrdinalIgnoreCase) ||
+                                              s.Name.Contains("Baggage", StringComparison.OrdinalIgnoreCase) ||
+                                              s.Name.Contains("Porter", StringComparison.OrdinalIgnoreCase) ||
+                                              s.Description.Contains("luggage", StringComparison.OrdinalIgnoreCase)));
+
+                if (luggageService != null)
+                {
+                    upsellSuggestion = $"\n\nWould you also like our {luggageService.Name.ToLower()}? {luggageService.Description}";
+                }
+            }
+            else if (isLateCheckOut)
+            {
+                baseResponse = hotelInfo?.CheckOutTime != null
+                    ? $"Our standard check-out time is {hotelInfo.CheckOutTime}. I can request late check-out for you."
+                    : "I can request late check-out for you. Let me connect you with our front desk.";
+
+                // Database-driven upsell: Late checkout → Spa treatments
+                var spaService = await _context.Services
+                    .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                             s.IsAvailable &&
+                                             s.Category == "Spa");
+
+                if (spaService != null)
+                {
+                    upsellSuggestion = $"\n\nMany guests enjoy our {spaService.Name.ToLower()} on departure day. Would you like to book a relaxing treatment before you leave?";
+                }
+            }
+            else if (isCheckOut)
+            {
+                baseResponse = hotelInfo?.CheckOutTime != null
+                    ? $"Check-out time is {hotelInfo.CheckOutTime}."
+                    : "Let me check the check-out time for you.";
+            }
+            else
+            {
+                // General check-in time inquiry
+                baseResponse = hotelInfo?.CheckInTime != null && hotelInfo?.CheckOutTime != null
+                    ? $"Check-in is at {hotelInfo.CheckInTime} and check-out is at {hotelInfo.CheckOutTime}."
+                    : "Let me get those times for you.";
+            }
+
+            var reply = baseResponse + upsellSuggestion;
+
+            await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, reply);
+
+            return new MessageRoutingResponse
+            {
+                Reply = reply
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling check-in/out inquiry");
+            return new MessageRoutingResponse
+            {
+                Reply = "I'd be happy to help with check-in and check-out information. Let me connect you with our front desk."
+            };
+        }
+    }
+
+    /// <summary>
+    /// Handles DIRECTIONS intent - Provides text-based navigation with intelligent upselling
+    /// </summary>
+    private async Task<MessageRoutingResponse> HandleDirectionsAsync(
+        Conversation conversation,
+        IntentAnalysisResult intentAnalysis,
+        string guestMessage,
+        TenantContext tenantContext)
+    {
+        try
+        {
+            _logger.LogInformation("🗺️ Handling directions request for conversation {ConversationId}", conversation.Id);
+
+            var entityType = intentAnalysis.DetectedIntents?.FirstOrDefault()?.EntityType?.ToLower() ?? "";
+
+            string directions = "";
+            string upsellSuggestion = "";
+
+            // Query database for facility information based on what guest is asking about
+            string facilityKeyword = "";
+            string serviceCategory = "";
+
+            if (entityType.Contains("pool"))
+            {
+                facilityKeyword = "pool";
+                serviceCategory = "Pool";
+            }
+            else if (entityType.Contains("restaurant") || entityType.Contains("dining"))
+            {
+                facilityKeyword = "restaurant";
+                serviceCategory = "Dining";
+            }
+            else if (entityType.Contains("gym") || entityType.Contains("fitness"))
+            {
+                facilityKeyword = "gym";
+                serviceCategory = "Fitness";
+            }
+            else if (entityType.Contains("spa"))
+            {
+                facilityKeyword = "spa";
+                serviceCategory = "Spa";
+            }
+
+            if (!string.IsNullOrEmpty(facilityKeyword))
+            {
+                // Look for facility in Services table with location information
+                var facility = await _context.Services
+                    .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                             s.IsAvailable &&
+                                             (s.Category == serviceCategory ||
+                                              s.Name.Contains(facilityKeyword, StringComparison.OrdinalIgnoreCase) ||
+                                              s.Description.Contains(facilityKeyword, StringComparison.OrdinalIgnoreCase)));
+
+                if (facility != null)
+                {
+                    // Use facility description which should include location details
+                    directions = facility.Description;
+
+                    // If description doesn't seem to have location info, add generic template
+                    if (!facility.Description.Contains("floor", StringComparison.OrdinalIgnoreCase) &&
+                        !facility.Description.Contains("level", StringComparison.OrdinalIgnoreCase) &&
+                        !facility.Description.Contains("located", StringComparison.OrdinalIgnoreCase))
+                    {
+                        directions = $"Our {facility.Name} is available for guests. {facility.Description}";
+                    }
+                }
+                else
+                {
+                    // Fallback if no facility found in database
+                    directions = $"I'd be happy to help you locate our {facilityKeyword}. Let me connect you with our concierge who can provide detailed directions.";
+                }
+
+                // Database-driven upsell based on facility type
+                if (serviceCategory == "Pool")
+                {
+                    // Look for cabana or poolside service
+                    var cabanaService = await _context.Services
+                        .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                                 s.IsAvailable &&
+                                                 (s.Name.Contains("Cabana", StringComparison.OrdinalIgnoreCase) ||
+                                                  s.Name.Contains("Poolside", StringComparison.OrdinalIgnoreCase) ||
+                                                  s.Description.Contains("pool", StringComparison.OrdinalIgnoreCase)));
+
+                    if (cabanaService != null)
+                    {
+                        upsellSuggestion = $"\n\nBy the way, we have {cabanaService.Name.ToLower()} available! {cabanaService.Description} Would you like to reserve one?";
+                    }
+                }
+                else if (serviceCategory == "Dining")
+                {
+                    // Look for wine pairing or sommelier service
+                    var wineService = await _context.Services
+                        .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                                 s.IsAvailable &&
+                                                 (s.Name.Contains("Wine", StringComparison.OrdinalIgnoreCase) ||
+                                                  s.Name.Contains("Sommelier", StringComparison.OrdinalIgnoreCase) ||
+                                                  s.Description.Contains("wine pairing", StringComparison.OrdinalIgnoreCase)));
+
+                    if (wineService != null)
+                    {
+                        upsellSuggestion = $"\n\nThis evening we're featuring {wineService.Name.ToLower()}. Would you like me to add you to the list?";
+                    }
+                }
+                else if (serviceCategory == "Spa")
+                {
+                    // Look for couples spa package
+                    var couplesSpaService = await _context.Services
+                        .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                                 s.IsAvailable &&
+                                                 (s.Name.Contains("Couples", StringComparison.OrdinalIgnoreCase) ||
+                                                  s.Name.Contains("Romantic", StringComparison.OrdinalIgnoreCase) ||
+                                                  s.Description.Contains("couples", StringComparison.OrdinalIgnoreCase)));
+
+                    if (couplesSpaService != null)
+                    {
+                        upsellSuggestion = $"\n\nWe offer {couplesSpaService.Name.ToLower()} - {couplesSpaService.Description} Perfect for special occasions!";
+                    }
+                }
+            }
+            else
+            {
+                // Generic response for unrecognized locations - query available facilities
+                var availableFacilities = await _context.Services
+                    .Where(s => s.TenantId == tenantContext.TenantId &&
+                               s.IsAvailable &&
+                               (s.Category == "Dining" || s.Category == "Spa" ||
+                                s.Category == "Fitness" || s.Category == "Pool" ||
+                                s.Category == "Recreation"))
+                    .Select(s => s.Name)
+                    .Take(5)
+                    .ToListAsync();
+
+                if (availableFacilities.Any())
+                {
+                    directions = $"I'd be happy to help you find that! We have the following facilities: {string.Join(", ", availableFacilities)}. Which one would you like directions to?";
+                }
+                else
+                {
+                    directions = "I'd be happy to help you find that! Could you let me know which facility you're looking for?";
+                }
+            }
+
+            var reply = directions + upsellSuggestion;
+
+            await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, reply);
+
+            return new MessageRoutingResponse
+            {
+                Reply = reply
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling directions request");
+            return new MessageRoutingResponse
+            {
+                Reply = "I'd be happy to help you find your way! Which facility are you looking for?"
+            };
+        }
+    }
+
+    /// <summary>
+    /// Handles FEEDBACK intent - Creates high-priority task for negative feedback, celebrates positive feedback
+    /// </summary>
+    private async Task<MessageRoutingResponse> HandleFeedbackAsync(
+        Conversation conversation,
+        IntentAnalysisResult intentAnalysis,
+        string guestMessage,
+        TenantContext tenantContext)
+    {
+        try
+        {
+            _logger.LogInformation("💬 Handling feedback for conversation {ConversationId}", conversation.Id);
+
+            // Extract sentiment from entity type (format: "subject|SENTIMENT")
+            var entityType = intentAnalysis.DetectedIntents?.FirstOrDefault()?.EntityType ?? "";
+            var sentiment = entityType.Contains("|POSITIVE") ? "POSITIVE" :
+                           entityType.Contains("|NEGATIVE") ? "NEGATIVE" : "NEUTRAL";
+
+            string reply = "";
+            string upsellSuggestion = "";
+
+            if (sentiment == "NEGATIVE")
+            {
+                // Create high-priority staff task for negative feedback
+                var feedbackTask = new StaffTask
+                {
+                    TenantId = tenantContext.TenantId,
+                    ConversationId = conversation.Id,
+                    Title = $"URGENT: Negative Feedback - {entityType.Split('|')[0]}",
+                    Description = $"Guest Phone: {conversation.WaUserPhone}\nFeedback: {guestMessage}",
+                    Department = "Management",
+                    Status = "Pending",
+                    Priority = "High",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.StaffTasks.Add(feedbackTask);
+                await _context.SaveChangesAsync();
+
+                // Notify management immediately
+                await _notificationService.NotifyTaskCreatedAsync(tenantContext.TenantId, feedbackTask);
+
+                reply = "I sincerely apologize for this experience. I've immediately notified our management team, and someone will reach out to you shortly to make this right.";
+            }
+            else if (sentiment == "POSITIVE")
+            {
+                reply = "Thank you so much for the wonderful feedback! We're thrilled you're enjoying your stay! 😊";
+
+                // Database-driven upsell: Positive feedback → Loyalty/membership program
+                var loyaltyService = await _context.Services
+                    .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                             s.IsAvailable &&
+                                             (s.Name.Contains("Loyalty", StringComparison.OrdinalIgnoreCase) ||
+                                              s.Name.Contains("Membership", StringComparison.OrdinalIgnoreCase) ||
+                                              s.Name.Contains("Rewards", StringComparison.OrdinalIgnoreCase) ||
+                                              s.Description.Contains("loyalty", StringComparison.OrdinalIgnoreCase)));
+
+                if (loyaltyService != null)
+                {
+                    upsellSuggestion = $"\n\nSince you're enjoying our service, you might love our {loyaltyService.Name.ToLower()} - {loyaltyService.Description} Would you like to hear more?";
+                }
+            }
+            else
+            {
+                reply = "Thank you for sharing your feedback with us. We truly appreciate it!";
+            }
+
+            var finalReply = reply + upsellSuggestion;
+
+            await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, finalReply);
+
+            return new MessageRoutingResponse
+            {
+                Reply = finalReply
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling feedback");
+            return new MessageRoutingResponse
+            {
+                Reply = "Thank you for your feedback! We truly appreciate you sharing your experience with us."
+            };
+        }
+    }
+
+    /// <summary>
+    /// Handles RECOMMENDATION intent - Recommends hotel amenities with natural upselling
+    /// </summary>
+    private async Task<MessageRoutingResponse> HandleRecommendationAsync(
+        Conversation conversation,
+        IntentAnalysisResult intentAnalysis,
+        string guestMessage,
+        TenantContext tenantContext)
+    {
+        try
+        {
+            _logger.LogInformation("⭐ Handling recommendation request for conversation {ConversationId}", conversation.Id);
+
+            var category = intentAnalysis.DetectedIntents?.FirstOrDefault()?.Category ?? "";
+            var entityType = intentAnalysis.DetectedIntents?.FirstOrDefault()?.EntityType?.ToLower() ?? "";
+
+            string recommendations = "";
+            string upsellSuggestion = "";
+
+            if (category == "DINING" || entityType.Contains("dinner") || entityType.Contains("restaurant") || entityType.Contains("food"))
+            {
+                // Get dining services from database
+                var diningServices = await _context.Services
+                    .Where(s => s.TenantId == tenantContext.TenantId && s.Category == "Dining" && s.IsAvailable)
+                    .Take(3)
+                    .ToListAsync();
+
+                if (diningServices.Any())
+                {
+                    recommendations = "For dining, I'd recommend:\n" + string.Join("\n", diningServices.Select(s => $"• {s.Name} - {s.Description}"));
+
+                    // Natural upsell: Check if wine pairing or sommelier service exists
+                    var winePairingService = await _context.Services
+                        .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                                  s.IsAvailable &&
+                                                  (s.Name.Contains("Wine", StringComparison.OrdinalIgnoreCase) ||
+                                                   s.Name.Contains("Sommelier", StringComparison.OrdinalIgnoreCase) ||
+                                                   s.Description.Contains("wine pairing", StringComparison.OrdinalIgnoreCase)));
+
+                    if (winePairingService != null)
+                    {
+                        upsellSuggestion = $"\n\nWould you like me to also arrange a {winePairingService.Name.ToLower()}?";
+                    }
+                }
+                else
+                {
+                    recommendations = "Let me connect you with our concierge for dining recommendations.";
+                }
+            }
+            else if (category == "OTHER" && (entityType.Contains("spa") || entityType.Contains("massage") || entityType.Contains("treatment")))
+            {
+                // Get spa services
+                var spaServices = await _context.Services
+                    .Where(s => s.TenantId == tenantContext.TenantId && s.Name.Contains("Spa") && s.IsAvailable)
+                    .Take(3)
+                    .ToListAsync();
+
+                if (spaServices.Any())
+                {
+                    recommendations = "Our most popular spa treatments:\n" + string.Join("\n", spaServices.Select(s => $"• {s.Name} - {s.Description}"));
+
+                    // Natural upsell: Check if couples package exists
+                    var couplesPackage = await _context.Services
+                        .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
+                                                  s.IsAvailable &&
+                                                  (s.Name.Contains("Couples", StringComparison.OrdinalIgnoreCase) ||
+                                                   s.Name.Contains("Package", StringComparison.OrdinalIgnoreCase) ||
+                                                   s.Description.Contains("couples", StringComparison.OrdinalIgnoreCase)));
+
+                    if (couplesPackage != null)
+                    {
+                        upsellSuggestion = $"\n\nWe also offer {couplesPackage.Name} - {couplesPackage.Description?.Split('.')[0]}!";
+                    }
+                }
+                else
+                {
+                    recommendations = "I'd recommend our signature spa services. Let me get you more details.";
+                }
+            }
+            else if (category == "BEVERAGE" || entityType.Contains("drink"))
+            {
+                // Get beverage services/items from database
+                var beverageServices = await _context.Services
+                    .Where(s => s.TenantId == tenantContext.TenantId &&
+                               (s.Category == "Bar" || s.Category == "Beverage") &&
+                               s.IsAvailable)
+                    .Take(3)
+                    .ToListAsync();
+
+                if (beverageServices.Any())
+                {
+                    recommendations = "Our beverage recommendations:\n" + string.Join("\n", beverageServices.Select(s => $"• {s.Name} - {s.Description}"));
+                }
+                else
+                {
+                    // Fallback to generic bar description
+                    recommendations = "Our bar features a selection of beverages. Let me connect you with our bartender for specific recommendations.";
+                }
+            }
+            else if (category == "AMENITIES" || entityType.Contains("activity") || entityType.Contains("activities"))
+            {
+                // Get amenities from hotel info
+                var hotelInfo = await _context.HotelInfos
+                    .FirstOrDefaultAsync(h => h.TenantId == tenantContext.TenantId);
+
+                if (hotelInfo != null && !string.IsNullOrEmpty(hotelInfo.Features))
+                {
+                    recommendations = $"We offer: {hotelInfo.Features}";
+                }
+                else
+                {
+                    // Get amenity-related services from database as fallback
+                    var amenityServices = await _context.Services
+                        .Where(s => s.TenantId == tenantContext.TenantId && s.IsAvailable)
+                        .Take(5)
+                        .ToListAsync();
+
+                    if (amenityServices.Any())
+                    {
+                        recommendations = "Our amenities include:\n" + string.Join("\n", amenityServices.Select(s => $"• {s.Name}"));
+                    }
+                    else
+                    {
+                        recommendations = "I'd be happy to help you discover our amenities! Let me connect you with our concierge.";
+                    }
+                }
+            }
+            else
+            {
+                recommendations = "I'd be happy to make a recommendation! What are you most interested in - dining, spa services, or activities?";
+            }
+
+            var reply = recommendations + upsellSuggestion;
+
+            await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, reply);
+
+            return new MessageRoutingResponse
+            {
+                Reply = reply
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling recommendation request");
+            return new MessageRoutingResponse
+            {
+                Reply = "I'd love to help with recommendations! What are you most interested in?"
+            };
+        }
+    }
+
+    #endregion
+
+    #region Phase 1: Late Checkout & Maintenance Urgency
+
+    /// <summary>
+    /// Classifies maintenance request urgency based on database-driven keyword rules
+    /// </summary>
+    private async Task<MaintenanceUrgencyClassification> ClassifyMaintenanceUrgency(
+        string message,
+        int tenantId)
+    {
+        try
+        {
+            var messageLower = message.ToLower();
+
+            // Query rules ordered by priority (highest first)
+            var matchedRule = await _context.MaintenanceUrgencyRules
+                .Include(r => r.ResponseTemplate)
+                .Where(r => r.TenantId == tenantId && r.IsActive)
+                .OrderByDescending(r => r.Priority)
+                .FirstOrDefaultAsync(r =>
+                    (r.KeywordType == "contains" && messageLower.Contains(r.Keyword.ToLower())) ||
+                    (r.KeywordType == "exact" && messageLower == r.Keyword.ToLower()) ||
+                    (r.KeywordType == "starts_with" && messageLower.StartsWith(r.Keyword.ToLower()))
+                );
+
+            // Default to NORMAL if no match
+            if (matchedRule == null)
+            {
+                _logger.LogInformation("No urgency rule matched for message: '{Message}'. Defaulting to NORMAL", message);
+
+                // Get default NORMAL template
+                var defaultTemplate = await _context.ResponseTemplates
+                    .FirstOrDefaultAsync(t =>
+                        t.TenantId == tenantId &&
+                        t.UrgencyLevel == "NORMAL" &&
+                        t.IntentName == "MAINTENANCE" &&
+                        t.IsActive);
+
+                return new MaintenanceUrgencyClassification
+                {
+                    UrgencyLevel = "NORMAL",
+                    TaskPriority = "Normal",
+                    TargetMinutes = 240,
+                    SafetyRisk = false,
+                    HabitabilityImpact = false,
+                    RequiresManagerEscalation = false,
+                    Category = "General",
+                    ResponseTemplate = defaultTemplate?.Template,
+                    SafetyInstructions = null
+                };
+            }
+
+            _logger.LogInformation("✅ Matched urgency rule: Keyword='{Keyword}', UrgencyLevel={UrgencyLevel}, Category={Category}, SLA={SLA}min",
+                matchedRule.Keyword, matchedRule.UrgencyLevel, matchedRule.Category, matchedRule.TargetMinutesToResolve);
+
+            return new MaintenanceUrgencyClassification
+            {
+                UrgencyLevel = matchedRule.UrgencyLevel,
+                TaskPriority = matchedRule.TaskPriority,
+                TargetMinutes = matchedRule.TargetMinutesToResolve,
+                SafetyRisk = matchedRule.IsSafetyRisk,
+                HabitabilityImpact = matchedRule.IsHabitabilityImpact,
+                RequiresManagerEscalation = matchedRule.RequiresManagerEscalation,
+                Category = matchedRule.Category ?? "General",
+                ResponseTemplate = matchedRule.ResponseTemplate?.Template,
+                SafetyInstructions = matchedRule.SafetyInstructions
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error classifying maintenance urgency for message: '{Message}'", message);
+
+            // Safe fallback
+            return new MaintenanceUrgencyClassification
+            {
+                UrgencyLevel = "NORMAL",
+                TaskPriority = "Normal",
+                TargetMinutes = 240,
+                SafetyRisk = false,
+                HabitabilityImpact = false,
+                RequiresManagerEscalation = false,
+                Category = "General"
+            };
+        }
+    }
+
+    /// <summary>
+    /// Handles late checkout requests - creates staff task for front desk approval
+    /// </summary>
+    private async Task<MessageRoutingResponse> HandleLateCheckoutRequest(
+        TenantContext tenantContext,
+        Conversation conversation,
+        string normalizedMessage)
+    {
+        try
+        {
+            _logger.LogInformation("🕐 Handling late checkout request for conversation {ConversationId}", conversation.Id);
+
+            // 1. Extract requested checkout time using LLM
+            var requestedTime = await ExtractCheckoutTimeFromMessage(normalizedMessage);
+
+            if (requestedTime == null)
+            {
+                return new MessageRoutingResponse
+                {
+                    Reply = "I'd be happy to help with a late checkout! What time would you like to checkout?"
+                };
+            }
+
+            // 2. Get guest's active booking
+            var booking = await _context.Bookings
+                .Where(b => b.TenantId == tenantContext.TenantId &&
+                           b.Phone == conversation.WaUserPhone &&
+                           (b.Status == "Confirmed" || b.Status == "CheckedIn"))
+                .OrderByDescending(b => b.CheckinDate)
+                .FirstOrDefaultAsync();
+
+            if (booking == null)
+            {
+                return new MessageRoutingResponse
+                {
+                    Reply = "I don't have an active booking for your number. Could you please provide your booking details or contact our front desk?"
+                };
+            }
+
+            // 3. Get tenant settings for standard checkout time (NO HARDCODING!)
+            var tenantSettings = await _context.TenantSettings
+                .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId);
+
+            var standardCheckoutTime = tenantSettings?.StandardCheckOutTime ?? TimeSpan.FromHours(12);
+
+            // 4. Get intent settings for acknowledgement template
+            var intentSettings = await _context.IntentSettings
+                .FirstOrDefaultAsync(i => i.TenantId == tenantContext.TenantId && i.IntentName == "LATE_CHECKOUT");
+
+            // 5. Create StaffTask for front desk approval
+            var task = new StaffTask
+            {
+                TenantId = tenantContext.TenantId,
+                ConversationId = conversation.Id,
+                BookingId = booking.Id,
+                Title = $"Late Checkout Request - Room {booking.RoomNumber}",
+                Description = $"Guest {booking.GuestName} requests checkout at {requestedTime:hh\\:mm} (standard checkout: {standardCheckoutTime:hh\\:mm})",
+                Department = intentSettings?.AssignedDepartment ?? "FrontDesk",
+                Priority = intentSettings?.TaskPriority ?? "Normal",
+                TaskType = "checkout_modification",
+                Status = "Pending",
+                RoomNumber = booking.RoomNumber,
+                GuestName = booking.GuestName,
+                GuestPhone = conversation.WaUserPhone,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.StaffTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("✅ Created late checkout task {TaskId} for room {RoomNumber}", task.Id, booking.RoomNumber);
+
+            // 6. Create BookingModification record
+            var modification = new BookingModification
+            {
+                TenantId = tenantContext.TenantId,
+                BookingId = booking.Id,
+                ConversationId = conversation.Id,
+                ModificationType = "late_checkout",
+                RequestDetails = $"{{\"requestedCheckoutTime\": \"{requestedTime:HH:mm}\"}}",
+                RequestedCheckOutTime = requestedTime,
+                Status = "Pending",
+                ApprovalStatus = "Pending",
+                RequestedAt = DateTime.UtcNow
+            };
+
+            _context.BookingModifications.Add(modification);
+            await _context.SaveChangesAsync();
+
+            // 7. Get acknowledgement template and replace placeholders
+            var acknowledgeTemplate = intentSettings?.CustomResponse ??
+                "I've received your late checkout request for {TIME}. Let me notify our front desk team to check availability. They'll get back to you shortly!";
+
+            // Format time as HH:MM (e.g., 14:00 or 2:00 PM)
+            var timeFormatted = DateTime.Today.Add(requestedTime.Value).ToString("h:mm tt");
+            var response = acknowledgeTemplate.Replace("{TIME}", timeFormatted);
+
+            // 8. Notify staff
+            await _notificationService.NotifyTaskCreatedAsync(tenantContext.TenantId, task);
+
+            return new MessageRoutingResponse
+            {
+                Reply = response,
+                ActionType = "late_checkout_request_created",
+                Action = JsonSerializer.SerializeToElement(new { taskId = task.Id, requestedTime })
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling late checkout request");
+            return new MessageRoutingResponse
+            {
+                Reply = "I apologize, but I'm having trouble processing your late checkout request. Please contact our front desk directly."
+            };
+        }
+    }
+
+    /// <summary>
+    /// Extracts checkout time from guest message using LLM
+    /// </summary>
+    private async Task<TimeSpan?> ExtractCheckoutTimeFromMessage(string message)
+    {
+        try
+        {
+            var prompt = $@"Extract the requested checkout time from this message: ""{message}""
+
+Time formats to recognize:
+- ""2pm"", ""2:00pm"", ""14:00"", ""2 o'clock""
+- ""noon"", ""12pm""
+- ""1pm"", ""3pm"", etc.
+
+Return ONLY the time in 24-hour format HH:mm (e.g., ""14:00"", ""15:30"")
+If no time is mentioned, return ""NONE""
+
+Time:";
+
+            // Simple regex-based extraction for common time formats
+            var messageLower = message.ToLower();
+
+            // Match patterns like "2pm", "14:00", "3 pm", "1pm", etc.
+            var pmMatch = System.Text.RegularExpressions.Regex.Match(messageLower, @"(\d{1,2})\s*pm");
+            if (pmMatch.Success)
+            {
+                var hour = int.Parse(pmMatch.Groups[1].Value);
+                if (hour != 12) hour += 12;
+                _logger.LogInformation("✅ Extracted checkout time: {Hour}:00", hour);
+                return new TimeSpan(hour, 0, 0);
+            }
+
+            var amMatch = System.Text.RegularExpressions.Regex.Match(messageLower, @"(\d{1,2})\s*am");
+            if (amMatch.Success)
+            {
+                var hour = int.Parse(amMatch.Groups[1].Value);
+                if (hour == 12) hour = 0;
+                _logger.LogInformation("✅ Extracted checkout time: {Hour}:00", hour);
+                return new TimeSpan(hour, 0, 0);
+            }
+
+            var timeMatch = System.Text.RegularExpressions.Regex.Match(messageLower, @"(\d{1,2}):(\d{2})");
+            if (timeMatch.Success)
+            {
+                var hour = int.Parse(timeMatch.Groups[1].Value);
+                var minute = int.Parse(timeMatch.Groups[2].Value);
+                _logger.LogInformation("✅ Extracted checkout time: {Hour}:{Minute}", hour, minute);
+                return new TimeSpan(hour, minute, 0);
+            }
+
+            // Default to 2 PM if "late checkout" mentioned but no specific time
+            if (messageLower.Contains("late") || messageLower.Contains("extend"))
+            {
+                _logger.LogInformation("✅ Defaulting to 14:00 for late checkout request");
+                return new TimeSpan(14, 0, 0);
+            }
+
+            _logger.LogWarning("Could not extract time from message: {Message}", message);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error extracting checkout time from message");
+            return null;
+        }
+    }
+
+    #endregion
 }

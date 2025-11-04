@@ -181,12 +181,28 @@ public class BookingModification
     public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
     public DateTime? ProcessedAt { get; set; }
     public int? ProcessedBy { get; set; } // Staff user ID
-    
+
+    // NEW: Late checkout specific fields
+    public TimeSpan? RequestedCheckOutTime { get; set; } // Requested late checkout time
+
+    [MaxLength(20)]
+    public string? ApprovalStatus { get; set; } // Pending|Auto-Approved|Approved|Rejected
+
+    [MaxLength(500)]
+    public string? ApprovalReason { get; set; } // Reason for approval/rejection
+
+    public decimal? PricingImpact { get; set; } // Additional charge for late checkout
+
+    public int? ApprovedBy { get; set; } // Staff user ID who approved
+
+    public DateTime? ApprovedAt { get; set; }
+
     // Navigation properties
     public virtual Tenant Tenant { get; set; } = null!;
     public virtual Booking Booking { get; set; } = null!;
     public virtual Conversation? Conversation { get; set; }
     public virtual User? ProcessedByUser { get; set; }
+    public virtual User? ApprovedByUser { get; set; }
 }
 
 public class BookingChangeHistory
