@@ -304,20 +304,22 @@ export class ActivityComponent implements OnInit, OnDestroy {
 
   formatDate(date: string | Date): string {
     const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('en-US', {
+    return d.toLocaleDateString('en-ZA', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
+      timeZone: 'Africa/Johannesburg'
     });
   }
 
   formatDateTime(date: string | Date): string {
     const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleString('en-US', {
+    return d.toLocaleString('en-ZA', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Africa/Johannesburg'
     });
   }
 
@@ -399,7 +401,7 @@ export class ActivityComponent implements OnInit, OnDestroy {
     return this.stats?.totalActiveUsers || 0;
   }
 
-  getTopActionsByCount(): Array<{action: string, count: number}> {
+  getTopActionsByCount(): Array<{ action: string, count: number }> {
     if (!this.stats?.activitiesByAction) return [];
 
     return Object.entries(this.stats.activitiesByAction)
@@ -408,7 +410,7 @@ export class ActivityComponent implements OnInit, OnDestroy {
       .slice(0, 5);
   }
 
-  getTopEntitiesByCount(): Array<{entity: string, count: number}> {
+  getTopEntitiesByCount(): Array<{ entity: string, count: number }> {
     if (!this.stats?.activitiesByEntity) return [];
 
     return Object.entries(this.stats.activitiesByEntity)

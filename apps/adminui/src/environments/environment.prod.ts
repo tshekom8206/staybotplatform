@@ -3,6 +3,8 @@ export const environment = {
   apiUrl: '/api', // Use relative path in production
   hubUrl: '/hubs/tasks',
   tenantId: null, // Set after login
+  locale: 'en-ZA', // South African English
+  timezone: 'Africa/Johannesburg', // South African Standard Time (SAST - UTC+2)
   theme: {
     primaryColor: '#25D466',
     primaryLight: '#E8FAF0',

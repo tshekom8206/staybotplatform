@@ -193,7 +193,7 @@ export class InteractionDetailComponent implements OnInit, OnDestroy {
       const diffInDays = Math.floor(diffInHours / 24);
       if (diffInDays === 1) return 'Yesterday';
       if (diffInDays < 7) return `${diffInDays} days ago`;
-      return dateObj.toLocaleDateString();
+      return dateObj.toLocaleDateString('en-ZA', { timeZone: 'Africa/Johannesburg' });
     }
   }
 

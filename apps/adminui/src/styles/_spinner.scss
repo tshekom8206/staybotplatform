@@ -36,7 +36,11 @@
       content: '';
     }
     &.spinner:after {
-      background: var(--#{$prefix}body-bg);
+      background-color: var(--#{$prefix}body-bg);
+      background-image: url('/assets/images/staybot.png');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 70%;
       width: 75%;
       height: 75%;
       border-radius: 50%;

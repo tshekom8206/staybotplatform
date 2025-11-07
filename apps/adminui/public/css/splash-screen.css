@@ -18,12 +18,17 @@
 }
 
 .splash-screen .logo {
-  background-image: url(../images/logo-mini-light.png);
-  width: 30px;
-  height: 30px;
-  background-size: 30px;
+  background-image: url(../assets/images/staybot.png);
+  width: 60px;
+  height: 60px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   position: absolute;
   z-index: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
  }
 
 .splash-screen .spinner {
@@ -54,7 +59,11 @@
 }
 
 .splash-screen .spinner:after {
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: url(../assets/images/staybot.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 70%;
   width: 90%;
   height: 90%;
   border-radius: 50%;
@@ -94,5 +103,5 @@
 }
 
 [data-bs-theme="dark"] .splash-screen .logo {
-  background-image: url(../images/logo-mini-dark.png);
+  background-image: url(../assets/images/staybot.png);
 }

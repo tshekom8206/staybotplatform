@@ -15,6 +15,9 @@ using Hostr.Api.Configuration;
 using Hostr.Api.Jobs;
 using Quartz;
 
+// Configure Npgsql to handle DateTime as UTC
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Serilog
@@ -302,14 +305,14 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<HostrDbContext>();
     await context.Database.MigrateAsync();
-    
+
     // Seed mock menu data and initialize services for tenants
     var menuService = scope.ServiceProvider.GetRequiredService<IMenuService>();
     var emergencyService = scope.ServiceProvider.GetRequiredService<IEmergencyService>();
     var lostAndFoundService = scope.ServiceProvider.GetRequiredService<ILostAndFoundService>();
     var tenantService = scope.ServiceProvider.GetRequiredService<ITenantService>();
-    
-    try 
+
+    try
     {
         // Get all tenants and seed mock data for each one
         var tenants = await context.Tenants.ToListAsync();
@@ -319,7 +322,7 @@ using (var scope = app.Services.CreateScope())
             await emergencyService.SeedEmergencyDataAsync(tenant.Id);
             await lostAndFoundService.SeedLostAndFoundDataAsync(tenant.Id);
         }
-        
+
         Log.Information("Menu, emergency, and lost & found systems initialization completed successfully");
     }
     catch (Exception ex)

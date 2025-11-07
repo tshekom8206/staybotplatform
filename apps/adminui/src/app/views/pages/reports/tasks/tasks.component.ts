@@ -153,7 +153,7 @@ export class TasksComponent implements OnInit {
 
     return Object.entries(this.data.tasksByDay)
       .map(([date, count]) => ({
-        label: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        label: new Date(date).toLocaleDateString('en-ZA', { month: 'short', day: 'numeric', timeZone: 'Africa/Johannesburg' }),
         value: count
       }))
       .sort((a, b) => new Date(a.label).getTime() - new Date(b.label).getTime())

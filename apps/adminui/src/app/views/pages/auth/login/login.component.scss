@@ -1,6 +1,384 @@
 :host {
   height: 100vh;
+  display: block;
+  background-color: #f0f4f8;
+}
+
+.login-page-wrapper {
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 2rem;
+  background-color: #f0f4f8;
+}
+
+.cards-container {
+  display: flex;
+  max-width: 1000px;
+  width: 100%;
+  gap: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border-radius: 1rem;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.login-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  background-color: #ffffff;
+  min-height: 600px;
+}
+
+.login-form-wrapper {
+  width: 100%;
+  max-width: 28rem;
+}
+
+// Logo Section
+.logo-section {
+  margin-bottom: 2rem;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-icon {
+  width: 2rem;
+  height: 2rem;
+  background-color: #374151;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  span {
+    color: white;
+    font-weight: bold;
+    font-size: 0.875rem;
+  }
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #66cc33;
+
+  .logo-accent {
+    color: #ff6633;
+  }
+}
+
+// Welcome Section
+.welcome-section {
+  margin-bottom: 2rem;
+}
+
+.welcome-title {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.welcome-description {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+// Form Styles
+.login-form {
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 0.75rem;
+  z-index: 2;
+  color: #9ca3af;
+  font-size: 1.25rem;
+}
+
+.input-icon-right {
+  position: absolute;
+  right: 0.75rem;
+  z-index: 2;
+  color: #9ca3af;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.modern-input {
+  width: 100%;
+  padding: 0.75rem 0.75rem 0.75rem 2.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #66cc33;
+    box-shadow: 0 0 0 3px rgba(102, 204, 51, 0.1);
+  }
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+}
+
+.error-message {
+  margin-top: 0.25rem;
+
+  small {
+    color: #ef4444;
+    font-size: 0.75rem;
+  }
+}
+
+.forgot-password {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.forgot-link {
+  color: #2563eb;
+  font-size: 0.875rem;
+  text-decoration: none;
+
+  &:hover {
+    color: #1d4ed8;
+    text-decoration: none;
+  }
+}
+
+.modern-alert {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.modern-btn {
+  width: 100%;
+  background-color: #33cc66;
+  border: none;
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  margin-bottom: 1.5rem;
+
+  &:hover:not(:disabled) {
+    background-color: #2bb85a;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+
+// Promotional Panel
+.promo-card {
+  flex: 1;
+  background: linear-gradient(135deg, #66cc33 0%, #33cc66 100%);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  min-height: 600px;
+
+  @media (min-width: 992px) {
+    display: flex;
+  }
+}
+
+.promo-content {
+  max-width: 28rem;
+  text-align: center;
+  color: white;
+}
+
+.promo-title {
+  font-size: 2.25rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.promo-subtitle {
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+// Testimonial
+.testimonial {
+  margin-bottom: 3rem;
+}
+
+.quote-mark {
+  font-size: 4rem;
+  font-weight: 300;
+  line-height: 1;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.testimonial-text {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.author-avatar {
+  width: 3rem;
+  height: 3rem;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .avatar-initials {
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: #e5e7eb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+}
+
+.author-info {
+  text-align: left;
+}
+
+.author-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.author-title {
+  font-size: 0.875rem;
+  opacity: 0.8;
+  color: #e6ffe6;
+}
+
+// Companies Section
+.companies-section {
+  .companies-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.8;
+    margin-bottom: 1.5rem;
+    color: #e6ffe6;
+  }
+}
+
+.companies-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  opacity: 0.8;
+}
+
+.company-logo {
+  background-color: white;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 600;
+  height: 2rem;
+}
+
+// Responsive Design
+@media (max-width: 991.98px) {
+  .login-page-wrapper {
+    padding: 1rem;
+  }
+
+  .cards-container {
+    flex-direction: column;
+    max-width: 500px;
+    gap: 0;
+  }
+
+  .login-card {
+    padding: 2rem 1.5rem;
+    min-height: auto;
+  }
+
+  .login-form-wrapper {
+    max-width: 24rem;
+  }
+
+  .promo-card {
+    display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .login-page-wrapper {
+    padding: 0.5rem;
+  }
+
+  .cards-container {
+    max-width: 100%;
+    border-radius: 0.5rem;
+  }
+
+  .login-card {
+    padding: 1.5rem 1rem;
+  }
 }

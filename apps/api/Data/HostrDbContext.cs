@@ -10,7 +10,7 @@ namespace Hostr.Api.Data;
 public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
-    
+
     public HostrDbContext(DbContextOptions<HostrDbContext> options, IHttpContextAccessor httpContextAccessor)
         : base(options)
     {
@@ -56,7 +56,7 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<MaintenanceItem> MaintenanceItems { get; set; }
     public DbSet<MaintenanceRequest> MaintenanceRequests { get; set; }
     public DbSet<MaintenanceHistory> MaintenanceHistory { get; set; }
-    
+
     // Booking modification models
     public DbSet<BookingModification> BookingModifications { get; set; }
 
@@ -83,7 +83,7 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     // Tenant Department Configuration
     public DbSet<TenantDepartment> TenantDepartments { get; set; }
     public DbSet<ServiceDepartmentMapping> ServiceDepartmentMappings { get; set; }
-    
+
     // Lost and Found models
     public DbSet<LostItem> LostItems { get; set; }
     public DbSet<FoundItem> FoundItems { get; set; }
@@ -124,6 +124,9 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     // User Notification Read tracking
     public DbSet<UserNotificationRead> UserNotificationReads { get; set; }
 
+    // Password Reset OTP
+    public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -150,6 +153,7 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
         ConfigureBusinessMetrics(builder);
         ConfigureBusinessRules(builder);
         ConfigureAgentTransfer(builder);
+        ConfigurePasswordResetOtp(builder);
         ConfigureIndexes(builder);
 
         // Global query filters for tenant isolation
@@ -512,7 +516,7 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     private void ApplyGlobalFilters(ModelBuilder builder)
     {
         var tenantId = GetCurrentTenantId();
-        
+
         if (tenantId.HasValue)
         {
             builder.Entity<Conversation>().HasQueryFilter(e => e.TenantId == tenantId);
@@ -566,7 +570,7 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
                     c => c.ToArray()));
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
-        
+
         builder.Entity<EmergencyIncident>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -584,7 +588,7 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             entity.Property(e => e.ResponseActions).HasColumnType("jsonb");
             entity.Property(e => e.ReportedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
-        
+
         builder.Entity<EmergencyProtocol>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -600,7 +604,7 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
                     c => c.ToArray()));
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
-        
+
         builder.Entity<EmergencyContact>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -833,6 +837,21 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             entity.Property(e => e.TransferredAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.HasIndex(e => new { e.ConversationId, e.TransferredAt });
             entity.HasIndex(e => new { e.TenantId, e.Status });
+        });
+    }
+
+    private void ConfigurePasswordResetOtp(ModelBuilder builder)
+    {
+        builder.Entity<PasswordResetOtp>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.HasIndex(e => new { e.UserId, e.Otp, e.IsUsed });
+            entity.HasIndex(e => e.ExpiresAt);
         });
     }
 }

@@ -15,6 +15,9 @@ public interface IAuthService
     Task<(bool Success, string Message)> InviteUserAsync(string email, string role, int tenantId, int invitedBy);
     Task<(bool Success, string Token, User? User, Tenant? Tenant)> AcceptInviteAsync(string inviteToken, string password);
     Task<(bool Success, string Token, User? User, Tenant? Tenant)> SwitchTenantAsync(int userId, string tenantSlug);
+    Task<(bool Success, string Message)> ForgotPasswordAsync(string email);
+    Task<(bool Success, string Message)> VerifyOtpAsync(string email, string otp);
+    Task<(bool Success, string Message)> ResetPasswordAsync(string email, string otp, string newPassword);
     string GenerateJwtToken(User user, Tenant tenant, string role);
     int? GetCurrentUserId(HttpContext httpContext);
 }
@@ -119,7 +122,7 @@ public class AuthService : IAuthService
                 // Check if already member of this tenant
                 var existingMembership = await _context.UserTenants
                     .AnyAsync(ut => ut.UserId == existingUser.Id && ut.TenantId == tenantId);
-                
+
                 if (existingMembership)
                 {
                     return (false, "User is already a member of this tenant");
@@ -219,7 +222,7 @@ public class AuthService : IAuthService
         {
             // Decode token to get user email (simplified - in production use proper token structure)
             var handler = new JwtSecurityTokenHandler();
-            
+
             // For now, assume token contains email - in production, implement proper invite token structure
             // This is a simplified implementation
             return (false, string.Empty, null, null);
@@ -238,8 +241,8 @@ public class AuthService : IAuthService
             var userTenant = await _context.UserTenants
                 .Include(ut => ut.User)
                 .Include(ut => ut.Tenant)
-                .FirstOrDefaultAsync(ut => ut.UserId == userId && 
-                                          ut.Tenant.Slug == tenantSlug && 
+                .FirstOrDefaultAsync(ut => ut.UserId == userId &&
+                                          ut.Tenant.Slug == tenantSlug &&
                                           ut.Tenant.Status == "Active");
 
             if (userTenant == null)
@@ -254,6 +257,156 @@ public class AuthService : IAuthService
         {
             _logger.LogError(ex, "Switch tenant failed for user: {UserId}", userId);
             return (false, string.Empty, null, null);
+        }
+    }
+
+    public async Task<(bool Success, string Message)> ForgotPasswordAsync(string email)
+    {
+        try
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            // Always return success to prevent email enumeration attacks
+            if (user == null || !user.IsActive)
+            {
+                _logger.LogWarning("Password reset requested for non-existent or inactive user: {Email}", email);
+                return (true, "If the email exists in our system, a password reset code has been sent.");
+            }
+
+            // Generate 6-digit OTP
+            var random = new Random();
+            var otp = random.Next(100000, 999999).ToString();
+
+            // Store OTP in database with 15-minute expiration
+            var otpRecord = new PasswordResetOtp
+            {
+                UserId = user.Id,
+                Otp = otp,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(15),
+                IsUsed = false
+            };
+
+            _context.PasswordResetOtps.Add(otpRecord);
+            await _context.SaveChangesAsync();
+
+            // Build reset URL (for frontend navigation)
+            var resetUrl = $"{_configuration["AppUrl"]}/auth/verify-otp?email={Uri.EscapeDataString(email)}";
+
+            // Send OTP email
+            var emailSent = await _emailService.SendPasswordResetEmailAsync(
+                user.Email!,
+                user.Email!,
+                otp,
+                resetUrl);
+
+            if (!emailSent)
+            {
+                _logger.LogError("Failed to send password reset email to: {Email}", email);
+                return (false, "Failed to send password reset code. Please try again later.");
+            }
+
+            _logger.LogInformation("Password reset OTP sent to: {Email}", email);
+            return (true, "If the email exists in our system, a password reset code has been sent.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Forgot password failed for email: {Email}", email);
+            return (false, "An error occurred. Please try again later.");
+        }
+    }
+
+    public async Task<(bool Success, string Message)> VerifyOtpAsync(string email, string otp)
+    {
+        try
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                _logger.LogWarning("OTP verification attempted for non-existent user: {Email}", email);
+                return (false, "Invalid verification code.");
+            }
+
+            // Find valid OTP
+            var otpRecord = await _context.PasswordResetOtps
+                .Where(o => o.UserId == user.Id &&
+                           o.Otp == otp &&
+                           !o.IsUsed &&
+                           o.ExpiresAt > DateTime.UtcNow)
+                .OrderByDescending(o => o.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (otpRecord == null)
+            {
+                _logger.LogWarning("Invalid or expired OTP for user: {Email}", email);
+                return (false, "Invalid or expired verification code.");
+            }
+
+            _logger.LogInformation("OTP verified successfully for user: {Email}", email);
+            return (true, "Verification code is valid.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "OTP verification failed for email: {Email}", email);
+            return (false, "An error occurred. Please try again later.");
+        }
+    }
+
+    public async Task<(bool Success, string Message)> ResetPasswordAsync(string email, string otp, string newPassword)
+    {
+        try
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                _logger.LogWarning("Password reset attempted for non-existent user: {Email}", email);
+                return (false, "Invalid password reset request.");
+            }
+
+            if (!user.IsActive)
+            {
+                _logger.LogWarning("Password reset attempted for inactive user: {Email}", email);
+                return (false, "User account is inactive.");
+            }
+
+            // Find and validate OTP
+            var otpRecord = await _context.PasswordResetOtps
+                .Where(o => o.UserId == user.Id &&
+                           o.Otp == otp &&
+                           !o.IsUsed &&
+                           o.ExpiresAt > DateTime.UtcNow)
+                .OrderByDescending(o => o.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (otpRecord == null)
+            {
+                _logger.LogWarning("Invalid or expired OTP for password reset: {Email}", email);
+                return (false, "Invalid or expired verification code.");
+            }
+
+            // Remove old password and set new one
+            await _userManager.RemovePasswordAsync(user);
+            var result = await _userManager.AddPasswordAsync(user, newPassword);
+
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogWarning("Password reset failed for {Email}: {Errors}", email, errors);
+                return (false, "Failed to reset password. " + errors);
+            }
+
+            // Mark OTP as used
+            otpRecord.IsUsed = true;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Password successfully reset for user: {Email}", email);
+            return (true, "Password has been reset successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Reset password failed for email: {Email}", email);
+            return (false, "An error occurred. Please try again later.");
         }
     }
 
