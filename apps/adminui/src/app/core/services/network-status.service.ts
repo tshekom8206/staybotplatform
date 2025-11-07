@@ -123,7 +123,7 @@ export class NetworkStatusService {
    */
   async testConnectivity(): Promise<boolean> {
     try {
-      const response = await fetch('/favicon.ico', {
+      const response = await fetch('/assets/images/staybot.png', {
         method: 'HEAD',
         cache: 'no-cache'
       });
