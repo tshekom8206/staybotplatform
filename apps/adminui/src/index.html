@@ -1,44 +1,143 @@
-<!doctype html>
+<!DOCTYPE html>
 
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>StayBOT - Your WhatsApp Concierge</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="stylesheet" href="css/splash-screen.css">
+  <head>
+    <meta charset="utf-8" />
+    <title>StayBOT - Your WhatsApp Concierge</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="assets/images/staybot.png" />
+    <style>
+      .splash-screen {
+        --primary: #6571ff;
+        --bg: #f9fafb;
+        background: var(--bg);
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&amp;display=swap" rel="stylesheet">
-  <!-- End fonts -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#727cf5">
-</head>
-<body>
+      .splash-screen .logo {
+        background-image: url("assets/images/staybot.png");
+        width: 60px;
+        height: 60px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        position: absolute;
+        z-index: 1;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
 
-  <!-- START: Setting up theme mode on page load for the splash screen -->
-  <script>
-    const themeMode = localStorage.getItem('theme');
-    if (themeMode) {
-      document.documentElement.setAttribute('data-bs-theme', themeMode);
-    } else {
-      document.documentElement.setAttribute('data-bs-theme', window.matchMedia('(prefers-color-scheme: dark)').matches? 'dark': 'light');
-    }
-  </script>
-  <!-- END: Setting up theme mode on page load for the splash screen -->
+      .splash-screen .spinner {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(
+          to right,
+          var(--primary) 10%,
+          rgba(0, 0, 0, 0) 42%
+        );
+        animation: loading 1.4s infinite linear;
+        transform: translateZ(0);
+      }
 
-  <app-root>
-    <!-- START: Splash screen -->
-    <div class="splash-screen">
-      <div class="logo"></div>
-      <div class="spinner"></div>
-    </div>
-    <!-- END: Splash screen -->
-  </app-root>
+      .splash-screen .spinner:before {
+        width: 50%;
+        height: 50%;
+        background: var(--primary);
+        border-radius: 100% 0 0 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        content: "";
+      }
 
-  <noscript>Please enable JavaScript to continue using this application.</noscript>
-</body>
+      .splash-screen .spinner:after {
+        background-color: var(--bg);
+        background-image: url("assets/images/staybot.png");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 70%;
+        width: 90%;
+        height: 90%;
+        border-radius: 50%;
+        content: "";
+        margin: auto;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+      }
+
+      @keyframes loading {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      [data-bs-theme="dark"] .splash-screen,
+      [data-bs-theme="dark"] .splash-screen .spinner:after {
+        background: #070d19;
+      }
+
+      [data-bs-theme="dark"] .splash-screen .logo {
+        background-image: url("assets/images/staybot.png");
+      }
+    </style>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <!-- End fonts -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#727cf5" />
+  </head>
+  <body>
+    <!-- START: Setting up theme mode on page load for the splash screen -->
+    <script>
+      const themeMode = localStorage.getItem("theme");
+      if (themeMode) {
+        document.documentElement.setAttribute("data-bs-theme", themeMode);
+      } else {
+        document.documentElement.setAttribute(
+          "data-bs-theme",
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light"
+        );
+      }
+    </script>
+    <!-- END: Setting up theme mode on page load for the splash screen -->
+
+    <app-root>
+      <!-- START: Splash screen -->
+      <div class="splash-screen">
+        <div class="logo"></div>
+        <div class="spinner"></div>
+      </div>
+      <!-- END: Splash screen -->
+    </app-root>
+
+    <noscript
+      >Please enable JavaScript to continue using this application.</noscript
+    >
+  </body>
 </html>
