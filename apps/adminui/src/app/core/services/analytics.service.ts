@@ -673,17 +673,17 @@ export class AnalyticsService {
   private formatPeriodLabel(date: Date, period: 'hour' | 'day' | 'week' | 'month'): string {
     switch (period) {
       case 'hour':
-        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Johannesburg' });
       case 'day':
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return date.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric', timeZone: 'Africa/Johannesburg' });
       case 'week':
         const endOfWeek = new Date(date);
         endOfWeek.setDate(endOfWeek.getDate() + 6);
-        return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        return `${date.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric', timeZone: 'Africa/Johannesburg' })} - ${endOfWeek.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric', timeZone: 'Africa/Johannesburg' })}`;
       case 'month':
-        return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        return date.toLocaleDateString('en-ZA', { month: 'long', year: 'numeric', timeZone: 'Africa/Johannesburg' });
       default:
-        return date.toLocaleDateString();
+        return date.toLocaleDateString('en-ZA', { timeZone: 'Africa/Johannesburg' });
     }
   }
 }

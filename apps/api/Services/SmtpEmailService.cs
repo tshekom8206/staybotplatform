@@ -25,9 +25,9 @@ public class SmtpEmailService : IEmailService
     {
         try
         {
-            var subject = "Reset Your Hostr Password";
+            var subject = "Your Hostr Password Reset Code";
             var htmlBody = GeneratePasswordResetHtml(userName, resetUrl, resetToken);
-            var textBody = $"Hi {userName},\n\nYou requested to reset your password. Please visit: {resetUrl}\n\nIf you didn't request this, please ignore this email.";
+            var textBody = $"Hi {userName},\n\nYour password reset code is: {resetToken}\n\nThis code will expire in 15 minutes.\n\nIf you didn't request this, please ignore this email.";
 
             return await SendEmailAsync(toEmail, subject, htmlBody, textBody);
         }
@@ -140,7 +140,7 @@ public class SmtpEmailService : IEmailService
         return smtpClient;
     }
 
-    private string GeneratePasswordResetHtml(string userName, string resetUrl, string token)
+    private string GeneratePasswordResetHtml(string userName, string resetUrl, string otp)
     {
         return $@"
 <!DOCTYPE html>
@@ -153,7 +153,7 @@ public class SmtpEmailService : IEmailService
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
         .header {{ background-color: #2563eb; color: white; padding: 20px; text-align: center; }}
         .content {{ background-color: #f9fafb; padding: 30px; border-radius: 8px; margin: 20px 0; }}
-        .button {{ background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; }}
+        .otp-code {{ background-color: #dbeafe; color: #1e40af; padding: 20px; font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 8px; border-radius: 8px; margin: 20px 0; }}
         .footer {{ text-align: center; color: #6b7280; font-size: 12px; margin-top: 30px; }}
     </style>
 </head>
@@ -165,9 +165,9 @@ public class SmtpEmailService : IEmailService
         <div class='content'>
             <h2>Hi {userName},</h2>
             <p>We received a request to reset your password for your Hostr account.</p>
-            <p>Click the button below to reset your password:</p>
-            <a href='{resetUrl}' class='button'>Reset Password</a>
-            <p style='margin-top: 30px;'><strong>This link will expire in 24 hours.</strong></p>
+            <p>Use the verification code below to reset your password:</p>
+            <div class='otp-code'>{otp}</div>
+            <p style='margin-top: 30px;'><strong>This code will expire in 15 minutes.</strong></p>
             <p>If you didn't request this password reset, please ignore this email or contact support if you have concerns.</p>
         </div>
         <div class='footer'>

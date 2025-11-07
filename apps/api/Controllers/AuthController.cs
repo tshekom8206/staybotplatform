@@ -90,22 +90,22 @@ public class AuthController : ControllerBase
         {
             var tenantId = int.Parse(HttpContext.Items["TenantId"]?.ToString() ?? "0");
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
+
             var (success, message) = await _authService.InviteUserAsync(request.Email, request.Role, tenantId, userId);
-            
-            return Ok(new ApiResponse<object> 
-            { 
-                Success = success, 
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = success,
                 Data = new { Message = message }
             });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Invite error");
-            return StatusCode(500, new ApiResponse<object> 
-            { 
-                Success = false, 
-                Error = "Internal server error" 
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Error = "Internal server error"
             });
         }
     }
@@ -116,13 +116,13 @@ public class AuthController : ControllerBase
         try
         {
             var (success, token, user, tenant) = await _authService.AcceptInviteAsync(request.Token, request.Password);
-            
+
             if (!success || user == null || tenant == null)
             {
-                return BadRequest(new ApiResponse<object> 
-                { 
-                    Success = false, 
-                    Error = "Invalid or expired invite token" 
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Error = "Invalid or expired invite token"
                 });
             }
 
@@ -148,19 +148,19 @@ public class AuthController : ControllerBase
                 }
             };
 
-            return Ok(new ApiResponse<LoginResponse> 
-            { 
-                Success = true, 
-                Data = response 
+            return Ok(new ApiResponse<LoginResponse>
+            {
+                Success = true,
+                Data = response
             });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Accept invite error");
-            return StatusCode(500, new ApiResponse<object> 
-            { 
-                Success = false, 
-                Error = "Internal server error" 
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Error = "Internal server error"
             });
         }
     }
@@ -172,15 +172,15 @@ public class AuthController : ControllerBase
         try
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
+
             var (success, token, user, tenant) = await _authService.SwitchTenantAsync(userId, request.TenantSlug);
-            
+
             if (!success || user == null || tenant == null)
             {
-                return BadRequest(new ApiResponse<object> 
-                { 
-                    Success = false, 
-                    Error = "Unable to switch to the specified tenant" 
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Error = "Unable to switch to the specified tenant"
                 });
             }
 
@@ -206,19 +206,111 @@ public class AuthController : ControllerBase
                 }
             };
 
-            return Ok(new ApiResponse<LoginResponse> 
-            { 
-                Success = true, 
-                Data = response 
+            return Ok(new ApiResponse<LoginResponse>
+            {
+                Success = true,
+                Data = response
             });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Switch tenant error");
-            return StatusCode(500, new ApiResponse<object> 
-            { 
-                Success = false, 
-                Error = "Internal server error" 
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Error = "Internal server error"
+            });
+        }
+    }
+
+    //need to add a background job to delete old otps
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        try
+        {
+            var (success, message) = await _authService.ForgotPasswordAsync(request.Email);
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Data = new { Message = message }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Forgot password error for email: {Email}", request.Email);
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Error = "Internal server error"
+            });
+        }
+    }
+
+    [HttpPost("verify-otp")]
+    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
+    {
+        try
+        {
+            var (success, message) = await _authService.VerifyOtpAsync(request.Email, request.Otp);
+
+            if (!success)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Error = message
+                });
+            }
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Data = new { Message = message }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Verify OTP error for email: {Email}", request.Email);
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Error = "Internal server error"
+            });
+        }
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        try
+        {
+            var (success, message) = await _authService.ResetPasswordAsync(request.Email, request.Otp, request.NewPassword);
+
+            if (!success)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Error = message
+                });
+            }
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Data = new { Message = message }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Reset password error for email: {Email}", request.Email);
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Error = "Internal server error"
             });
         }
     }
