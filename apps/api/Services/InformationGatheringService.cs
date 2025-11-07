@@ -111,6 +111,8 @@ TASK: Extract ALL booking-related information and return JSON:
 {{
   ""serviceName"": ""exact service name from AVAILABLE SERVICES list or null if not found"",
   ""serviceCategory"": ""LOCAL_TOURS|MASSAGE|CONFERENCE_ROOM|HOUSEKEEPING_ITEMS|DINING|null"",
+  ""mealType"": ""breakfast|lunch|dinner|null (ONLY set if guest explicitly mentions breakfast/lunch/dinner)"",
+  ""location"": ""restaurant name or location for DINING bookings (e.g., 'Main Restaurant', 'Pool Bar') or null"",
   ""numberOfPeople"": <number or null>,
   ""requestedDate"": ""YYYY-MM-DD or null"",
   ""requestedTime"": ""HH:MM or null"",
@@ -173,19 +175,21 @@ SMART EXTRACTION RULES:
    - ""5 people"" -> numberOfPeople: 5
 
 2. DATE PARSING:
+   - ""today"" -> {currentDate}
+   - ""tonight"" -> {currentDate} (tonight means today's date)
    - ""tomorrow"" -> calculate from {currentDate}
    - ""next Tuesday"" -> calculate exact date
    - ""this Friday"" -> calculate exact date
    - ""in 3 days"" -> calculate from {currentDate}
-   - ""today"" -> {currentDate}
 
 3. TIME PARSING:
-   - ""morning"" -> ""09:00""
-   - ""afternoon"" -> ""14:00""
-   - ""evening"" -> ""18:00""
-   - ""night"" -> ""20:00""
+   - ""morning"" / ""this morning"" -> ""09:00""
+   - ""afternoon"" / ""this afternoon"" -> ""14:00""
+   - ""evening"" / ""this evening"" -> ""18:00""
+   - ""night"" / ""tonight"" (time context) -> ""20:00""
    - ""ASAP"" / ""as soon as possible"" -> null (means earliest available)
    - ""6am"" -> ""06:00""
+   - ""7pm"" / ""7:00pm"" -> ""19:00""
    - ""2:30pm"" -> ""14:30""
 
 4. HANDLING CORRECTIONS/UPDATES:
@@ -204,9 +208,35 @@ SMART EXTRACTION RULES:
    - Massages, spa treatments -> MASSAGE
    - Meeting rooms, conference facilities -> CONFERENCE_ROOM
    - Towels, pillows, amenities -> HOUSEKEEPING_ITEMS
-   - Food, meals, room service -> DINING
+   - Food, meals, room service, restaurant reservations, table bookings, dining reservations -> DINING
 
-7. MERGE WITH EXISTING STATE:
+7. TABLE RESERVATION HANDLING (CRITICAL for DINING):
+   - If guest says ""reserve a table"", ""book a table"", ""table for lunch/dinner/breakfast"", or ""restaurant reservation""
+   - ALWAYS set serviceCategory to ""DINING""
+   - Extract mealType if mentioned (breakfast, lunch, dinner)
+   - Do NOT require serviceName for table reservations - leave it null (guest will order from menu at restaurant)
+   - Example: ""I want to reserve a table for lunch"" -> serviceCategory: ""DINING"", mealType: ""lunch"", serviceName: null
+
+8. LOCATION/RESTAURANT EXTRACTION (for DINING only):
+   - Extract location if guest mentions specific restaurant or dining area
+   - Examples of valid locations: ""Main Restaurant"", ""Pool Bar"", ""Poolside"", ""Terrace Restaurant"", etc.
+   - Examples:
+     * ""Reserve a table at the Main Restaurant"" -> location: ""Main Restaurant""
+     * ""Book a table for dinner at the Pool Bar"" -> location: ""Pool Bar""
+     * ""I want lunch"" -> location: null (not mentioned, will ask later)
+   - If guest asks ""which restaurant?"" later, extract from their response
+
+9. MEAL TYPE DETECTION (for DINING only):
+   - ONLY set mealType if guest explicitly mentions breakfast, lunch, or dinner
+   - Examples:
+     * Guest says 'I want breakfast' -> mealType: ""breakfast""
+     * Guest says 'book dinner for tomorrow' -> mealType: ""dinner""
+     * Guest says 'lunch menu please' -> mealType: ""lunch""
+     * Guest says 'I want to eat' -> mealType: null (not specific)
+     * Guest says 'food for tomorrow' -> mealType: null (not specific)
+   - If mealType is null, system will use time-based filtering automatically
+
+9. MERGE WITH EXISTING STATE:
    - If existingState has fields and new message doesn't override them, keep existing values
    - Only update fields that are explicitly mentioned in the new message
 
@@ -224,6 +254,8 @@ Return ONLY valid JSON, no other text.";
 
             if (extracted.ServiceName != null) state.ServiceName = extracted.ServiceName;
             if (extracted.ServiceCategory != null) state.ServiceCategory = extracted.ServiceCategory;
+            if (extracted.MealType != null) state.MealType = extracted.MealType;
+            if (extracted.Location != null) state.Location = extracted.Location;
             if (extracted.NumberOfPeople.HasValue) state.NumberOfPeople = extracted.NumberOfPeople;
             if (extracted.RequestedDate != null && DateOnly.TryParse(extracted.RequestedDate, out var date))
                 state.RequestedDate = date;
@@ -244,18 +276,16 @@ Return ONLY valid JSON, no other text.";
 
                 if (!userMentionedService)
                 {
-                    // User didn't explicitly mention the service - check if there are multiple similar services
-                    // Look for services with similar names (e.g., "Traditional Massage", "Aromatherapy Massage")
-                    var servicesWithSimilarNames = availableServices
-                        .Where(s => s.Name.Contains("Massage", StringComparison.OrdinalIgnoreCase) ||
-                                   s.Name.Contains("Spa", StringComparison.OrdinalIgnoreCase) ||
-                                   s.Name.Contains(state.ServiceCategory ?? "", StringComparison.OrdinalIgnoreCase))
+                    // User didn't explicitly mention the service - check if there are multiple services in this CATEGORY
+                    // IMPORTANT: Only look at services in the SAME category to avoid category switching
+                    var servicesInCategory = availableServices
+                        .Where(s => s.Category == state.ServiceCategory)
                         .ToList();
 
-                    if (servicesWithSimilarNames.Count > 1)
+                    if (servicesInCategory.Count > 1)
                     {
-                        _logger.LogWarning("LLM extracted serviceName '{ServiceName}' but user said '{Message}' - user didn't explicitly mention this service. Found {Count} similar services: {Services}. Nullifying to force option listing.",
-                            state.ServiceName, message, servicesWithSimilarNames.Count, string.Join(", ", servicesWithSimilarNames.Select(s => s.Name)));
+                        _logger.LogWarning("LLM extracted serviceName '{ServiceName}' but user said '{Message}' - user didn't explicitly mention this service. Found {Count} services in category {Category}: {Services}. Nullifying to force option listing.",
+                            state.ServiceName, message, servicesInCategory.Count, state.ServiceCategory, string.Join(", ", servicesInCategory.Select(s => s.Name)));
                         state.ServiceName = null;
                     }
                 }
@@ -265,6 +295,7 @@ Return ONLY valid JSON, no other text.";
             state.ProvidedFields.Clear();
             if (state.ServiceName != null) state.ProvidedFields.Add("ServiceName");
             if (state.ServiceCategory != null) state.ProvidedFields.Add("ServiceCategory");
+            if (state.Location != null) state.ProvidedFields.Add("Location");
             if (state.NumberOfPeople.HasValue) state.ProvidedFields.Add("NumberOfPeople");
             if (state.RequestedDate.HasValue) state.ProvidedFields.Add("RequestedDate");
             if (state.RequestedTime.HasValue) state.ProvidedFields.Add("RequestedTime");
@@ -387,6 +418,12 @@ CONTINUE PATTERNS (intent=""continue""):
 - Answering the current question directly
 - Providing requested information
 - Following up on current topic
+- CRITICAL: Confirmation/acceptance messages like:
+  * ""Thanks"", ""Thank you"", ""Thanks so much""
+  * ""Sounds good"", ""Perfect"", ""Great""
+  * ""Looking forward to it"", ""See you then""
+  * ""Have a great day"" (as closing after agreement)
+  These indicate the user is satisfied and agreeing with the booking, NOT canceling or switching topics
 
 Return ONLY valid JSON.";
 
@@ -439,7 +476,7 @@ Return ONLY valid JSON.";
 - MASSAGE: serviceName, numberOfPeople, requestedDate, requestedTime
 - SPA: serviceName, numberOfPeople, requestedDate, requestedTime
 - CONFERENCE_ROOM: requestedDate, requestedTime, numberOfPeople
-- DINING: serviceName, numberOfPeople, requestedDate, requestedTime
+- DINING: numberOfPeople, requestedDate, requestedTime (CRITICAL: serviceName and location are OPTIONAL for DINING - NEVER add them to missingFields)
 - ACTIVITIES: serviceName, numberOfPeople, requestedDate
 - HOUSEKEEPING_ITEMS: serviceName only";
             }
@@ -455,18 +492,40 @@ CURRENT STATE:
 Service Category: {normalizedCategory}
 Extracted Information: {stateJson}
 
-TASK: Return JSON:
+TASK: Return JSON with ONLY the fields that are ACTUALLY missing:
 {{
   ""missingFields"": [""field1"", ""field2""],
   ""readyToBook"": true/false,
   ""reasoning"": ""explain what's missing or why ready""
 }}
 
-RULES:
-- If serviceName is vague (like ""tour"" without specific tour), count as missing
-- If numberOfPeople is ambiguous or null when required, count as missing
-- Optional fields (specialRequests) don't count as missing
-- Use exact field names: ServiceName, NumberOfPeople, RequestedDate, RequestedTime
+CRITICAL VALIDATION RULES - FOLLOW EXACTLY:
+
+1. NumberOfPeople:
+   - If the JSON shows ""NumberOfPeople"": 1 or ""NumberOfPeople"": 2 or ""NumberOfPeople"": 3 or ""NumberOfPeople"": 4 (ANY NUMBER) → DO NOT add to missingFields
+   - If the JSON shows ""NumberOfPeople"": null → ADD to missingFields
+
+2. RequestedDate:
+   - If the JSON shows ""RequestedDate"": ""2025-10-18"" (ANY VALID YYYY-MM-DD DATE) → DO NOT add to missingFields
+   - If the JSON shows ""RequestedDate"": null → ADD to missingFields
+
+3. RequestedTime:
+   - If the JSON shows ""RequestedTime"": ""19:00:00"" (ANY VALID HH:MM:SS TIME) → DO NOT add to missingFields
+   - If the JSON shows ""RequestedTime"": null → ADD to missingFields
+
+4. ServiceName:
+   - For DINING bookings: serviceName is ALWAYS optional → NEVER add to missingFields
+   - For other bookings: If the JSON shows ""ServiceName"": null → ADD to missingFields
+
+5. Location (for DINING only):
+   - Location is OPTIONAL for DINING bookings
+   - If missing, bot will ask for clarification, but NOT required to proceed
+   - NEVER add Location to missingFields for DINING bookings
+
+FIELD NAME RULES:
+- Use EXACT JSON property names: ServiceName, NumberOfPeople, RequestedDate, RequestedTime, Location
+- DO NOT add fields that have non-null values in the JSON
+- Optional fields (specialRequests, location for DINING) are NEVER missing
 
 Return ONLY valid JSON.";
 
@@ -542,14 +601,15 @@ Return ONLY valid JSON.";
         }
     }
 
-    private async Task<Dictionary<string, List<string>>> LoadAvailableServicesByCategory(int tenantId)
+    private async Task<Dictionary<string, List<string>>> LoadAvailableServicesByCategory(int tenantId, string? mealType = null, TimeOnly? requestedTime = null)
     {
         try
         {
             using var scope = new TenantScope(_context, tenantId);
 
+            // Load non-dining services from Services table
             var services = await _context.Services
-                .Where(s => s.TenantId == tenantId && s.IsAvailable)
+                .Where(s => s.TenantId == tenantId && s.IsAvailable && s.Category != "DINING")
                 .Select(s => new { s.Name, s.Category })
                 .ToListAsync();
 
@@ -560,8 +620,51 @@ Return ONLY valid JSON.";
                     g => g.Select(s => s.Name).ToList()
                 );
 
-            _logger.LogInformation("Loaded services for tenant {TenantId}: {Categories} categories, {Total} total services",
-                tenantId, grouped.Keys.Count, services.Count);
+            // Determine meal type filter: Use explicit mealType if provided, otherwise infer from time
+            string? effectiveMealType = mealType;
+            if (effectiveMealType == null && requestedTime.HasValue)
+            {
+                // Time-based fallback
+                var hour = requestedTime.Value.Hour;
+                effectiveMealType = hour switch
+                {
+                    >= 6 and < 11 => "breakfast",
+                    >= 11 and < 16 => "lunch",
+                    >= 16 and <= 23 => "dinner",
+                    _ => null // Late night/early morning - show all
+                };
+
+                if (effectiveMealType != null)
+                {
+                    _logger.LogInformation("No explicit meal type - inferred '{MealType}' from time {Time}",
+                        effectiveMealType, requestedTime.Value);
+                }
+            }
+
+            // Load DINING items from Menu system with meal type filtering
+            var diningQuery = _context.MenuItems
+                .Where(m => m.TenantId == tenantId && m.IsAvailable);
+
+            // Apply meal type filter if specified
+            if (!string.IsNullOrEmpty(effectiveMealType))
+            {
+                diningQuery = diningQuery.Where(m => m.MealType == effectiveMealType || m.MealType == "all");
+                _logger.LogInformation("Filtering menu items by meal type: {MealType}", effectiveMealType);
+            }
+
+            var diningItems = await diningQuery
+                .Select(m => m.Name)
+                .ToListAsync();
+
+            if (diningItems.Any())
+            {
+                grouped["DINING"] = diningItems;
+                _logger.LogInformation("Loaded {Count} {MealType} dining items from Menu for tenant {TenantId}",
+                    diningItems.Count, effectiveMealType ?? "all", tenantId);
+            }
+
+            _logger.LogInformation("Loaded services for tenant {TenantId}: {Categories} categories, {ServiceCount} services, {DiningCount} menu items",
+                tenantId, grouped.Keys.Count, services.Count, diningItems.Count);
 
             return grouped;
         }
@@ -577,10 +680,10 @@ Return ONLY valid JSON.";
         return category switch
         {
             "LOCAL_TOURS" => "tour",
-            "MASSAGE" => "massage type",
-            "SPA" => "spa service",
+            "MASSAGE" => "massage",
+            "SPA" => "spa treatment",
             "CONFERENCE_ROOM" => "room",
-            "DINING" => "dining option",
+            "DINING" => "dish",
             "ACTIVITIES" => "activity",
             _ => "service"
         };
@@ -594,12 +697,40 @@ Return ONLY valid JSON.";
         try
         {
             var stateJson = JsonSerializer.Serialize(state);
+
+            // CRITICAL FIX FOR DINING: Remove ServiceName from missing fields for DINING category
+            // For table reservations, guests don't need to pre-select dishes - they order from menu
+            if (state.ServiceCategory == "DINING" && state.MissingRequiredFields.Contains("ServiceName"))
+            {
+                _logger.LogInformation("Removing ServiceName from missing fields for DINING category (table reservation)");
+                state.MissingRequiredFields.Remove("ServiceName");
+            }
+
             var missingFields = string.Join(", ", state.MissingRequiredFields);
 
-            // Load actual services from database
-            var availableServicesByCategory = await LoadAvailableServicesByCategory(tenantId);
+            // Load actual services from database with meal type filtering
+            var availableServicesByCategory = await LoadAvailableServicesByCategory(tenantId, state.MealType, state.RequestedTime);
 
-            // Build dynamic service examples
+            // CRITICAL FIX: If serviceName is missing and we have a list of available services,
+            // bypass the LLM entirely to prevent hallucination and construct the question directly
+            // NOTE: This should NOT trigger for DINING because we removed ServiceName above
+            if (state.MissingRequiredFields.Contains("ServiceName") &&
+                state.ServiceCategory != null &&
+                availableServicesByCategory.ContainsKey(state.ServiceCategory))
+            {
+                var services = availableServicesByCategory[state.ServiceCategory];
+                if (services.Any())
+                {
+                    var servicesList = string.Join(", ", services);
+                    var categoryLabel = GetCategoryLabel(state.ServiceCategory);
+                    var question = $"Which {categoryLabel} would you like? We offer: {servicesList}";
+
+                    _logger.LogInformation("Generated question (direct, no LLM): {Question}", question);
+                    return question;
+                }
+            }
+
+            // Build dynamic service examples for other fields (numberOfPeople, requestedDate, requestedTime)
             var serviceOptionsSection = new System.Text.StringBuilder();
             serviceOptionsSection.AppendLine("4. Show available options when asking about serviceName:");
 
@@ -609,7 +740,10 @@ Return ONLY valid JSON.";
                 if (services.Any())
                 {
                     var servicesList = string.Join(", ", services);
-                    serviceOptionsSection.AppendLine($"   - For {state.ServiceCategory}: \"Which {GetCategoryLabel(state.ServiceCategory)} would you like? We have: {servicesList}\"");
+                    serviceOptionsSection.AppendLine($"   - CRITICAL: For {state.ServiceCategory}: You MUST list all available options explicitly");
+                    serviceOptionsSection.AppendLine($"     ✅ CORRECT: \"Which {GetCategoryLabel(state.ServiceCategory)} would you like? We offer: {servicesList}\"");
+                    serviceOptionsSection.AppendLine($"     ❌ WRONG: \"Which {GetCategoryLabel(state.ServiceCategory)} would you like?\" (without listing options)");
+                    serviceOptionsSection.AppendLine($"     Available services: {servicesList}");
                 }
                 else
                 {
@@ -638,12 +772,14 @@ QUESTION ATTEMPTS SO FAR: {state.QuestionAttempts} / {BookingInformationState.MA
 
 TASK: Generate ONE clarifying question to ask the guest.
 
-RULES:
+MANDATORY RULES (MUST FOLLOW):
 1. Ask for the MOST IMPORTANT missing field first:
-   - Priority 1: serviceName (if specific service not identified)
+   - SPECIAL CASE FOR DINING: For table reservations (DINING category), NEVER ask about serviceName
+   - Priority 1: serviceName (if specific service not identified) - EXCEPT for DINING
    - Priority 2: numberOfPeople (for services that need it)
    - Priority 3: requestedDate
    - Priority 4: requestedTime
+   - For DINING bookings, start with Priority 2 (numberOfPeople)
 
 2. Be conversational and natural, not robotic
 
@@ -654,9 +790,16 @@ RULES:
 
 5. Use context from conversation history to make question more natural
 
+6. CRITICAL ENFORCEMENT - When asking about serviceName:
+   - Your question MUST include the phrase ""We offer:"" followed by the list of services
+   - NEVER ask ""Which [category] would you like?"" without listing the options
+   - The guest cannot choose if they don't know what's available
+   - Example CORRECT format: ""Which dish would you like? We offer: Grilled Ribeye Steak, Salmon Fillet, Vegetarian Pasta""
+   - Example WRONG format: ""Which dish would you like?"" (missing the list)
+
 Return ONLY valid JSON with format: {{ ""question"": ""your question here"" }}";
 
-            var response = await _openAIService.GetStructuredResponseAsync<QuestionResponse>(prompt, 0.7); // Higher temp for natural language
+            var response = await _openAIService.GetStructuredResponseAsync<QuestionResponse>(prompt, 0.3); // Lower temp to enforce rules strictly
 
             if (response == null || string.IsNullOrEmpty(response.Question))
             {
@@ -729,7 +872,8 @@ TASK: Validate the booking. Return JSON:
 VALIDATION RULES:
 
 1. SERVICE AVAILABILITY:
-   - If service is null or isAvailable = false:
+   - SPECIAL CASE: If serviceCategory is DINING and service is null, this is VALID (menu items are not in Services table)
+   - For non-DINING categories: If service is null or isAvailable = false:
      * isValid: false
      * errorType: ""availability""
      * errorMessage: ""I'm sorry, that service is currently unavailable""
@@ -789,6 +933,8 @@ Return ONLY valid JSON.";
     {
         public string? ServiceName { get; set; }
         public string? ServiceCategory { get; set; }
+        public string? MealType { get; set; }
+        public string? Location { get; set; }
         public int? NumberOfPeople { get; set; }
         public string? RequestedDate { get; set; }
         public string? RequestedTime { get; set; }

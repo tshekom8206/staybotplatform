@@ -2657,6 +2657,10 @@ namespace Hostr.Api.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
+                    b.Property<string>("IntentClassification")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("MessageType")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -2685,42 +2689,6 @@ namespace Hostr.Api.Migrations
                     b.HasIndex("TenantId", "ConversationId", "CreatedAt");
 
                     b.ToTable("Messages");
-                });
-
-            modelBuilder.Entity("Hostr.Api.Models.PasswordResetOtp", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Otp")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExpiresAt");
-
-                    b.HasIndex("UserId", "Otp", "IsUsed");
-
-                    b.ToTable("PasswordResetOtps");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.PostStaySurvey", b =>
@@ -5149,17 +5117,6 @@ namespace Hostr.Api.Migrations
                     b.Navigation("Conversation");
 
                     b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("Hostr.Api.Models.PasswordResetOtp", b =>
-                {
-                    b.HasOne("Hostr.Api.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Hostr.Api.Models.PostStaySurvey", b =>

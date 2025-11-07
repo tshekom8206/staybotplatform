@@ -95,13 +95,31 @@ public class WebhookController : ControllerBase
             {
                 try
                 {
+                    _logger.LogInformation("🚀 Starting background processing for {MessageCount} messages", messageIds.Count);
+
                     using var scope = _serviceScopeFactory.CreateScope();
                     var whatsAppService = scope.ServiceProvider.GetRequiredService<IWhatsAppService>();
-                    await whatsAppService.ProcessInboundMessageAsync(payload);
+                    var (success, response) = await whatsAppService.ProcessInboundMessageAsync(payload);
+
+                    if (success)
+                    {
+                        _logger.LogInformation("✅ Background processing completed successfully. Response: {Response}",
+                            response ?? "(no response)");
+                    }
+                    else
+                    {
+                        _logger.LogWarning("⚠️ Background processing completed with success=false");
+                    }
+                }
+                catch (DbUpdateException dbEx)
+                {
+                    _logger.LogError(dbEx, "❌ DATABASE ERROR in background webhook processing. Inner: {Inner}",
+                        dbEx.InnerException?.Message ?? "No inner exception");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error processing webhook message in background");
+                    _logger.LogError(ex, "❌ GENERAL ERROR in background webhook processing. Type: {Type}, Message: {Message}",
+                        ex.GetType().Name, ex.Message);
                 }
             });
 

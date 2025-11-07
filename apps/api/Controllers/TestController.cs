@@ -65,6 +65,11 @@ public class TestController : ControllerBase
                 _logger.LogInformation("Created new conversation for phone {Phone} and tenant {TenantId}",
                     request.PhoneNumber, request.TenantId);
             }
+            else
+            {
+                _logger.LogInformation("Loaded existing conversation {ConversationId} with Mode={Mode}, StateVariables={StateVariables}",
+                    conversation.Id, conversation.ConversationMode, conversation.StateVariables ?? "null");
+            }
 
             // Create message
             var message = new Message
@@ -100,6 +105,12 @@ public class TestController : ControllerBase
             await _actionProcessingService.ProcessActionsAsync(
                 tenantContext, conversation, routingResult);
 
+            // Reload conversation to get updated StateVariables
+            await _context.Entry(conversation).ReloadAsync();
+
+            _logger.LogInformation("After processing, conversation {ConversationId} StateVariables={StateVariables}",
+                conversation.Id, conversation.StateVariables ?? "null");
+
             return Ok(new
             {
                 ConversationId = conversation.Id,
@@ -107,6 +118,8 @@ public class TestController : ControllerBase
                 Response = routingResult.Reply,
                 PhoneNumber = request.PhoneNumber,
                 TenantId = request.TenantId,
+                ConversationMode = conversation.ConversationMode,
+                StateVariables = conversation.StateVariables,
                 HasActions = routingResult.Action.HasValue || (routingResult.Actions?.Any() == true)
             });
         }

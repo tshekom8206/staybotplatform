@@ -19,6 +19,16 @@ public class BookingInformationState
     public string? ServiceCategory { get; set; }
 
     /// <summary>
+    /// Meal type for DINING bookings (breakfast, lunch, dinner, or null for non-dining)
+    /// </summary>
+    public string? MealType { get; set; }
+
+    /// <summary>
+    /// Location/Restaurant name for DINING bookings (e.g., "Main Restaurant", "Pool Bar", etc.)
+    /// </summary>
+    public string? Location { get; set; }
+
+    /// <summary>
     /// Number of people for the booking (required for tours, massages, conferences)
     /// </summary>
     public int? NumberOfPeople { get; set; }
@@ -57,6 +67,16 @@ public class BookingInformationState
     /// Maximum number of clarifying questions before escalation
     /// </summary>
     public const int MAX_QUESTIONS = 3;
+
+    /// <summary>
+    /// Number of times user has asked for booking confirmation
+    /// </summary>
+    public int ConfirmationAttempts { get; set; } = 0;
+
+    /// <summary>
+    /// Maximum number of confirmation attempts before forcing database lookup
+    /// </summary>
+    public const int MAX_CONFIRMATION_ATTEMPTS = 2;
 
     /// <summary>
     /// Confidence level of the extraction (0.0 to 1.0)
@@ -138,5 +158,20 @@ public class BookingValidationResult
     public string? ErrorType { get; set; } // "capacity", "advance_booking", "availability", "date_past"
     public string? ErrorMessage { get; set; }
     public string? SuggestedAlternative { get; set; }
+    public string? Reasoning { get; set; }
+}
+
+/// <summary>
+/// Result from confirmation request extraction
+/// </summary>
+public class ConfirmationRequest
+{
+    public bool IsConfirmationRequest { get; set; }
+    public string? ServiceCategory { get; set; } // DINING, LOCAL_TOURS, etc.
+    public int? NumberOfPeople { get; set; }
+    public DateOnly? RequestedDate { get; set; }
+    public TimeOnly? RequestedTime { get; set; }
+    public string? Location { get; set; }
+    public double Confidence { get; set; }
     public string? Reasoning { get; set; }
 }
