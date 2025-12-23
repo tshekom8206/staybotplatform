@@ -13,6 +13,12 @@ public interface ITenantCacheService
     Task<List<RequestItem>> GetTenantRequestItemsAsync(int tenantId);
     Task InvalidateTenantCacheAsync(int tenantId);
     Task<string> GetTenantTimezoneAsync(int tenantId);
+
+    // NEW: Hotel configuration caching
+    Task<HotelInfo?> GetTenantHotelInfoAsync(int tenantId);
+    Task<List<BusinessInfo>> GetTenantBusinessInfoAsync(int tenantId);
+    Task<BusinessInfo?> GetBusinessInfoByCategoryAsync(int tenantId, string category);
+    Task<List<MenuItem>> GetTenantMenuItemsAsync(int tenantId);
 }
 
 public class TenantCacheService : ITenantCacheService
@@ -186,7 +192,10 @@ public class TenantCacheService : ITenantCacheService
                 $"tenant_services_{tenantId}",
                 $"tenant_menu_categories_{tenantId}",
                 $"tenant_request_items_{tenantId}",
-                $"tenant_timezone_{tenantId}"
+                $"tenant_timezone_{tenantId}",
+                $"tenant_hotel_info_{tenantId}",
+                $"tenant_business_info_{tenantId}",
+                $"tenant_menu_items_{tenantId}"
             };
 
             foreach (var key in cacheKeys)
@@ -202,5 +211,96 @@ public class TenantCacheService : ITenantCacheService
         }
 
         await Task.CompletedTask;
+    }
+
+    public async Task<HotelInfo?> GetTenantHotelInfoAsync(int tenantId)
+    {
+        var cacheKey = $"tenant_hotel_info_{tenantId}";
+
+        if (_cache.TryGetValue(cacheKey, out HotelInfo? cachedInfo))
+        {
+            return cachedInfo;
+        }
+
+        try
+        {
+            var hotelInfo = await _context.HotelInfos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(h => h.TenantId == tenantId);
+
+            // Cache even null to avoid repeated DB queries for missing data
+            _cache.Set(cacheKey, hotelInfo, _cacheExpiration);
+            _logger.LogDebug("Cached hotel info for tenant {TenantId}", tenantId);
+
+            return hotelInfo;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting hotel info for tenant {TenantId}", tenantId);
+            return null;
+        }
+    }
+
+    public async Task<List<BusinessInfo>> GetTenantBusinessInfoAsync(int tenantId)
+    {
+        var cacheKey = $"tenant_business_info_{tenantId}";
+
+        if (_cache.TryGetValue(cacheKey, out List<BusinessInfo>? cachedInfo) && cachedInfo != null)
+        {
+            return cachedInfo;
+        }
+
+        try
+        {
+            var businessInfo = await _context.BusinessInfo
+                .AsNoTracking()
+                .Where(b => b.TenantId == tenantId && b.IsActive)
+                .ToListAsync();
+
+            _cache.Set(cacheKey, businessInfo, _cacheExpiration);
+            _logger.LogDebug("Cached {Count} business info items for tenant {TenantId}", businessInfo.Count, tenantId);
+
+            return businessInfo;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting business info for tenant {TenantId}", tenantId);
+            return new List<BusinessInfo>();
+        }
+    }
+
+    public async Task<BusinessInfo?> GetBusinessInfoByCategoryAsync(int tenantId, string category)
+    {
+        // Use the cached list to find by category
+        var allInfo = await GetTenantBusinessInfoAsync(tenantId);
+        return allInfo.FirstOrDefault(b => b.Category == category);
+    }
+
+    public async Task<List<MenuItem>> GetTenantMenuItemsAsync(int tenantId)
+    {
+        var cacheKey = $"tenant_menu_items_{tenantId}";
+
+        if (_cache.TryGetValue(cacheKey, out List<MenuItem>? cachedItems) && cachedItems != null)
+        {
+            return cachedItems;
+        }
+
+        try
+        {
+            var menuItems = await _context.MenuItems
+                .AsNoTracking()
+                .Where(m => m.TenantId == tenantId && m.IsAvailable)
+                .ToListAsync();
+
+            _cache.Set(cacheKey, menuItems, _cacheExpiration);
+            _logger.LogDebug("Cached {Count} menu items for tenant {TenantId}", menuItems.Count, tenantId);
+
+            return menuItems;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting menu items for tenant {TenantId}", tenantId);
+            return new List<MenuItem>();
+        }
     }
 }

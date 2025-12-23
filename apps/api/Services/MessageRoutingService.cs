@@ -124,6 +124,7 @@ public class MessageRoutingService : IMessageRoutingService
     private readonly IInformationGatheringService _informationGatheringService;
     private readonly ILostAndFoundService _lostAndFoundService;
     private readonly IConfiguration _configuration;
+    private readonly ITenantCacheService _tenantCacheService;
 
     public MessageRoutingService(
         HostrDbContext context,
@@ -150,7 +151,8 @@ public class MessageRoutingService : IMessageRoutingService
         IHumanTransferService humanTransferService,
         IInformationGatheringService informationGatheringService,
         ILostAndFoundService lostAndFoundService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ITenantCacheService tenantCacheService)
     {
         _context = context;
         _openAIService = openAIService;
@@ -177,6 +179,7 @@ public class MessageRoutingService : IMessageRoutingService
         _informationGatheringService = informationGatheringService;
         _lostAndFoundService = lostAndFoundService;
         _configuration = configuration;
+        _tenantCacheService = tenantCacheService;
     }
 
     public async Task<MessageRoutingResponse> RouteMessageAsync(TenantContext tenantContext, Conversation conversation, Message message)
@@ -1079,12 +1082,11 @@ public class MessageRoutingService : IMessageRoutingService
             // Build comprehensive context
             var contextBuilder = new System.Text.StringBuilder();
 
-            // 1. Load Business Info (WiFi, hours, policies, etc.)
-            var businessInfo = await _context.BusinessInfo
-                .Where(b => b.TenantId == tenantContext.TenantId && b.IsActive)
+            // 1. Load Business Info (WiFi, hours, policies, etc.) - CACHED
+            var businessInfo = (await _tenantCacheService.GetTenantBusinessInfoAsync(tenantContext.TenantId))
                 .OrderBy(b => b.Category)
                 .ThenBy(b => b.DisplayOrder)
-                .ToListAsync();
+                .ToList();
 
             if (businessInfo.Any())
             {
@@ -1099,10 +1101,8 @@ public class MessageRoutingService : IMessageRoutingService
                 }
             }
 
-            // 3. Load Hotel Policies from HotelInfo table
-            var hotelInfo = await _context.HotelInfos
-                .Where(h => h.TenantId == tenantContext.TenantId)
-                .FirstOrDefaultAsync();
+            // 3. Load Hotel Policies from HotelInfo table - CACHED
+            var hotelInfo = await _tenantCacheService.GetTenantHotelInfoAsync(tenantContext.TenantId);
 
             if (hotelInfo != null)
             {
@@ -3023,13 +3023,12 @@ Property plan: {{PLAN}}";
             // Map query to service type
             var serviceType = DetectServiceType(messageLower);
 
-            // Get all hours info from BusinessInfo
-            var hoursInfo = await _context.BusinessInfo
-                .Where(b => b.TenantId == tenantContext.TenantId &&
-                           (b.Category == "hours" || b.Category == "facility_hours" ||
-                            b.Category == "restaurant_hours" || b.Category == "hotel_policies") &&
-                           b.IsActive)
-                .ToListAsync();
+            // Get all hours info from BusinessInfo - CACHED
+            var allBusinessInfo = await _tenantCacheService.GetTenantBusinessInfoAsync(tenantContext.TenantId);
+            var hoursInfo = allBusinessInfo
+                .Where(b => b.Category == "hours" || b.Category == "facility_hours" ||
+                            b.Category == "restaurant_hours" || b.Category == "hotel_policies")
+                .ToList();
 
             string? foundHours = null;
             string serviceName = serviceType.name;
@@ -4532,10 +4531,8 @@ Return ONLY valid JSON.";
     {
         try
         {
-            // Check if tenant has WiFi credentials configured in business info
-            var wifiInfo = await _context.BusinessInfo
-                .Where(b => b.TenantId == tenantId && b.Category == "wifi_credentials")
-                .FirstOrDefaultAsync();
+            // Check if tenant has WiFi credentials configured in business info - CACHED
+            var wifiInfo = await _tenantCacheService.GetBusinessInfoByCategoryAsync(tenantId, "wifi_credentials");
 
             if (wifiInfo != null && !string.IsNullOrEmpty(wifiInfo.Content))
             {
@@ -8746,12 +8743,10 @@ Return ONLY valid JSON, no markdown.";
                 }
             }
 
-            // Fallback: Query BusinessInfo for general dining hours
+            // Fallback: Query BusinessInfo for general dining hours - CACHED
             if (!serviceStart.HasValue || !serviceEnd.HasValue)
             {
-                var businessInfo = await _context.BusinessInfo
-                    .Where(b => b.TenantId == tenantId && b.Category == "hours" && b.IsActive)
-                    .FirstOrDefaultAsync();
+                var businessInfo = await _tenantCacheService.GetBusinessInfoByCategoryAsync(tenantId, "hours");
 
                 if (businessInfo != null && !string.IsNullOrEmpty(businessInfo.Content))
                 {
@@ -9121,9 +9116,8 @@ Return JSON:
         {
             _logger.LogInformation("🏨 Handling check-in/out inquiry for conversation {ConversationId}", conversation.Id);
 
-            // Get hotel information for check-in/out times
-            var hotelInfo = await _context.HotelInfos
-                .FirstOrDefaultAsync(h => h.TenantId == tenantContext.TenantId);
+            // Get hotel information for check-in/out times - CACHED
+            var hotelInfo = await _tenantCacheService.GetTenantHotelInfoAsync(tenantContext.TenantId);
 
             var entityType = intentAnalysis.DetectedIntents?.FirstOrDefault()?.EntityType?.ToLower() ?? "";
             bool isEarlyCheckIn = entityType.Contains("early check");
@@ -9580,9 +9574,8 @@ Return JSON:
             }
             else if (category == "AMENITIES" || entityType.Contains("activity") || entityType.Contains("activities"))
             {
-                // Get amenities from hotel info
-                var hotelInfo = await _context.HotelInfos
-                    .FirstOrDefaultAsync(h => h.TenantId == tenantContext.TenantId);
+                // Get amenities from hotel info - CACHED
+                var hotelInfo = await _tenantCacheService.GetTenantHotelInfoAsync(tenantContext.TenantId);
 
                 if (hotelInfo != null && !string.IsNullOrEmpty(hotelInfo.Features))
                 {
@@ -9590,11 +9583,11 @@ Return JSON:
                 }
                 else
                 {
-                    // Get amenity-related services from database as fallback
-                    var amenityServices = await _context.Services
-                        .Where(s => s.TenantId == tenantContext.TenantId && s.IsAvailable)
+                    // Get amenity-related services from database as fallback - CACHED
+                    var amenityServices = (await _tenantCacheService.GetTenantServicesAsync(tenantContext.TenantId))
+                        .Where(s => s.IsAvailable)
                         .Take(5)
-                        .ToListAsync();
+                        .ToList();
 
                     if (amenityServices.Any())
                     {
@@ -10105,8 +10098,8 @@ Time:";
             .ThenBy(s => s.Name)
             .ToListAsync();
 
-        var hotelInfo = await _context.HotelInfos
-            .FirstOrDefaultAsync(h => h.TenantId == tenantContext.TenantId);
+        // Get hotel info - CACHED
+        var hotelInfo = await _tenantCacheService.GetTenantHotelInfoAsync(tenantContext.TenantId);
 
         if (!services.Any() && hotelInfo == null)
         {
@@ -10286,8 +10279,8 @@ Time:";
     {
         _logger.LogInformation("HandleInformationInquiryAsync: {Query}", query);
 
-        var hotelInfo = await _context.HotelInfos
-            .FirstOrDefaultAsync(h => h.TenantId == tenantContext.TenantId);
+        // Get hotel info - CACHED
+        var hotelInfo = await _tenantCacheService.GetTenantHotelInfoAsync(tenantContext.TenantId);
 
         if (hotelInfo == null)
         {
