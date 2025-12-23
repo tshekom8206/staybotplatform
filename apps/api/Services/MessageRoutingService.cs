@@ -2426,6 +2426,19 @@ Property plan: {{PLAN}}";
                 };
             }
 
+            // Pattern matching for late checkout TIME responses (after bot asked "What time would you like to check out?")
+            if (lastBotMessage.Content.Contains("What time would you like to check out"))
+            {
+                // Check if the message contains a time
+                var timeMatch = System.Text.RegularExpressions.Regex.Match(messageText.ToLower(), @"(\d{1,2})\s*(pm|am|:)");
+                if (timeMatch.Success)
+                {
+                    _logger.LogInformation("🕐 Late checkout time response detected: {Message}", messageText);
+                    // Route to late checkout handler - it will extract the time
+                    return await HandleLateCheckoutRequest(tenantContext, conversation, messageText);
+                }
+            }
+
             // Pattern matching for toilet paper quantity responses
             if (IsQuantityResponse(messageText) && ContainsToiletPaperQuestion(lastBotMessage.Content))
             {
