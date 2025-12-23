@@ -25,6 +25,27 @@ public class DetectedIntent
     public string OriginalText { get; set; } = string.Empty;
     public double Confidence { get; set; }
     public int? RequestedQuantity { get; set; }
+
+    // OPTIMIZATION: Item request analysis (consolidated from MessageRoutingService)
+    public bool IsItemRequest { get; set; }
+    public double ItemRequestConfidence { get; set; }
+    public string? ItemRequestReasoning { get; set; }
+
+    // OPTIMIZATION: Confirmation request details (consolidated from MessageRoutingService)
+    public bool IsConfirmationRequest { get; set; }
+    public string? ServiceCategory { get; set; } // DINING|LOCAL_TOURS|MASSAGE|CONFERENCE_ROOM
+    public int? NumberOfPeople { get; set; }
+    public string? RequestedDate { get; set; } // YYYY-MM-DD
+    public string? RequestedTime { get; set; } // HH:MM
+    public string? Location { get; set; }
+
+    // OPTIMIZATION: Quantity clarification (consolidated from MessageRoutingService)
+    public bool IsQuantityClarification { get; set; }
+    public bool IsNewRequest { get; set; }
+    public bool IsCancellation { get; set; }
+    public string? ItemSlug { get; set; }
+    public string? ItemName { get; set; }
+    public int? Quantity { get; set; }
 }
 
 public class IntentAnalysisResult
@@ -42,6 +63,11 @@ public class IntentAnalysisResult
     // NEW: Support for multiple intents
     public List<DetectedIntent> DetectedIntents { get; set; } = new();
     public bool HasMultipleIntents => DetectedIntents.Count > 1;
+
+    // Service routing flags - routes to dedicated handlers instead of generic LLM
+    public bool ShouldRouteToService { get; set; }
+    public string? ServiceRouteType { get; set; } // "MENU", "AMENITIES", "SERVICES", "INFORMATION", "ITEM_REQUEST"
+    public string? ServiceRouteCategory { get; set; } // "dinner", "breakfast", "spa", etc.
 }
 
 public class LLMIntentAnalysisService : ILLMIntentAnalysisService
@@ -411,7 +437,7 @@ public class LLMIntentAnalysisService : ILLMIntentAnalysisService
         GuestContextInfo guestContext)
     {
         var prompt = $@"You are analyzing a guest message for {hotelContext.HotelName ?? "a hospitality property"}.
-Your job is ONLY to analyze the intent and identify what the guest is asking for - DO NOT generate responses.
+Your job is to analyze the intent AND generate an appropriate warm, professional response in ONE call.
 
 HOTEL CONFIGURATION:
 {JsonSerializer.Serialize(hotelContext, new JsonSerializerOptions { WriteIndented = true })}
@@ -447,7 +473,25 @@ Analyze this message and respond with the following JSON structure:
                 ""entity"": ""Quote the exact phrase for the entity or 'inferred from context'""
             }},
             ""assumptions"": [""List any assumptions made for this intent""],
-            ""uncertainties"": [""List any uncertainties about this intent classification""]
+            ""uncertainties"": [""List any uncertainties about this intent classification""],
+
+            ""isItemRequest"": true/false,
+            ""itemRequestConfidence"": 0.0-1.0,
+            ""itemRequestReasoning"": ""Brief explanation why this is/isn't an item request"",
+
+            ""isConfirmationRequest"": true/false,
+            ""serviceCategory"": ""DINING | LOCAL_TOURS | MASSAGE | CONFERENCE_ROOM | null"",
+            ""numberOfPeople"": <number or null>,
+            ""requestedDate"": ""YYYY-MM-DD or null"",
+            ""requestedTime"": ""HH:MM or null"",
+            ""location"": ""string or null"",
+
+            ""isQuantityClarification"": true/false,
+            ""isNewRequest"": true/false,
+            ""isCancellation"": true/false,
+            ""itemSlug"": ""item-slug or null"",
+            ""itemName"": ""Item Name or null"",
+            ""quantity"": <number or null>
         }}
     ],
     ""isAmbiguous"": true/false,
@@ -456,7 +500,8 @@ Analyze this message and respond with the following JSON structure:
         ""required"": true/false,
         ""type"": ""OPTION_SELECTION | QUANTITY | TIME | DETAILS | NONE"",
         ""question"": ""Warm clarification question if needed - CRITICAL: NEVER use vague language like 'and more', 'etc.', 'such as', or similar phrases. List ALL available options explicitly from the configuration.""
-    }}
+    }},
+    ""warmResponse"": ""REQUIRED: Generate a warm, professional hotel concierge response addressing the guest's request. Include relevant details like hours, prices, availability from the hotel configuration. Keep it natural, 2-3 sentences max. Match the language of the guest message.""
 }}
 
 REFLECTION REQUIREMENTS (CRITICAL - prevents hallucinations):
@@ -679,6 +724,40 @@ BOOKING INTENT CLASSIFICATION RULES:
 - Use REQUEST_SERVICE when guest is CREATING a NEW booking (e.g., ""Can I book a table for 4 tonight?"")
 - Use CANCELLATION when guest wants to CANCEL (not change) a booking (e.g., ""Cancel my dinner"", ""I can't make it"")
 
+WARM RESPONSE GENERATION RULES:
+1. Generate warmResponse in the SAME LANGUAGE as the guest message
+2. Be warm, professional, and concise (2-3 sentences max)
+3. Include relevant details from hotel configuration (hours, prices, features)
+4. For GREETING: ""Hello! Welcome to [hotel]. How may I assist you today?""
+5. For ACKNOWLEDGMENT: ""You're welcome! Is there anything else I can help you with?""
+6. For INQUIRY: Provide the specific information requested from hotel config
+7. For REQUEST_ITEM/SERVICE: Confirm you can help and mention any relevant details
+8. For AMBIGUOUS requests: Use the clarificationNeeded.question as warmResponse
+9. For MULTI-INTENT: Address ALL intents in the warmResponse, using transitions like ""Also,"" ""Additionally,""
+10. For LOST_AND_FOUND: Express concern and confirm you'll help locate the item
+11. For BOOKING_INQUIRY/CONFIRMATION: Provide booking details if available, or offer to check
+12. For CANCELLATION: Confirm the cancellation request professionally
+13. For LATE_CHECKOUT: Acknowledge request and inform about approval process
+14. For COMPLAINT: Express empathy and confirm immediate attention
+15. NEVER hallucinate services/items - only mention what's in the configuration
+
+ITEM REQUEST CLASSIFICATION (isItemRequest):
+Set isItemRequest=true when guest is REQUESTING a physical item, food, beverage, service delivery, or bookable service:
+✅ TRUE: ""I need towels"", ""Can I get water?"", ""I want a massage"", ""Book me a safari"", ""Send coffee to my room""
+❌ FALSE: ""What wines do you have?"", ""Tell me about your spa"", ""What tours are available?"", ""Thank you"", ""Hello""
+
+CONFIRMATION REQUEST DETECTION (isConfirmationRequest):
+Set isConfirmationRequest=true when guest is ASKING ABOUT an EXISTING booking/reservation:
+✅ TRUE: ""Is my table for 4 confirmed?"", ""Do I have a dinner reservation?"", ""Check my booking status""
+❌ FALSE: ""Book a table for 4"" (this is a NEW request, not checking existing)
+When true, extract: serviceCategory, numberOfPeople, requestedDate, requestedTime, location
+
+QUANTITY CLARIFICATION (isQuantityClarification):
+Set isQuantityClarification=true when guest is responding to a bot question about quantity:
+✅ TRUE: ""Yes, 2 bottles please"", ""Make it 3"", ""Just one""
+❌ FALSE: ""I need water"" (initial request, not clarification)
+Also set isNewRequest=true if they're adding a new item, isCancellation=true if cancelling
+
 Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.";
 
         return prompt;
@@ -796,7 +875,28 @@ Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.
                 EntityType = i.EntityType ?? "",
                 OriginalText = i.OriginalText ?? "",
                 Confidence = i.Confidence,
-                RequestedQuantity = i.RequestedQuantity
+                RequestedQuantity = i.RequestedQuantity,
+
+                // OPTIMIZATION: Item request analysis (from consolidated LLM call)
+                IsItemRequest = i.IsItemRequest,
+                ItemRequestConfidence = i.ItemRequestConfidence,
+                ItemRequestReasoning = i.ItemRequestReasoning,
+
+                // OPTIMIZATION: Confirmation request details (from consolidated LLM call)
+                IsConfirmationRequest = i.IsConfirmationRequest,
+                ServiceCategory = i.ServiceCategory,
+                NumberOfPeople = i.NumberOfPeople,
+                RequestedDate = i.RequestedDate,
+                RequestedTime = i.RequestedTime,
+                Location = i.Location,
+
+                // OPTIMIZATION: Quantity clarification (from consolidated LLM call)
+                IsQuantityClarification = i.IsQuantityClarification,
+                IsNewRequest = i.IsNewRequest,
+                IsCancellation = i.IsCancellation,
+                ItemSlug = i.ItemSlug,
+                ItemName = i.ItemName,
+                Quantity = i.Quantity
             }).ToList();
 
             _logger.LogWarning("===== AFTER VALIDATION =====");
@@ -813,40 +913,33 @@ Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.
             result.SpecificityLevel = primaryIntent.SpecificityLevel;
             result.AvailableOptions = primaryIntent.AvailableOptions;
             result.Confidence = primaryIntent.Confidence;
+
+            // Set service routing flags for intents that have database data
+            // This routes to dedicated handlers instead of generic LLM responses
+            SetServiceRoutingFlags(result, primaryIntent, originalMessage);
         }
 
-        // Generate warm response based on detected intents
-        if (result.DetectedIntents.Count > 1)
-        {
-            _logger.LogWarning("===== RESPONSE PATH: MULTI-INTENT =====");
-            // MULTI-INTENT: Handle each intent and combine responses
-            result.WarmResponse = await GenerateMultiIntentResponseAsync(
-                result.DetectedIntents,
-                hotelContext,
-                guestContext,
-                originalMessage);
-        }
-        else if (result.DetectedIntents.Count == 1)
-        {
-            // SINGLE INTENT: Use existing logic
-            var intent = result.DetectedIntents.First();
+        // OPTIMIZATION: Use pre-generated warmResponse from the single LLM call
+        // This eliminates 3 additional LLM calls (GenerateMultiIntentResponseAsync, GenerateInquiryResponseAsync, GenerateWarmResponseAsync)
+        _logger.LogWarning("===== RESPONSE PATH: USING PRE-GENERATED RESPONSE =====");
+        _logger.LogWarning("aiResponse.WarmResponse: {WarmResponse}", aiResponse.WarmResponse ?? "NULL");
 
-            _logger.LogWarning("===== RESPONSE PATH: SINGLE INTENT =====");
-            _logger.LogWarning("Intent: {Intent}, Category: {Category}, AvailableOptions Count: {Count}",
-                intent.Intent, intent.Category, intent.AvailableOptions.Count);
-            _logger.LogWarning("AvailableOptions: {Options}", string.Join(", ", intent.AvailableOptions));
-            _logger.LogWarning("IsAmbiguous: {IsAmbiguous}", result.IsAmbiguous);
+        if (!string.IsNullOrEmpty(aiResponse.WarmResponse))
+        {
+            // Use the pre-generated response from the single LLM call
+            result.WarmResponse = aiResponse.WarmResponse;
+            _logger.LogInformation("Using pre-generated WarmResponse from intent analysis call");
 
-            if (intent.AvailableOptions.Count > 0)
+            // CRITICAL: Override for ambiguous requests with validated options
+            // This ensures we only present options that exist in the database (anti-hallucination)
+            if (result.DetectedIntents.Count == 1)
             {
-                // CRITICAL: Check for ambiguity before generating response
-                // If ambiguous with multiple options, ask for clarification instead
+                var intent = result.DetectedIntents.First();
                 if (result.IsAmbiguous && intent.AvailableOptions.Count > 1 &&
-                    (intent.Intent == "REQUEST_ITEM" || intent.Intent == "REQUEST_SERVICE" || intent.Intent == "REQUEST_SERVICE"))
+                    (intent.Intent == "REQUEST_ITEM" || intent.Intent == "REQUEST_SERVICE"))
                 {
-                    _logger.LogWarning("===== TAKING CLARIFICATION PATH (lines 583-597) =====");
-                    // CRITICAL ANTI-HALLUCINATION: Always generate clarification from AvailableOptions
-                    // NEVER trust LLM's question as it may hallucinate items not in the database
+                    _logger.LogWarning("===== OVERRIDING WITH VALIDATED CLARIFICATION =====");
+                    // CRITICAL ANTI-HALLUCINATION: Always generate clarification from VALIDATED AvailableOptions
                     var optionsList = string.Join(", ", intent.AvailableOptions.Select((opt, idx) =>
                         idx == intent.AvailableOptions.Count - 1 && intent.AvailableOptions.Count > 1
                             ? $"or {opt}"
@@ -857,87 +950,48 @@ Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.
                     result.WarmResponse = clarificationQuestion;
 
                     _logger.LogInformation(
-                        "Ambiguous {Intent} detected with {Count} options. Asking clarification: '{Question}'",
+                        "Ambiguous {Intent} detected with {Count} options. Using validated clarification: '{Question}'",
                         intent.Intent, intent.AvailableOptions.Count, clarificationQuestion);
                 }
-                else
-                {
-                    // Not ambiguous or only one option - generate normal response
-                    var serviceDetails = await GetServiceDetailsAsync(intent.AvailableOptions, hotelContext);
-                    result.WarmResponse = await GenerateWarmResponseAsync(
-                        originalMessage,
-                        serviceDetails,
-                        hotelContext.HotelName ?? "our property",
-                        hotelContext.TenantId,
-                        guestContext.ConversationId,
-                        intent.Category);
-                }
             }
-            else if (intent.Intent == "GREETING")
+
+            // Handle clarification questions from LLM
+            if (aiResponse.ClarificationNeeded?.Required == true && !string.IsNullOrEmpty(aiResponse.ClarificationNeeded.Question))
             {
-                result.WarmResponse = await GenerateGreetingResponseAsync(
-                    hotelContext,
-                    guestContext,
-                    guestContext.ConversationId);
-            }
-            else if (!string.IsNullOrEmpty(DetectAndGeneratePolicyResponse(originalMessage, hotelContext)))
-            {
-                var policyResponse = DetectAndGeneratePolicyResponse(originalMessage, hotelContext);
-                result.WarmResponse = policyResponse;
-                result.Intent = "INQUIRY";
-                result.Metadata["policyType"] = "detected";
-            }
-            else if (intent.Intent == "INQUIRY" && aiResponse.ClarificationNeeded?.Required == true)
-            {
-                result.WarmResponse = aiResponse.ClarificationNeeded.Question;
                 result.ClarificationQuestion = aiResponse.ClarificationNeeded.Question;
             }
-            else if (intent.Intent == "INQUIRY")
+
+            // Check for policy response (still uses local detection, no LLM call)
+            if (result.DetectedIntents.Count == 1)
             {
-                // Check if this is an amenities/services list inquiry OR dining/menu inquiry
-                if (intent.Category == "AMENITIES" ||
-                    intent.Category == "DINING" ||
-                    intent.EntityType?.Contains("amenities") == true ||
-                    intent.EntityType?.Contains("services") == true ||
-                    intent.EntityType?.Contains("list") == true ||
-                    intent.EntityType?.Contains("menu") == true ||
-                    intent.EntityType?.Contains("vegetarian") == true ||
-                    intent.EntityType?.Contains("vegan") == true ||
-                    intent.EntityType?.Contains("food") == true ||
-                    intent.EntityType?.Contains("price") == true ||
-                    intent.EntityType?.Contains("pricing") == true)
+                var policyResponse = DetectAndGeneratePolicyResponse(originalMessage, hotelContext);
+                if (!string.IsNullOrEmpty(policyResponse))
                 {
-                    // Generate proper inquiry response (amenities, menu, dining, etc.)
-                    result.WarmResponse = await GenerateInquiryResponseAsync(intent, hotelContext);
-                }
-                else
-                {
-                    // Generic inquiry response for other inquiries
-                    result.WarmResponse = "I'd be happy to assist you! How may I help you today? You can ask about our services, amenities, room service, or any other questions you may have.";
+                    result.WarmResponse = policyResponse;
+                    result.Intent = "INQUIRY";
+                    result.Metadata["policyType"] = "detected";
                 }
             }
-            else if (intent.Intent == "GREETING")
+        }
+        else
+        {
+            // Fallback if LLM didn't generate a response (shouldn't happen with updated prompt)
+            _logger.LogWarning("===== FALLBACK: NO PRE-GENERATED RESPONSE =====");
+            if (result.DetectedIntents.Count > 0)
             {
-                result.WarmResponse = "Hello! Welcome to our hotel. How may I assist you today?";
-            }
-            else if (intent.Intent == "OTHER" &&
-                     (intent.EntityType?.Contains("farewell", StringComparison.OrdinalIgnoreCase) == true ||
-                      intent.EntityType?.Contains("goodbye", StringComparison.OrdinalIgnoreCase) == true ||
-                      intent.EntityType?.Contains("bye", StringComparison.OrdinalIgnoreCase) == true ||
-                      intent.EntityType?.Contains("closing", StringComparison.OrdinalIgnoreCase) == true ||
-                      intent.EntityType?.Contains("remark", StringComparison.OrdinalIgnoreCase) == true ||
-                      originalMessage.ToLower().Contains("bye") ||
-                      originalMessage.ToLower().Contains("goodbye") ||
-                      originalMessage.ToLower().Contains("see you") ||
-                      originalMessage.ToLower().Contains("take care")))
-            {
-                // Handle farewells gracefully
-                result.WarmResponse = "Thank you for chatting with us! If you need anything else, feel free to reach out. Have a wonderful day!";
+                var intent = result.DetectedIntents.First();
+                result.WarmResponse = intent.Intent switch
+                {
+                    "GREETING" => $"Hello! Welcome to {hotelContext.HotelName ?? "our hotel"}. How may I assist you today?",
+                    "ACKNOWLEDGMENT" => "You're welcome! Is there anything else I can help you with?",
+                    "OTHER" when originalMessage.ToLower().Contains("bye") || originalMessage.ToLower().Contains("goodbye")
+                        => "Thank you for chatting with us! If you need anything else, feel free to reach out. Have a wonderful day!",
+                    _ => "I'd be happy to assist you! How may I help you today?"
+                };
             }
             else
             {
-                result.WarmResponse = $"I'm sorry, we don't currently offer that service at our property. " +
-                    $"However, I'd be happy to help you with other requests or provide information about our available amenities and services.";
+                result.WarmResponse = "I'd be happy to assist you! How may I help you today?";
             }
         }
 
@@ -955,16 +1009,22 @@ Focus on ACCURATE ANALYSIS based ONLY on the actual configuration data provided.
     private async Task<string> GetServiceDetailsAsync(List<string> serviceNames, HotelConfigurationContext hotelContext)
     {
         // Extract full service details from hotelContext.AvailableServices
-        var services = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(
-            hotelContext.AvailableServices?.ToString() ?? "[]");
+        // First serialize to JSON, then deserialize - handles anonymous types correctly
+        var servicesJson = JsonSerializer.Serialize(hotelContext.AvailableServices ?? new List<object>());
+        var services = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(servicesJson);
 
         var matchingServices = services?.Where(s =>
-            s.ContainsKey("Name") && serviceNames.Contains(s["Name"].ToString() ?? ""))
-            .ToList() ?? new List<Dictionary<string, object>>();
+            s.ContainsKey("Name") && serviceNames.Contains(s["Name"].GetString() ?? ""))
+            .ToList() ?? new List<Dictionary<string, JsonElement>>();
 
         return JsonSerializer.Serialize(matchingServices, new JsonSerializerOptions { WriteIndented = true });
     }
 
+    /// <summary>
+    /// DEPRECATED: No longer called - warmResponse is now generated in the single intent analysis LLM call.
+    /// Kept for reference. Can be removed after confirming the new approach works correctly.
+    /// </summary>
+    [Obsolete("No longer used - warmResponse is generated in single LLM call")]
     private async Task<string> GenerateMultiIntentResponseAsync(
         List<DetectedIntent> intents,
         HotelConfigurationContext hotelContext,
@@ -1048,6 +1108,11 @@ Return ONLY the combined response text.";
         return combinedResponseObj?.Text ?? "I apologize, but I'm having trouble processing your request. How may I assist you?";
     }
 
+    /// <summary>
+    /// DEPRECATED: No longer called - warmResponse is now generated in the single intent analysis LLM call.
+    /// Kept for reference. Can be removed after confirming the new approach works correctly.
+    /// </summary>
+    [Obsolete("No longer used - warmResponse is generated in single LLM call")]
     private async Task<string> GenerateInquiryResponseAsync(DetectedIntent intent, HotelConfigurationContext hotelContext)
     {
         // Handle common inquiries like breakfast time, check-in time, etc.
@@ -1087,6 +1152,11 @@ Provide a helpful, specific response based on the hotel configuration.";
         return responseObj?.Text ?? "I'd be happy to help! Please let me connect you with our staff for specific information.";
     }
 
+    /// <summary>
+    /// DEPRECATED: No longer called - warmResponse is now generated in the single intent analysis LLM call.
+    /// Kept for reference. Can be removed after confirming the new approach works correctly.
+    /// </summary>
+    [Obsolete("No longer used - warmResponse is generated in single LLM call")]
     private async Task<string> GenerateWarmResponseAsync(
         string guestMessage,
         string serviceDetailsJson,
@@ -1243,6 +1313,27 @@ Generate a natural, warm response:";
         public Dictionary<string, string?>? Citations { get; set; }
         public string[]? Assumptions { get; set; }
         public string[]? Uncertainties { get; set; }
+
+        // OPTIMIZATION: Item request analysis (eliminates separate LLM call)
+        public bool IsItemRequest { get; set; }
+        public double ItemRequestConfidence { get; set; }
+        public string? ItemRequestReasoning { get; set; }
+
+        // OPTIMIZATION: Confirmation request details (eliminates separate LLM call)
+        public bool IsConfirmationRequest { get; set; }
+        public string? ServiceCategory { get; set; } // DINING|LOCAL_TOURS|MASSAGE|CONFERENCE_ROOM
+        public int? NumberOfPeople { get; set; }
+        public string? RequestedDate { get; set; } // YYYY-MM-DD
+        public string? RequestedTime { get; set; } // HH:MM
+        public string? Location { get; set; }
+
+        // OPTIMIZATION: Quantity clarification (eliminates separate LLM call)
+        public bool IsQuantityClarification { get; set; }
+        public bool IsNewRequest { get; set; }
+        public bool IsCancellation { get; set; }
+        public string? ItemSlug { get; set; }
+        public string? ItemName { get; set; }
+        public int? Quantity { get; set; }
     }
 
     private class IntentAnalysisResponse
@@ -1251,6 +1342,8 @@ Generate a natural, warm response:";
         public bool IsAmbiguous { get; set; }
         public string? AmbiguityReason { get; set; }
         public ClarificationInfo? ClarificationNeeded { get; set; }
+        // OPTIMIZATION: Response generated in same LLM call to avoid additional calls
+        public string? WarmResponse { get; set; }
     }
 
     private class ClarificationInfo
@@ -1368,8 +1461,27 @@ Generate a natural, warm response:";
 
         var checkoutKeywords = new[] {
             "check out", "check-out", "checkout", "departure time", "when do i check out",
-            "check out time", "late check out", "late checkout", "early checkout"
+            "check out time", "early checkout"
         };
+
+        // IMPORTANT: Late checkout REQUEST patterns should NOT trigger simple time response
+        // These should go to HandleLateCheckoutRequest for proper task creation
+        var lateCheckoutRequestPatterns = new[] {
+            "late checkout", "late check out", "late check-out",
+            "checkout at", "check out at", "check-out at",
+            "stay until", "leave at", "leave later",
+            "extend checkout", "extend my checkout", "extend check out",
+            "can i checkout later", "can i check out later",
+            "i need late", "i want late", "request late"
+        };
+
+        var isLateCheckoutRequest = lateCheckoutRequestPatterns.Any(p => messageLower.Contains(p));
+
+        // If this is a late checkout REQUEST, don't return simple times - let it go to proper handler
+        if (isLateCheckoutRequest)
+        {
+            return string.Empty; // Fall through to intent-based handling
+        }
 
         if (checkinKeywords.Any(k => messageLower.Contains(k)) || checkoutKeywords.Any(k => messageLower.Contains(k)))
         {
@@ -1433,5 +1545,170 @@ Generate a natural, warm response:";
 
         // No policy detected
         return string.Empty;
+    }
+
+    /// <summary>
+    /// Sets service routing flags to route intents with database data to dedicated handlers
+    /// instead of relying on generic LLM responses.
+    /// </summary>
+    private void SetServiceRoutingFlags(IntentAnalysisResult result, DetectedIntent primaryIntent, string originalMessage)
+    {
+        var msgLower = originalMessage.ToLower().Trim();
+        var entityTypeLower = primaryIntent.EntityType?.ToLower() ?? "";
+        var categoryLower = primaryIntent.Category?.ToLower() ?? "";
+
+        // =====================================================================
+        // MENU / DINING - Handle direct requests and follow-ups
+        // =====================================================================
+        var mealTypeWords = new[] { "lunch", "dinner", "breakfast", "dessert", "desserts", "beverages", "drinks", "starters", "mains", "main course" };
+        var isMealTypeFollowUp = mealTypeWords.Any(m => msgLower == m || msgLower == m + " menu" || msgLower == m + " please" || msgLower == "the " + m);
+
+        if (isMealTypeFollowUp ||
+            msgLower.Contains("menu") ||
+            msgLower.Contains("what do you serve") ||
+            msgLower.Contains("food options") ||
+            msgLower.Contains("what's for") ||
+            (primaryIntent.Intent == "INQUIRY" &&
+             (categoryLower == "dining" ||
+              entityTypeLower.Contains("menu") ||
+              entityTypeLower.Contains("dinner") ||
+              entityTypeLower.Contains("lunch") ||
+              entityTypeLower.Contains("breakfast") ||
+              entityTypeLower.Contains("food"))))
+        {
+            result.ShouldRouteToService = true;
+            result.ServiceRouteType = "MENU";
+            result.ServiceRouteCategory = DetermineMenuCategory(msgLower, entityTypeLower);
+            _logger.LogInformation("Routing to MENU service. Category: {Category}", result.ServiceRouteCategory);
+            return;
+        }
+
+        // =====================================================================
+        // AMENITIES / FACILITIES - Handle direct requests and follow-ups
+        // =====================================================================
+        var amenityFollowUps = new[] {
+            "spa", "pool", "swimming pool", "gym", "fitness", "sauna", "steam room",
+            "restaurant", "bar", "lounge", "parking", "wifi", "wi-fi", "laundry",
+            "business center", "meeting room", "conference"
+        };
+        var isAmenityFollowUp = amenityFollowUps.Any(a => msgLower == a || msgLower == "the " + a || msgLower == a + " please");
+
+        if (isAmenityFollowUp ||
+            msgLower.Contains("amenities") ||
+            msgLower.Contains("facilities") ||
+            msgLower.Contains("what do you have") ||
+            msgLower.Contains("what facilities") ||
+            (primaryIntent.Intent == "INQUIRY" &&
+             (categoryLower == "amenities" ||
+              entityTypeLower.Contains("amenities") ||
+              entityTypeLower.Contains("facilities"))))
+        {
+            result.ShouldRouteToService = true;
+            result.ServiceRouteType = "AMENITIES";
+            result.ServiceRouteCategory = isAmenityFollowUp ? amenityFollowUps.FirstOrDefault(a => msgLower.Contains(a)) : null;
+            _logger.LogInformation("Routing to AMENITIES service. Category: {Category}", result.ServiceRouteCategory ?? "all");
+            return;
+        }
+
+        // =====================================================================
+        // BOOKABLE SERVICES - Handle direct requests and follow-ups
+        // =====================================================================
+        var serviceFollowUps = new[] {
+            "massage", "facial", "manicure", "pedicure", "spa treatment",
+            "airport transfer", "shuttle", "taxi", "car rental",
+            "tour", "excursion", "safari", "room service",
+            "babysitting", "childcare", "wake up call", "wake-up call"
+        };
+        var isServiceFollowUp = serviceFollowUps.Any(s => msgLower == s || msgLower == "the " + s || msgLower == s + " please" || msgLower == "a " + s);
+
+        if (isServiceFollowUp ||
+            msgLower.Contains("what can i book") ||
+            msgLower.Contains("available services") ||
+            msgLower.Contains("book a") ||
+            (primaryIntent.Intent == "INQUIRY" &&
+             (categoryLower == "services" ||
+              entityTypeLower.Contains("services") ||
+              entityTypeLower.Contains("book"))) ||
+            (msgLower.Contains("services") && !msgLower.Contains("room service")))
+        {
+            result.ShouldRouteToService = true;
+            result.ServiceRouteType = "SERVICES";
+            result.ServiceRouteCategory = isServiceFollowUp ? serviceFollowUps.FirstOrDefault(s => msgLower.Contains(s)) : null;
+            _logger.LogInformation("Routing to SERVICES service. Category: {Category}", result.ServiceRouteCategory ?? "all");
+            return;
+        }
+
+        // =====================================================================
+        // HOTEL INFORMATION / POLICIES - Handle direct requests and follow-ups
+        // =====================================================================
+        var policyFollowUps = new[] {
+            "check-in", "checkin", "check in", "check-out", "checkout", "check out",
+            "smoking", "pets", "pet policy", "cancellation", "children", "kids",
+            "parking policy", "late checkout", "early checkin"
+        };
+        var isPolicyFollowUp = policyFollowUps.Any(p => msgLower == p || msgLower == p + " policy" || msgLower == p + " time" || msgLower == "the " + p);
+
+        if (isPolicyFollowUp ||
+            msgLower.Contains("policy") ||
+            msgLower.Contains("policies") ||
+            msgLower.Contains("what time is") ||
+            msgLower.Contains("when is") ||
+            (primaryIntent.Intent == "INQUIRY" &&
+             (categoryLower == "information" ||
+              entityTypeLower.Contains("policy") ||
+              entityTypeLower.Contains("policies") ||
+              entityTypeLower.Contains("check-in") ||
+              entityTypeLower.Contains("check-out") ||
+              entityTypeLower.Contains("checkin") ||
+              entityTypeLower.Contains("checkout"))))
+        {
+            result.ShouldRouteToService = true;
+            result.ServiceRouteType = "INFORMATION";
+            result.ServiceRouteCategory = isPolicyFollowUp ? policyFollowUps.FirstOrDefault(p => msgLower.Contains(p)) : entityTypeLower;
+            _logger.LogInformation("Routing to INFORMATION service. Category: {Category}", result.ServiceRouteCategory ?? "general");
+            return;
+        }
+
+        // =====================================================================
+        // ITEM REQUESTS - Handle direct requests and follow-ups
+        // =====================================================================
+        var itemFollowUps = new[] {
+            "towels", "towel", "pillows", "pillow", "blankets", "blanket",
+            "toiletries", "shampoo", "soap", "toothbrush", "toothpaste",
+            "iron", "ironing board", "hangers", "hanger",
+            "water", "bottled water", "ice", "ice bucket",
+            "coffee", "tea", "kettle", "slippers", "bathrobe", "robe",
+            "extra bed", "crib", "cot", "hairdryer", "hair dryer",
+            "adaptor", "adapter", "charger", "remote", "batteries"
+        };
+        var isItemFollowUp = itemFollowUps.Any(i => msgLower == i || msgLower == "some " + i || msgLower == "more " + i || msgLower == "extra " + i);
+
+        if (isItemFollowUp ||
+            primaryIntent.Intent == "REQUEST_ITEM" ||
+            primaryIntent.Intent == "ITEM_REQUEST")
+        {
+            result.ShouldRouteToService = true;
+            result.ServiceRouteType = "ITEM_REQUEST";
+            result.ServiceRouteCategory = isItemFollowUp ? itemFollowUps.FirstOrDefault(i => msgLower.Contains(i)) : entityTypeLower;
+            _logger.LogInformation("Routing to ITEM_REQUEST service. Category: {Category}", result.ServiceRouteCategory ?? "unknown");
+            return;
+        }
+    }
+
+    private string DetermineMenuCategory(string msgLower, string entityTypeLower)
+    {
+        if (msgLower.Contains("dinner") || entityTypeLower.Contains("dinner"))
+            return "dinner";
+        if (msgLower.Contains("lunch") || entityTypeLower.Contains("lunch"))
+            return "lunch";
+        if (msgLower.Contains("breakfast") || entityTypeLower.Contains("breakfast"))
+            return "breakfast";
+        if (msgLower.Contains("dessert") || entityTypeLower.Contains("dessert"))
+            return "dessert";
+        if (msgLower.Contains("drinks") || msgLower.Contains("beverage") || entityTypeLower.Contains("drinks"))
+            return "drinks";
+        if (msgLower.Contains("starters") || msgLower.Contains("appetizer"))
+            return "starters";
+        return "all"; // Default to showing all menu items
     }
 }

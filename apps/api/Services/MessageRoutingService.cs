@@ -121,7 +121,6 @@ public class MessageRoutingService : IMessageRoutingService
     private readonly IConfigurationBasedResponseService _configurationBasedResponseService;
     private readonly IResponseDeduplicationService _responseDeduplicationService;
     private readonly IHumanTransferService _humanTransferService;
-    private readonly IFAQService _faqService;
     private readonly IInformationGatheringService _informationGatheringService;
     private readonly ILostAndFoundService _lostAndFoundService;
     private readonly IConfiguration _configuration;
@@ -149,7 +148,6 @@ public class MessageRoutingService : IMessageRoutingService
         IConfigurationBasedResponseService configurationBasedResponseService,
         IResponseDeduplicationService responseDeduplicationService,
         IHumanTransferService humanTransferService,
-        IFAQService faqService,
         IInformationGatheringService informationGatheringService,
         ILostAndFoundService lostAndFoundService,
         IConfiguration configuration)
@@ -176,7 +174,6 @@ public class MessageRoutingService : IMessageRoutingService
         _configurationBasedResponseService = configurationBasedResponseService;
         _responseDeduplicationService = responseDeduplicationService;
         _humanTransferService = humanTransferService;
-        _faqService = faqService;
         _informationGatheringService = informationGatheringService;
         _lostAndFoundService = lostAndFoundService;
         _configuration = configuration;
@@ -197,6 +194,28 @@ public class MessageRoutingService : IMessageRoutingService
         if (normalizedMessage != originalMessage)
         {
             _logger.LogInformation("Message normalized: '{Original}' -> '{Normalized}'", originalMessage, normalizedMessage);
+        }
+
+        // Step 0.1: Direct WiFi password handling - high priority pattern match
+        if (IsWiFiPasswordQuery(messageText))
+        {
+            _logger.LogInformation("📶 Direct WiFi password query detected");
+            var wifiResponse = await HandleWiFiPasswordQueryAsync(tenantContext);
+            if (wifiResponse != null)
+            {
+                return wifiResponse;
+            }
+        }
+
+        // Step 0.2: Service hours/time queries - high priority to return hours instead of service details
+        if (IsServiceHoursQuery(messageText))
+        {
+            _logger.LogInformation("🕐 Service hours query detected: {Message}", messageText);
+            var hoursResponse = await HandleServiceHoursQueryAsync(tenantContext, messageText);
+            if (hoursResponse != null)
+            {
+                return hoursResponse;
+            }
         }
 
         // Step 0.5: Check for pending clarifications (state-based routing)
@@ -305,56 +324,7 @@ public class MessageRoutingService : IMessageRoutingService
             return await HandleBookingModificationRequest(tenantContext, conversation, normalizedMessage);
         }
 
-        // Step 1.2: Check FAQ knowledge base for quick answers (before transfer detection to avoid false positives)
-        // CRITICAL: Skip FAQ matching for late checkout requests with specific times - let them go to intent-based handling
-        var msgLowerForFaq = normalizedMessage.ToLower();
-        var isLateCheckoutRequest = msgLowerForFaq.Contains("checkout at") || msgLowerForFaq.Contains("check-out at") || msgLowerForFaq.Contains("check out at") ||
-            (msgLowerForFaq.Contains("late") && (msgLowerForFaq.Contains("checkout") || msgLowerForFaq.Contains("check-out") || msgLowerForFaq.Contains("check out")));
-
-        if (!isLateCheckoutRequest)
-        {
-            try
-            {
-                var faqResults = await _faqService.SearchFAQsAsync(normalizedMessage, tenantContext.TenantId, null, 3);
-                if (faqResults.Any() && faqResults[0].RelevanceScore >= 0.65)
-                {
-                    var topFAQ = faqResults[0];
-                    _logger.LogInformation("FAQ match found for question '{Question}' with relevance score {Score}",
-                        topFAQ.Question, topFAQ.RelevanceScore);
-
-                var faqResponse = $"**{topFAQ.Question}**\n\n{topFAQ.Answer}";
-
-                // If multiple FAQs have high relevance, show them as related questions
-                if (faqResults.Count > 1 && faqResults[1].RelevanceScore >= 0.5)
-                {
-                    faqResponse += "\n\n**Related questions you might find helpful:**";
-                    for (int i = 1; i < Math.Min(faqResults.Count, 3); i++)
-                    {
-                        if (faqResults[i].RelevanceScore >= 0.5)
-                        {
-                            faqResponse += $"\n• {faqResults[i].Question}";
-                        }
-                    }
-                }
-
-                return new MessageRoutingResponse
-                {
-                    Reply = faqResponse
-                };
-            }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error searching FAQs for tenant {TenantId}", tenantContext.TenantId);
-                // Continue to normal processing if FAQ search fails
-            }
-        }
-        else
-        {
-            _logger.LogInformation("🔄 Skipping FAQ matching for late checkout request - will use intent-based handler");
-        }
-
-        // Step 2: Check for human transfer requests - after FAQ check to reduce false positives
+        // Step 2: Check for human transfer requests
         var transferDetection = await _humanTransferService.DetectTransferRequestAsync(normalizedMessage, conversation);
 
         if (transferDetection.ShouldTransfer)
@@ -432,20 +402,10 @@ public class MessageRoutingService : IMessageRoutingService
             return await HandleBookingInformationGathering(tenantContext, conversation, normalizedMessage, existingState);
         }
 
-        // Step 1.4: Check for contextual follow-up responses (highest priority - timing responses, etc)
+        // Step 1.4: Load conversation history and run intent analysis FIRST (OPTIMIZATION: Run intent analysis early so we can use pre-analyzed fields)
         _logger.LogInformation("MessageRoutingService: Loading conversation history for conversation {ConversationId}", conversation.Id);
         var conversationHistoryWithIntent = await LoadConversationHistoryAsync(conversation.Id);
         var conversationHistory = conversationHistoryWithIntent.Select(h => (h.Role, h.Content)).ToList();
-
-        _logger.LogInformation("MessageRoutingService: Calling ProcessContextualResponse with {MessageCount} messages",
-            conversationHistory.Count);
-        var contextualResponse = await ProcessContextualResponse(conversationHistory, messageText, tenantContext, conversation);
-        if (contextualResponse != null)
-        {
-            _logger.LogInformation("MessageRoutingService: Found contextual response: '{Reply}'", contextualResponse.Reply);
-            return contextualResponse;
-        }
-        _logger.LogInformation("MessageRoutingService: No contextual response found, continuing to other checks");
 
         // Phase 1 Enhancement: Initialize conversation state and temporal context
         await _conversationStateService.MarkInteractionAsync(conversation.Id);
@@ -455,150 +415,207 @@ public class MessageRoutingService : IMessageRoutingService
         _logger.LogInformation("Temporal context for tenant {TenantId}: {TimeOfDay} ({Timezone})",
             tenantContext.TenantId, timeContext.TimeOfDayDescription, timeContext.Timezone);
 
-        // Use LLM-based intent analysis for intelligent ambiguity detection
+        // OPTIMIZATION: Run intent analysis EARLY so pre-analyzed fields are available for contextual response
+        IntentAnalysisResult? intentAnalysis = null;
+        GuestStatus earlyGuestStatus = new GuestStatus { Type = GuestType.Unregistered };
         try
         {
-            var guestStatus = await DetermineGuestStatusAsync(conversation.WaUserPhone, tenantContext.TenantId);
-            var intentAnalysis = await _llmIntentAnalysisService.AnalyzeMessageIntentAsync(
+            earlyGuestStatus = await DetermineGuestStatusAsync(conversation.WaUserPhone, tenantContext.TenantId);
+            intentAnalysis = await _llmIntentAnalysisService.AnalyzeMessageIntentAsync(
                 normalizedMessage,
                 tenantContext,
                 conversation.Id,
-                guestStatus);
+                earlyGuestStatus);
+            _logger.LogInformation("Intent analysis completed early. Intent: {Intent}, Confidence: {Confidence}",
+                intentAnalysis?.Intent, intentAnalysis?.Confidence);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Early intent analysis failed, will continue without pre-analyzed fields");
+        }
 
-            // Capture intent for conversation history filtering
-            if (!string.IsNullOrEmpty(intentAnalysis.Intent))
+        // Step 1.5: Check for contextual follow-up responses (uses pre-analyzed fields from intent analysis)
+        _logger.LogInformation("MessageRoutingService: Calling ProcessContextualResponse with {MessageCount} messages",
+            conversationHistory.Count);
+        var contextualResponse = await ProcessContextualResponse(conversationHistory, messageText, tenantContext, conversation, intentAnalysis);
+        if (contextualResponse != null)
+        {
+            _logger.LogInformation("MessageRoutingService: Found contextual response: '{Reply}'", contextualResponse.Reply);
+            return contextualResponse;
+        }
+        _logger.LogInformation("MessageRoutingService: No contextual response found, continuing to other checks");
+
+        // Continue with intent-based routing (intent analysis already done above)
+        try
+        {
+            // Skip if intent analysis failed
+            if (intentAnalysis == null)
             {
-                detectedIntent = intentAnalysis.Intent;
-                _logger.LogInformation("Captured intent for history filtering: {Intent}", detectedIntent);
+                _logger.LogWarning("Intent analysis was null, skipping intent-based routing");
             }
-
-            // Handle special intents FIRST, before ambiguity checks
-            if (intentAnalysis.Intent == "BOOKING_CHANGE" && intentAnalysis.Confidence >= 0.6)
+            else
             {
-                _logger.LogInformation("LLM detected booking change request, checking existing bookings");
-                return await HandleBookingModificationRequest(tenantContext, conversation, normalizedMessage);
-            }
-
-            if (intentAnalysis.IsAmbiguous && intentAnalysis.Confidence >= 0.6)
-            {
-                _logger.LogInformation("LLM detected ambiguity in message. Intent: {Intent}, Category: {Category}, Specificity: {Specificity}",
-                    intentAnalysis.Intent, intentAnalysis.Category, intentAnalysis.SpecificityLevel);
-
-                // Store the warm, welcoming clarification
-                if (!string.IsNullOrEmpty(intentAnalysis.ClarificationQuestion))
+                // Capture intent for conversation history filtering
+                if (!string.IsNullOrEmpty(intentAnalysis.Intent))
                 {
-                    await _conversationStateService.AddPendingClarificationAsync(conversation.Id, intentAnalysis.ClarificationQuestion);
+                    detectedIntent = intentAnalysis.Intent;
+                    _logger.LogInformation("Captured intent for history filtering: {Intent}", detectedIntent);
                 }
 
-                // Store the response
-                var warmResponse = intentAnalysis.WarmResponse ?? intentAnalysis.ClarificationQuestion;
-                await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, warmResponse);
-
-                return new MessageRoutingResponse
-                {
-                    Reply = warmResponse
-                };
-            }
-
-            // If not ambiguous but we have a direct warm response, check if we need to create tasks
-            if (!string.IsNullOrEmpty(intentAnalysis.WarmResponse) && intentAnalysis.Confidence >= 0.8)
-            {
-                _logger.LogInformation("LLM provided direct response for intent: {Intent}", intentAnalysis.Intent);
-
-                // For item requests and booking changes, we should proceed to processing flow
-                if (intentAnalysis.Intent == "REQUEST_ITEM")
-                {
-                    _logger.LogInformation("LLM detected non-ambiguous item request, proceeding to create task");
-                    // Continue to normal processing flow to create tasks through ProcessWithEnhancedRAG
-                }
-                else if (intentAnalysis.Intent == "BOOKING_CHANGE")
+                // Handle special intents FIRST, before ambiguity checks
+                if (intentAnalysis.Intent == "BOOKING_CHANGE" && intentAnalysis.Confidence >= 0.6)
                 {
                     _logger.LogInformation("LLM detected booking change request, checking existing bookings");
-                    // Handle room reservation modifications (not service bookings)
                     return await HandleBookingModificationRequest(tenantContext, conversation, normalizedMessage);
                 }
-                else if (intentAnalysis.Intent == "LOST_AND_FOUND")
+
+                // PRIORITY: Route to dedicated service handlers BEFORE using generic LLM responses
+                // This ensures database queries are used instead of vague LLM-generated responses
+                if (intentAnalysis.ShouldRouteToService)
                 {
-                    _logger.LogInformation("LLM detected lost item report, starting lost & found processing");
-                    // Directly trigger lost item reporting flow
-                    return await HandleLostItemReporting(tenantContext, conversation, normalizedMessage, intentAnalysis);
-                }
-                else if (intentAnalysis.Intent == "BOOKING_INQUIRY")
-                {
-                    _logger.LogInformation("LLM detected booking inquiry, retrieving all bookings for guest");
-                    // Handle request to see all bookings
-                    return await HandleBookingInquiry(tenantContext, conversation, normalizedMessage);
-                }
-                else if (intentAnalysis.Intent == "BOOKING_CONFIRMATION")
-                {
-                    _logger.LogInformation("LLM detected booking confirmation request, checking specific booking");
-                    // Handle confirmation of specific booking (e.g., "Do I have a dinner reservation tonight?")
-                    return await HandleBookingConfirmation(normalizedMessage, conversation, tenantContext);
-                }
-                else if (intentAnalysis.Intent == "GREETING")
-                {
-                    _logger.LogInformation("LLM detected greeting message");
-                    var greetingResponse = await CreateGreetingResponseAsync(tenantContext, conversation, normalizedMessage);
-                    return greetingResponse;
-                }
-                else if (intentAnalysis.Intent == "ACKNOWLEDGMENT")
-                {
-                    _logger.LogInformation("LLM detected acknowledgment/gratitude message");
-                    // Respond warmly to acknowledgment
-                    var acknowledgmentResponses = new[]
+                    _logger.LogInformation("Routing to dedicated service: {Type} / {Category}",
+                        intentAnalysis.ServiceRouteType, intentAnalysis.ServiceRouteCategory);
+
+                    MessageRoutingResponse? serviceResponse = intentAnalysis.ServiceRouteType switch
                     {
-                        "You're very welcome! I'm here anytime you need assistance.",
-                        "My pleasure! Feel free to reach out if you need anything else.",
-                        "Happy to help! Don't hesitate to contact me if you have any other requests.",
-                        "You're welcome! I'm always here to assist you.",
-                        "Glad I could help! Let me know if there's anything else you need."
+                        "MENU" => await HandleMenuInquiryAsync(tenantContext, intentAnalysis.ServiceRouteCategory ?? normalizedMessage),
+                        "AMENITIES" => await HandleAmenitiesInquiryAsync(tenantContext, intentAnalysis.ServiceRouteCategory),
+                        "SERVICES" => await HandleServicesInquiryAsync(tenantContext, intentAnalysis.ServiceRouteCategory),
+                        "INFORMATION" => await HandleInformationInquiryAsync(tenantContext, intentAnalysis.ServiceRouteCategory ?? normalizedMessage),
+                        "ITEM_REQUEST" => await HandleItemRequestDirectAsync(tenantContext, conversation, normalizedMessage),
+                        _ => null
                     };
 
-                    var random = new Random();
-                    var acknowledgmentReply = acknowledgmentResponses[random.Next(acknowledgmentResponses.Length)];
+                    if (serviceResponse != null)
+                    {
+                        await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, serviceResponse.Reply);
+                        return serviceResponse;
+                    }
+                    // If handler returns null, fall through to other processing
+                    _logger.LogWarning("Service handler returned null for {Type}, falling through", intentAnalysis.ServiceRouteType);
+                }
 
-                    await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, acknowledgmentReply);
+                if (intentAnalysis.IsAmbiguous && intentAnalysis.Confidence >= 0.6)
+                {
+                    _logger.LogInformation("LLM detected ambiguity in message. Intent: {Intent}, Category: {Category}, Specificity: {Specificity}",
+                        intentAnalysis.Intent, intentAnalysis.Category, intentAnalysis.SpecificityLevel);
+
+                    // Store the warm, welcoming clarification
+                    if (!string.IsNullOrEmpty(intentAnalysis.ClarificationQuestion))
+                    {
+                        await _conversationStateService.AddPendingClarificationAsync(conversation.Id, intentAnalysis.ClarificationQuestion);
+                    }
+
+                    // Store the response
+                    var warmResponse = intentAnalysis.WarmResponse ?? intentAnalysis.ClarificationQuestion;
+                    await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, warmResponse);
 
                     return new MessageRoutingResponse
                     {
-                        Reply = acknowledgmentReply
+                        Reply = warmResponse
                     };
                 }
-                else if (intentAnalysis.Intent == "CANCELLATION")
-                {
-                    return await HandleCancellationAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
-                }
-                else if (intentAnalysis.Intent == "CHECK_IN_OUT")
-                {
-                    return await HandleCheckInOutAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
-                }
-                else if (intentAnalysis.Intent == "DIRECTIONS")
-                {
-                    return await HandleDirectionsAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
-                }
-                else if (intentAnalysis.Intent == "FEEDBACK")
-                {
-                    return await HandleFeedbackAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
-                }
-                else if (intentAnalysis.Intent == "RECOMMENDATION")
-                {
-                    return await HandleRecommendationAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
-                }
-                else if (intentAnalysis.Intent == "LATE_CHECKOUT")
-                {
-                    return await HandleLateCheckoutRequest(tenantContext, conversation, normalizedMessage);
-                }
-                else
-                {
-                    // For non-item requests, use the warm response directly
-                    await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, intentAnalysis.WarmResponse);
 
-                    return new MessageRoutingResponse
+                // If not ambiguous but we have a direct warm response, check if we need to create tasks
+                if (!string.IsNullOrEmpty(intentAnalysis.WarmResponse) && intentAnalysis.Confidence >= 0.8)
+                {
+                    _logger.LogInformation("LLM provided direct response for intent: {Intent}", intentAnalysis.Intent);
+
+                    // For item requests and booking changes, we should proceed to processing flow
+                    if (intentAnalysis.Intent == "REQUEST_ITEM")
                     {
-                        Reply = intentAnalysis.WarmResponse
-                    };
+                        _logger.LogInformation("LLM detected non-ambiguous item request, proceeding to create task");
+                        // Continue to normal processing flow to create tasks through ProcessWithEnhancedRAG
+                    }
+                    else if (intentAnalysis.Intent == "BOOKING_CHANGE")
+                    {
+                        _logger.LogInformation("LLM detected booking change request, checking existing bookings");
+                        // Handle room reservation modifications (not service bookings)
+                        return await HandleBookingModificationRequest(tenantContext, conversation, normalizedMessage);
+                    }
+                    else if (intentAnalysis.Intent == "LOST_AND_FOUND")
+                    {
+                        _logger.LogInformation("LLM detected lost item report, starting lost & found processing");
+                        // Directly trigger lost item reporting flow
+                        return await HandleLostItemReporting(tenantContext, conversation, normalizedMessage, intentAnalysis);
+                    }
+                    else if (intentAnalysis.Intent == "BOOKING_INQUIRY")
+                    {
+                        _logger.LogInformation("LLM detected booking inquiry, retrieving all bookings for guest");
+                        // Handle request to see all bookings
+                        return await HandleBookingInquiry(tenantContext, conversation, normalizedMessage);
+                    }
+                    else if (intentAnalysis.Intent == "BOOKING_CONFIRMATION")
+                    {
+                        _logger.LogInformation("LLM detected booking confirmation request, checking specific booking");
+                        // Handle confirmation of specific booking (e.g., "Do I have a dinner reservation tonight?")
+                        return await HandleBookingConfirmation(normalizedMessage, conversation, tenantContext);
+                    }
+                    else if (intentAnalysis.Intent == "GREETING")
+                    {
+                        _logger.LogInformation("LLM detected greeting message");
+                        var greetingResponse = await CreateGreetingResponseAsync(tenantContext, conversation, normalizedMessage);
+                        return greetingResponse;
+                    }
+                    else if (intentAnalysis.Intent == "ACKNOWLEDGMENT")
+                    {
+                        _logger.LogInformation("LLM detected acknowledgment/gratitude message");
+                        // Respond warmly to acknowledgment
+                        var acknowledgmentResponses = new[]
+                        {
+                            "You're very welcome! I'm here anytime you need assistance.",
+                            "My pleasure! Feel free to reach out if you need anything else.",
+                            "Happy to help! Don't hesitate to contact me if you have any other requests.",
+                            "You're welcome! I'm always here to assist you.",
+                            "Glad I could help! Let me know if there's anything else you need."
+                        };
+
+                        var random = new Random();
+                        var acknowledgmentReply = acknowledgmentResponses[random.Next(acknowledgmentResponses.Length)];
+
+                        await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, acknowledgmentReply);
+
+                        return new MessageRoutingResponse
+                        {
+                            Reply = acknowledgmentReply
+                        };
+                    }
+                    else if (intentAnalysis.Intent == "CANCELLATION")
+                    {
+                        return await HandleCancellationAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
+                    }
+                    else if (intentAnalysis.Intent == "CHECK_IN_OUT")
+                    {
+                        return await HandleCheckInOutAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
+                    }
+                    else if (intentAnalysis.Intent == "DIRECTIONS")
+                    {
+                        return await HandleDirectionsAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
+                    }
+                    else if (intentAnalysis.Intent == "FEEDBACK")
+                    {
+                        return await HandleFeedbackAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
+                    }
+                    else if (intentAnalysis.Intent == "RECOMMENDATION")
+                    {
+                        return await HandleRecommendationAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
+                    }
+                    else if (intentAnalysis.Intent == "LATE_CHECKOUT")
+                    {
+                        return await HandleLateCheckoutRequest(tenantContext, conversation, normalizedMessage);
+                    }
+                    else
+                    {
+                        // For non-item requests, use the warm response directly
+                        await _conversationStateService.StoreLastBotResponseAsync(conversation.Id, intentAnalysis.WarmResponse);
+
+                        return new MessageRoutingResponse
+                        {
+                            Reply = intentAnalysis.WarmResponse
+                        };
+                    }
                 }
-            }
+            } // end of else (intentAnalysis != null)
         }
         catch (Exception ex)
         {
@@ -636,8 +653,8 @@ public class MessageRoutingService : IMessageRoutingService
 
         try
         {
-            // Get guest status for LLM analysis
-            var guestStatus = await DetermineGuestStatusAsync(conversation.WaUserPhone, tenantContext.TenantId);
+            // Reuse guest status from early intent analysis (no need to call DetermineGuestStatusAsync again)
+            var guestStatus = earlyGuestStatus;
 
             // Check if the current message is contextually relevant
             var isContextRelevant = await _smartContextManagerService.IsContextRelevantAsync(conversation.Id, normalizedMessage);
@@ -775,11 +792,38 @@ public class MessageRoutingService : IMessageRoutingService
             };
         }
 
-        // Step 1.4: Hybrid message intent classification (replaces old greeting detection)
-        var intentResult = await ClassifyMessageIntentAsync(messageText, conversationHistory);
-        _logger.LogInformation("MessageRoutingService: Intent classification - Intent: {Intent}, Confidence: {Confidence}, Source: {Source}, Reasoning: {Reasoning}", 
+        // Step 1.4: OPTIMIZATION - Use pre-analyzed intent from early intent analysis, skip duplicate LLM call
+        MessageIntentResult intentResult;
+        if (intentAnalysis != null && !string.IsNullOrEmpty(intentAnalysis.Intent))
+        {
+            // Map IntentAnalysisResult.Intent to MessageIntent (avoids duplicate LLM classification)
+            var mappedIntent = intentAnalysis.Intent switch
+            {
+                "GREETING" => MessageIntent.Greeting,
+                "REQUEST_SERVICE" or "REQUEST_ITEM" => MessageIntent.ServiceRequest,
+                "MAINTENANCE" or "MAINTENANCE_REPORT" => MessageIntent.MaintenanceIssue,
+                "MENU_INQUIRY" or "MENU" => MessageIntent.MenuRequest,
+                _ => MessageIntent.Other
+            };
+            intentResult = new MessageIntentResult
+            {
+                Intent = mappedIntent,
+                Confidence = intentAnalysis.Confidence,
+                Source = "pre-analyzed",
+                Reasoning = $"From early intent analysis: {intentAnalysis.Intent}"
+            };
+            _logger.LogInformation("🤖 Using pre-analyzed intent (eliminates duplicate LLM call): {Intent}, Confidence: {Confidence}",
+                intentAnalysis.Intent, intentAnalysis.Confidence);
+        }
+        else
+        {
+            // Fallback to LLM classification if intent analysis not available
+            _logger.LogInformation("🤖 Intent analysis not available, falling back to LLM classification");
+            intentResult = await ClassifyMessageIntentAsync(messageText, conversationHistory);
+        }
+        _logger.LogInformation("MessageRoutingService: Intent classification - Intent: {Intent}, Confidence: {Confidence}, Source: {Source}, Reasoning: {Reasoning}",
             intentResult.Intent, intentResult.Confidence, intentResult.Source, intentResult.Reasoning);
-            
+
         // Handle classified intents
         if (intentResult.Intent == MessageIntent.Greeting && intentResult.Confidence > _classificationOptions.GreetingConfidenceThreshold)
         {
@@ -826,19 +870,7 @@ public class MessageRoutingService : IMessageRoutingService
         //     return fallbackMenuResponse;
         // }
 
-        // Step 2: Check critical FAQs only (WiFi password, emergency contacts)
-        if (IsCriticalQuery(messageText))
-        {
-            _logger.LogInformation("MessageRoutingService: Checking critical FAQs for message '{MessageText}'", messageText);
-            var faqResponse = await CheckFAQs(tenantContext.TenantId, messageText);
-            if (faqResponse != null)
-            {
-                _logger.LogInformation("MessageRoutingService: Found FAQ response: '{Reply}'", faqResponse.Reply);
-                return faqResponse;
-            }
-        }
-
-        // Step 3: Go directly to enhanced LLM with full context
+        // Step 2: Go directly to enhanced LLM with full context
         _logger.LogInformation("MessageRoutingService: Processing with enhanced LLM for message '{MessageText}'", messageText);
 
         // Reload history with intent filtering to prevent contamination
@@ -850,7 +882,7 @@ public class MessageRoutingService : IMessageRoutingService
         _logger.LogInformation("Using filtered conversation history: {FilteredCount} messages (from {TotalCount}) for intent: {Intent}",
             filteredHistory.Count, fullHistoryWithIntent.Count, detectedIntent ?? "unknown");
 
-        var llmResponse = await ProcessWithEnhancedRAG(tenantContext, conversation, messageText, filteredHistory);
+        var llmResponse = await ProcessWithEnhancedRAG(tenantContext, conversation, messageText, filteredHistory, intentAnalysis);
         if (llmResponse != null)
         {
             // Set intent classification for conversation history filtering
@@ -874,112 +906,6 @@ public class MessageRoutingService : IMessageRoutingService
     {
         var emergencyKeywords = new[] { "emergency", "urgent", "help", "human", "agent", "speak to someone" };
         return emergencyKeywords.Any(keyword => messageText.Contains(keyword));
-    }
-
-    private bool IsCriticalQuery(string messageText)
-    {
-        var messageLower = messageText.ToLower();
-        var criticalQueries = new[] { "wifi password", "emergency", "fire", "medical", "check-in time", "check-out time" };
-        return criticalQueries.Any(query => messageLower.Contains(query));
-    }
-
-    private async Task<MessageRoutingResponse?> CheckFAQs(int tenantId, string messageText)
-    {
-        try
-        {
-            _logger.LogInformation("CheckFAQs: Searching for '{MessageText}' in tenant {TenantId} FAQs", messageText, tenantId);
-            using var scope = new TenantScope(_context, tenantId);
-            
-            // Use PostgreSQL trigram similarity
-            // Use raw SQL query to avoid EF mapping issues with text[] fields
-            using var command = _context.Database.GetDbConnection().CreateCommand();
-            command.CommandText = @"
-                SELECT ""Question"", ""Answer""
-                FROM ""FAQs"" 
-                WHERE ""TenantId"" = @tenantId 
-                AND similarity(LOWER(""Question""), @messageText) >= 0.5 
-                ORDER BY similarity(LOWER(""Question""), @messageText) DESC 
-                LIMIT 1";
-            
-            var tenantParam = command.CreateParameter();
-            tenantParam.ParameterName = "@tenantId";
-            tenantParam.Value = tenantId;
-            command.Parameters.Add(tenantParam);
-            
-            var messageParam = command.CreateParameter();
-            messageParam.ParameterName = "@messageText";
-            messageParam.Value = messageText.ToLower();
-            command.Parameters.Add(messageParam);
-            
-            await _context.Database.OpenConnectionAsync();
-            using var reader = await command.ExecuteReaderAsync();
-            
-            if (await reader.ReadAsync())
-            {
-                var question = reader.GetString(0);
-                var answer = reader.GetString(1);
-                
-                return new MessageRoutingResponse
-                {
-                    Reply = answer
-                };
-            }
-
-
-            return null;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking FAQs");
-            return null;
-        }
-    }
-
-    private async Task<MessageRoutingResponse?> CheckSemanticFAQs(int tenantId, string messageText)
-    {
-        try
-        {
-            // Get embedding for the message
-            var messageEmbedding = await _openAIService.GetEmbeddingAsync(messageText);
-            if (messageEmbedding == null) return null;
-
-            using var scope = new TenantScope(_context, tenantId);
-            
-            // First, get FAQ embeddings (simplified - in production, pre-compute and store FAQ embeddings)
-            var faqs = await _context.FAQs.Select(f => new FAQ 
-            { 
-                Id = f.Id, 
-                TenantId = f.TenantId, 
-                Question = f.Question, 
-                Answer = f.Answer, 
-                Language = f.Language,
-                Tags = new string[0],
-                UpdatedAt = f.UpdatedAt
-            }).ToListAsync();
-            
-            foreach (var faq in faqs)
-            {
-                var faqEmbedding = await _openAIService.GetEmbeddingAsync(faq.Question);
-                if (faqEmbedding != null)
-                {
-                    var similarity = CosineSimilarity(messageEmbedding, faqEmbedding);
-                    if (similarity >= 0.85)
-                    {
-                        return new MessageRoutingResponse
-                        {
-                            Reply = faq.Answer
-                        };
-                    }
-                }
-            }
-
-            return null;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking semantic FAQs");
-            return null;
-        }
     }
 
     private async Task<MessageRoutingResponse?> ProcessWithRAG(TenantContext tenantContext, Conversation conversation, string messageText)
@@ -1109,7 +1035,7 @@ public class MessageRoutingService : IMessageRoutingService
         }
     }
 
-    private async Task<MessageRoutingResponse?> ProcessWithEnhancedRAG(TenantContext tenantContext, Conversation conversation, string messageText, List<(string Role, string Content)> conversationHistory)
+    private async Task<MessageRoutingResponse?> ProcessWithEnhancedRAG(TenantContext tenantContext, Conversation conversation, string messageText, List<(string Role, string Content)> conversationHistory, IntentAnalysisResult? intentAnalysis = null)
     {
         try
         {
@@ -1122,8 +1048,21 @@ public class MessageRoutingService : IMessageRoutingService
             _logger.LogInformation("🔍 GUEST ACCESS CONTROL - Guest status determined: {Type} for {PhoneNumber} - CanRequestItems: {CanRequestItems}", 
                 guestStatus.Type, guestStatus.PhoneNumber, guestStatus.CanRequestItems);
 
-            // STEP 2: Check if this is a request that the guest cannot make (using LLM-based analysis)
-            var isItemRequest = await IsItemRequestAsync(messageText, tenantContext, conversation.Id, guestStatus);
+            // STEP 2: Check if this is a request that the guest cannot make
+            // OPTIMIZATION: Use pre-analyzed IsItemRequest from intent analysis (eliminates separate LLM call)
+            bool isItemRequest;
+            if (intentAnalysis?.DetectedIntents?.Count > 0 && intentAnalysis.DetectedIntents[0].ItemRequestConfidence >= 0.7)
+            {
+                isItemRequest = intentAnalysis.DetectedIntents[0].IsItemRequest;
+                _logger.LogInformation("🤖 Using pre-analyzed IsItemRequest from intent analysis: {IsItemRequest}, Confidence: {Confidence}",
+                    isItemRequest, intentAnalysis.DetectedIntents[0].ItemRequestConfidence);
+            }
+            else
+            {
+                // Fallback to LLM call if intent analysis not available (should rarely happen)
+                isItemRequest = await IsItemRequestAsync(messageText, tenantContext, conversation.Id, guestStatus);
+            }
+
             if (isItemRequest && !guestStatus.CanRequestItems)
             {
                 _logger.LogInformation("🚫 GUEST ACCESS CONTROL - Blocking item request from {GuestType} guest: {Message}", 
@@ -1140,19 +1079,7 @@ public class MessageRoutingService : IMessageRoutingService
             // Build comprehensive context
             var contextBuilder = new System.Text.StringBuilder();
 
-            // 1. Load FAQs
-            var faqs = await _context.FAQs
-                .Where(f => f.TenantId == tenantContext.TenantId)
-                .Select(f => $"Q: {f.Question}\nA: {f.Answer}")
-                .ToListAsync();
-
-            if (faqs.Any())
-            {
-                contextBuilder.AppendLine("=== FREQUENTLY ASKED QUESTIONS ===");
-                contextBuilder.AppendLine(string.Join("\n\n", faqs));
-            }
-
-            // 2. Load Business Info (WiFi, hours, policies, etc.)
+            // 1. Load Business Info (WiFi, hours, policies, etc.)
             var businessInfo = await _context.BusinessInfo
                 .Where(b => b.TenantId == tenantContext.TenantId && b.IsActive)
                 .OrderBy(b => b.Category)
@@ -2229,7 +2156,7 @@ Property plan: {{PLAN}}";
         return filtered;
     }
 
-    private async Task<MessageRoutingResponse?> ProcessContextualResponse(List<(string Role, string Content)> conversationHistory, string messageText, TenantContext tenantContext, Conversation conversation)
+    private async Task<MessageRoutingResponse?> ProcessContextualResponse(List<(string Role, string Content)> conversationHistory, string messageText, TenantContext tenantContext, Conversation conversation, IntentAnalysisResult? intentAnalysis = null)
     {
         try
         {
@@ -2311,17 +2238,47 @@ Property plan: {{PLAN}}";
                 return await HandleMenuFollowUpResponse(messageText, tenantContext);
             }
 
-            // LLM-based quantity clarification detection
-            var clarificationAnalysis = await AnalyzeQuantityClarificationAsync(messageText, lastBotMessage.Content, conversationHistory);
+            // OPTIMIZATION: Use pre-analyzed quantity clarification from intent analysis (eliminates separate LLM call)
+            // Check if intentAnalysis has quantity clarification data
+            bool isQuantityClarification = false;
+            bool isCancellation = false;
+            string? itemSlug = null;
+            string? itemName = null;
+            int? quantity = null;
 
-            if (clarificationAnalysis != null && clarificationAnalysis.IsQuantityClarification &&
-                clarificationAnalysis.Confidence >= 0.7 && !clarificationAnalysis.IsAmbiguous)
+            if (intentAnalysis?.DetectedIntents?.Count > 0)
             {
-                _logger.LogInformation("🔢 QUANTITY CLARIFICATION DETECTED - Item: {ItemSlug}, Quantity: {Quantity}, Confidence: {Confidence}",
-                    clarificationAnalysis.ItemSlug, clarificationAnalysis.Quantity, clarificationAnalysis.Confidence);
+                var primaryIntent = intentAnalysis.DetectedIntents[0];
+                isQuantityClarification = primaryIntent.IsQuantityClarification;
+                isCancellation = primaryIntent.IsCancellation;
+                itemSlug = primaryIntent.ItemSlug;
+                itemName = primaryIntent.ItemName;
+                quantity = primaryIntent.Quantity;
+                _logger.LogInformation("🤖 Using pre-analyzed quantity clarification: IsQuantity={IsQty}, IsCancellation={IsCancel}, ItemSlug={ItemSlug}, Quantity={Qty}",
+                    isQuantityClarification, isCancellation, itemSlug, quantity);
+            }
+            else
+            {
+                // Fallback to LLM call if intent analysis not available (should rarely happen)
+                _logger.LogInformation("🤖 Intent analysis not available, falling back to LLM quantity clarification");
+                var clarificationAnalysis = await AnalyzeQuantityClarificationAsync(messageText, lastBotMessage.Content, conversationHistory);
+                if (clarificationAnalysis != null && clarificationAnalysis.Confidence >= 0.7 && !clarificationAnalysis.IsAmbiguous)
+                {
+                    isQuantityClarification = clarificationAnalysis.IsQuantityClarification;
+                    isCancellation = clarificationAnalysis.IsCancellation;
+                    itemSlug = clarificationAnalysis.ItemSlug;
+                    itemName = clarificationAnalysis.ItemName;
+                    quantity = clarificationAnalysis.Quantity;
+                }
+            }
+
+            if (isQuantityClarification)
+            {
+                _logger.LogInformation("🔢 QUANTITY CLARIFICATION DETECTED - Item: {ItemSlug}, Quantity: {Quantity}",
+                    itemSlug, quantity);
 
                 // Look up the RequestItem to get the RequestItemId
-                var searchTerm = clarificationAnalysis.ItemSlug?.ToLower() ?? "";
+                var searchTerm = itemSlug?.ToLower() ?? "";
                 var requestItem = await _context.RequestItems
                     .FirstOrDefaultAsync(r => r.TenantId == tenantContext.TenantId &&
                                              (r.LlmVisibleName.ToLower().Contains(searchTerm) ||
@@ -2329,7 +2286,7 @@ Property plan: {{PLAN}}";
 
                 // Check for duplicate tasks created in the last 5 minutes
                 var fiveMinutesAgo = DateTime.UtcNow.AddMinutes(-5);
-                var itemNameLower = (clarificationAnalysis.ItemName ?? "").ToLower();
+                var itemNameLower = (itemName ?? "").ToLower();
 
                 StaffTask? existingTask;
                 if (requestItem != null)
@@ -2357,9 +2314,9 @@ Property plan: {{PLAN}}";
                 {
                     // Update the existing task with the new quantity
                     _logger.LogInformation("📝 UPDATING EXISTING TASK #{TaskId} - Old Quantity: {OldQty}, New Quantity: {NewQty}",
-                        existingTask.Id, existingTask.Quantity, clarificationAnalysis.Quantity);
+                        existingTask.Id, existingTask.Quantity, quantity);
 
-                    existingTask.Quantity = clarificationAnalysis.Quantity ?? 1;
+                    existingTask.Quantity = quantity ?? 1;
                     existingTask.UpdatedAt = DateTime.UtcNow;
                     await _context.SaveChangesAsync();
 
@@ -2367,7 +2324,7 @@ Property plan: {{PLAN}}";
                     var guestStatus = await DetermineGuestStatusAsync(conversation.WaUserPhone, tenantContext.TenantId);
 
                     // Create direct response for quantity update
-                    var updateMessage = $"Perfect! I've updated your request to {clarificationAnalysis.Quantity} {clarificationAnalysis.ItemName ?? clarificationAnalysis.ItemSlug}. " +
+                    var updateMessage = $"Perfect! I've updated your request to {quantity} {itemName ?? itemSlug}. " +
                         $"They'll be delivered to {(!string.IsNullOrEmpty(guestStatus.RoomNumber) ? $"room {guestStatus.RoomNumber}" : "your room")} shortly.";
 
                     return new MessageRoutingResponse { Reply = updateMessage };
@@ -2376,38 +2333,26 @@ Property plan: {{PLAN}}";
                 {
                     // No existing task found, create a new one
                     _logger.LogInformation("📝 CREATING NEW TASK - Item: {ItemSlug}, Quantity: {Quantity}",
-                        clarificationAnalysis.ItemSlug, clarificationAnalysis.Quantity);
+                        itemSlug, quantity);
 
                     return await CreateItemTaskResponse(
-                        clarificationAnalysis.ItemSlug ?? "unknown-item",
-                        clarificationAnalysis.ItemName ?? "item",
-                        clarificationAnalysis.Quantity ?? 1,
+                        itemSlug ?? "unknown-item",
+                        itemName ?? "item",
+                        quantity ?? 1,
                         tenantContext,
                         conversation
                     );
                 }
             }
 
-            // Handle cancellations
-            if (clarificationAnalysis != null && clarificationAnalysis.IsCancellation && clarificationAnalysis.Confidence >= 0.7)
+            // Handle cancellations (using pre-analyzed field)
+            if (isCancellation)
             {
-                _logger.LogInformation("❌ CANCELLATION DETECTED - Confidence: {Confidence}", clarificationAnalysis.Confidence);
+                _logger.LogInformation("❌ CANCELLATION DETECTED - Using pre-analyzed cancellation flag");
 
                 return new MessageRoutingResponse
                 {
                     Reply = "No problem! I've cancelled that request. Let me know if you need anything else during your stay."
-                };
-            }
-
-            // Handle ambiguous cases
-            if (clarificationAnalysis != null && clarificationAnalysis.IsAmbiguous && clarificationAnalysis.Confidence >= 0.7)
-            {
-                _logger.LogInformation("⚠️ AMBIGUOUS CLARIFICATION - Asking for clarification");
-
-                return new MessageRoutingResponse
-                {
-                    Reply = clarificationAnalysis.ClarificationNeeded ??
-                            "I want to make sure I get this right - could you clarify which item you're referring to?"
                 };
             }
 
@@ -2427,6 +2372,58 @@ Property plan: {{PLAN}}";
             if (IsAffirmativeResponse(messageText) && ContainsIronQuestion(lastBotMessage.Content))
             {
                 return await CreateIronTaskResponse(tenantContext, conversation);
+            }
+
+            // Pattern matching for service booking follow-ups (spa, massage, etc.)
+            if (IsAffirmativeResponse(messageText) && ContainsServiceBookingQuestion(lastBotMessage.Content))
+            {
+                _logger.LogInformation("📋 Service booking follow-up detected - guest said yes to booking question");
+                return await HandleServiceBookingFollowUp(lastBotMessage.Content, tenantContext, conversation);
+            }
+
+            // Pattern matching for menu order follow-ups
+            if (IsAffirmativeResponse(messageText) && ContainsMenuOrderQuestion(lastBotMessage.Content))
+            {
+                _logger.LogInformation("🍽️ Menu order follow-up detected - guest wants to order");
+                return new MessageRoutingResponse
+                {
+                    Reply = "I'd be happy to help you order! What would you like to have? Just tell me the item name and quantity, and I'll arrange it for you."
+                };
+            }
+
+            // Pattern matching for food/item delivery confirmation with additional items
+            // e.g., Bot: "Would you like me to arrange delivery of the Cheesecake?" Guest: "Yes please add sparkling water"
+            if (ContainsDeliveryConfirmationQuestion(lastBotMessage.Content))
+            {
+                var originalItem = ExtractItemFromDeliveryQuestion(lastBotMessage.Content);
+                var additionalItems = ExtractAdditionalItemsFromResponse(messageText);
+                var isConfirmation = IsAffirmativeResponse(messageText);
+
+                if (isConfirmation || additionalItems.Count > 0)
+                {
+                    _logger.LogInformation("🍽️ Delivery confirmation detected. Original: {Original}, Additional: {Additional}, Confirmed: {Confirmed}",
+                        originalItem, string.Join(", ", additionalItems), isConfirmation);
+
+                    return await HandleDeliveryConfirmationWithAdditions(
+                        tenantContext, conversation, originalItem, additionalItems, isConfirmation);
+                }
+            }
+
+            // Pattern matching for multi-item corrections like "its water AND cheese cake"
+            if (IsMultiItemCorrectionOrRequest(messageText))
+            {
+                _logger.LogInformation("🍽️ Multi-item request/correction detected: {Message}", messageText);
+                return await HandleMultiItemFoodOrder(tenantContext, conversation, messageText);
+            }
+
+            // Pattern matching for late checkout follow-ups
+            if (IsAffirmativeResponse(messageText) && ContainsLateCheckoutQuestion(lastBotMessage.Content))
+            {
+                _logger.LogInformation("🕐 Late checkout follow-up detected - guest wants late checkout");
+                return new MessageRoutingResponse
+                {
+                    Reply = "I'd be happy to arrange a late checkout for you! What time would you like to check out?"
+                };
             }
 
             // Pattern matching for toilet paper quantity responses
@@ -2651,6 +2648,603 @@ Property plan: {{PLAN}}";
     private bool ContainsIronQuestion(string message)
     {
         return message.ToLower().Contains("iron") && (message.ToLower().Contains("delivered") || message.ToLower().Contains("send"));
+    }
+
+    private bool ContainsServiceBookingQuestion(string message)
+    {
+        var messageLower = message.ToLower();
+        // Check if the message contains a booking-related question about services
+        var hasBookingQuestion = messageLower.Contains("would you like to make a booking") ||
+                                  messageLower.Contains("would you like to book") ||
+                                  messageLower.Contains("would you like me to book") ||
+                                  messageLower.Contains("shall i book") ||
+                                  messageLower.Contains("need more information");
+
+        // Also check if it mentions specific services that could be booked
+        var hasServiceContext = messageLower.Contains("spa") ||
+                                 messageLower.Contains("massage") ||
+                                 messageLower.Contains("wellness") ||
+                                 messageLower.Contains("tour") ||
+                                 messageLower.Contains("safari") ||
+                                 messageLower.Contains("treatment") ||
+                                 messageLower.Contains("service");
+
+        return hasBookingQuestion && hasServiceContext;
+    }
+
+    private bool ContainsMenuOrderQuestion(string message)
+    {
+        var messageLower = message.ToLower();
+        // Check if the bot asked about ordering from the menu
+        return (messageLower.Contains("would you like to order") ||
+                messageLower.Contains("shall i order") ||
+                messageLower.Contains("want to order")) &&
+               (messageLower.Contains("menu") ||
+                messageLower.Contains("item") ||
+                messageLower.Contains("something") ||
+                messageLower.Contains("breakfast") ||
+                messageLower.Contains("lunch") ||
+                messageLower.Contains("dinner"));
+    }
+
+    private bool ContainsLateCheckoutQuestion(string message)
+    {
+        var messageLower = message.ToLower();
+        // Check if the bot asked about late checkout
+        return messageLower.Contains("late checkout") ||
+               messageLower.Contains("late check-out") ||
+               messageLower.Contains("later checkout");
+    }
+
+    private bool ContainsDeliveryConfirmationQuestion(string message)
+    {
+        var messageLower = message.ToLower();
+        // Check if the bot asked about arranging delivery of an item
+        return (messageLower.Contains("would you like me to arrange delivery") ||
+                messageLower.Contains("shall i arrange delivery") ||
+                messageLower.Contains("would you like me to order") ||
+                messageLower.Contains("shall i order") ||
+                messageLower.Contains("would you like to order")) &&
+               (messageLower.Contains("room") || messageLower.Contains("?"));
+    }
+
+    private string? ExtractItemFromDeliveryQuestion(string message)
+    {
+        var messageLower = message.ToLower();
+
+        // Pattern: "Would you like me to arrange delivery of the X to room"
+        var deliveryPattern = new System.Text.RegularExpressions.Regex(
+            @"(?:arrange delivery of(?: the)?|order(?: the)?)\s+([a-zA-Z\s]+?)(?:\s+to\s+room|\s*\?)",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        var match = deliveryPattern.Match(message);
+        if (match.Success)
+        {
+            return match.Groups[1].Value.Trim();
+        }
+
+        // Fallback: look for common food items in the message
+        var foodItems = new[] { "cheesecake", "cheese cake", "coffee", "tea", "water", "sandwich",
+            "burger", "pizza", "salad", "soup", "dessert", "cake", "ice cream", "wine", "beer" };
+
+        foreach (var item in foodItems)
+        {
+            if (messageLower.Contains(item))
+            {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    private List<string> ExtractAdditionalItemsFromResponse(string message)
+    {
+        var messageLower = message.ToLower();
+        var items = new List<string>();
+
+        // Common food/beverage items
+        var foodItems = new Dictionary<string, string[]>
+        {
+            { "sparkling water", new[] { "sparkling water", "sparkling" } },
+            { "still water", new[] { "still water" } },
+            { "water", new[] { "water" } },
+            { "coffee", new[] { "coffee" } },
+            { "tea", new[] { "tea" } },
+            { "cheesecake", new[] { "cheesecake", "cheese cake" } },
+            { "cake", new[] { "cake" } },
+            { "wine", new[] { "wine" } },
+            { "beer", new[] { "beer" } },
+            { "juice", new[] { "juice" } },
+            { "sandwich", new[] { "sandwich" } },
+            { "salad", new[] { "salad" } },
+            { "soup", new[] { "soup" } },
+            { "pizza", new[] { "pizza" } },
+            { "burger", new[] { "burger" } }
+        };
+
+        foreach (var kvp in foodItems)
+        {
+            if (kvp.Value.Any(v => messageLower.Contains(v)))
+            {
+                items.Add(kvp.Key);
+            }
+        }
+
+        return items;
+    }
+
+    private bool IsMultiItemCorrectionOrRequest(string message)
+    {
+        var messageLower = message.ToLower();
+
+        // Patterns like "its X and Y", "I want X and Y", "both X and Y"
+        var hasCorrection = messageLower.StartsWith("its ") ||
+                           messageLower.StartsWith("it's ") ||
+                           messageLower.StartsWith("i said ") ||
+                           messageLower.StartsWith("i meant ") ||
+                           messageLower.Contains("i want") ||
+                           messageLower.Contains("i need") ||
+                           messageLower.Contains("both");
+
+        var hasMultipleItems = messageLower.Contains(" and ") || messageLower.Contains(" & ");
+
+        // Also check for food items
+        var foodItems = new[] { "water", "cake", "cheesecake", "coffee", "tea", "wine", "beer",
+            "juice", "sandwich", "salad", "soup", "pizza", "burger" };
+        var itemCount = foodItems.Count(item => messageLower.Contains(item));
+
+        return (hasCorrection && hasMultipleItems) || (hasMultipleItems && itemCount >= 2);
+    }
+
+    private async Task<MessageRoutingResponse> HandleDeliveryConfirmationWithAdditions(
+        TenantContext tenantContext,
+        Conversation conversation,
+        string? originalItem,
+        List<string> additionalItems,
+        bool isConfirmation)
+    {
+        var allItems = new List<string>();
+
+        // Add original item if confirmed
+        if (isConfirmation && !string.IsNullOrEmpty(originalItem))
+        {
+            allItems.Add(originalItem);
+        }
+
+        // Add additional items (avoiding duplicates)
+        foreach (var item in additionalItems)
+        {
+            if (!allItems.Any(i => i.Equals(item, StringComparison.OrdinalIgnoreCase)))
+            {
+                allItems.Add(item);
+            }
+        }
+
+        if (allItems.Count == 0)
+        {
+            return new MessageRoutingResponse
+            {
+                Reply = "I'd be happy to help with your order! Could you please confirm what items you'd like?"
+            };
+        }
+
+        // Get booking for room number
+        var booking = await _context.Bookings
+            .Where(b => b.TenantId == tenantContext.TenantId &&
+                       b.Phone == conversation.WaUserPhone &&
+                       (b.Status == "Confirmed" || b.Status == "CheckedIn"))
+            .OrderByDescending(b => b.CheckinDate)
+            .FirstOrDefaultAsync();
+
+        var roomNumber = booking?.RoomNumber ?? "your room";
+
+        // Create task for the order
+        var task = new StaffTask
+        {
+            TenantId = tenantContext.TenantId,
+            ConversationId = conversation.Id,
+            TaskType = "FoodOrder",
+            Title = $"Deliver {string.Join(" and ", allItems)}",
+            Description = $"Guest ordered: {string.Join(", ", allItems)}",
+            Department = "Kitchen",
+            Status = "Pending",
+            Priority = "Normal",
+            GuestName = booking?.GuestName,
+            GuestPhone = conversation.WaUserPhone,
+            RoomNumber = booking?.RoomNumber,
+            CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)
+        };
+
+        _context.StaffTasks.Add(task);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Created food order task {TaskId} for items: {Items}", task.Id, string.Join(", ", allItems));
+
+        var itemList = allItems.Count == 1
+            ? allItems[0]
+            : string.Join(" and ", allItems.Take(allItems.Count - 1)) + " and " + allItems.Last();
+
+        return new MessageRoutingResponse
+        {
+            Reply = $"I've arranged delivery of {itemList} to {roomNumber}. Our team will bring it to you shortly. Is there anything else you need?"
+        };
+    }
+
+    private async Task<MessageRoutingResponse> HandleMultiItemFoodOrder(
+        TenantContext tenantContext,
+        Conversation conversation,
+        string messageText)
+    {
+        var items = ExtractAdditionalItemsFromResponse(messageText);
+
+        if (items.Count == 0)
+        {
+            return new MessageRoutingResponse
+            {
+                Reply = "I'd be happy to help with your order! Could you please let me know what items you'd like?"
+            };
+        }
+
+        // Get booking for room number
+        var booking = await _context.Bookings
+            .Where(b => b.TenantId == tenantContext.TenantId &&
+                       b.Phone == conversation.WaUserPhone &&
+                       (b.Status == "Confirmed" || b.Status == "CheckedIn"))
+            .OrderByDescending(b => b.CheckinDate)
+            .FirstOrDefaultAsync();
+
+        var roomNumber = booking?.RoomNumber ?? "your room";
+
+        // Create task for the order
+        var task = new StaffTask
+        {
+            TenantId = tenantContext.TenantId,
+            ConversationId = conversation.Id,
+            TaskType = "FoodOrder",
+            Title = $"Deliver {string.Join(" and ", items)}",
+            Description = $"Guest ordered: {string.Join(", ", items)} (multi-item order)",
+            Department = "Kitchen",
+            Status = "Pending",
+            Priority = "Normal",
+            GuestName = booking?.GuestName,
+            GuestPhone = conversation.WaUserPhone,
+            RoomNumber = booking?.RoomNumber,
+            CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)
+        };
+
+        _context.StaffTasks.Add(task);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Created multi-item food order task {TaskId} for items: {Items}", task.Id, string.Join(", ", items));
+
+        var itemList = items.Count == 1
+            ? items[0]
+            : string.Join(", ", items.Take(items.Count - 1)) + " and " + items.Last();
+
+        return new MessageRoutingResponse
+        {
+            Reply = $"I've arranged delivery of {itemList} to {roomNumber}. Our team will bring everything to you shortly. Is there anything else you need?"
+        };
+    }
+
+    private bool IsWiFiPasswordQuery(string message)
+    {
+        var messageLower = message.ToLower();
+        // Direct WiFi password/credentials queries
+        return (messageLower.Contains("wifi") || messageLower.Contains("wi-fi") || messageLower.Contains("internet")) &&
+               (messageLower.Contains("password") ||
+                messageLower.Contains("code") ||
+                messageLower.Contains("credentials") ||
+                messageLower.Contains("login") ||
+                messageLower.Contains("connect") ||
+                messageLower.Contains("access") ||
+                messageLower.Contains("what is the") ||
+                messageLower.Contains("what's the"));
+    }
+
+    private bool IsServiceHoursQuery(string message)
+    {
+        var messageLower = message.ToLower();
+
+        // Time/hours indicators
+        var timeIndicators = new[]
+        {
+            "what time", "when is", "when does", "when do", "what are the hours",
+            "time is", "time for", "served", "serving", "opens", "closes", "open",
+            "start", "end", "hours for", "schedule", "available", "operating hours"
+        };
+
+        // All services/facilities that have hours
+        var serviceWords = new[]
+        {
+            // Meals
+            "breakfast", "lunch", "dinner", "brunch", "supper", "meal", "restaurant", "kitchen",
+            // Facilities
+            "pool", "swimming", "gym", "fitness", "spa", "wellness", "sauna", "steam room",
+            "bar", "rooftop", "lounge",
+            // Hotel operations
+            "check-in", "checkin", "check in", "check-out", "checkout", "check out",
+            "reception", "front desk", "concierge", "room service",
+            // Other
+            "laundry", "housekeeping", "parking", "shuttle", "airport transfer"
+        };
+
+        var hasTimeIndicator = timeIndicators.Any(t => messageLower.Contains(t));
+        var hasServiceWord = serviceWords.Any(s => messageLower.Contains(s));
+
+        // Explicit patterns
+        var explicitPatterns = new[]
+        {
+            // Meals
+            "breakfast time", "lunch time", "dinner time", "breakfast hours", "lunch hours", "dinner hours",
+            "breakfast served", "lunch served", "dinner served",
+            "when is breakfast", "when is lunch", "when is dinner",
+            "what time is breakfast", "what time is lunch", "what time is dinner",
+            // Pool
+            "pool hours", "pool time", "when is the pool open", "pool open", "swimming hours",
+            // Gym
+            "gym hours", "gym open", "fitness center hours", "when is the gym open",
+            // Spa
+            "spa hours", "spa open", "when is the spa open", "wellness hours",
+            // Bar
+            "bar hours", "bar open", "when is the bar open", "rooftop hours",
+            // Check-in/out
+            "check-in time", "checkin time", "check in time", "when is check-in",
+            "check-out time", "checkout time", "check out time", "when is check-out",
+            // Room service
+            "room service hours", "when is room service available",
+            // Reception
+            "reception hours", "front desk hours", "when is reception open"
+        };
+
+        return explicitPatterns.Any(p => messageLower.Contains(p)) || (hasTimeIndicator && hasServiceWord);
+    }
+
+    private async Task<MessageRoutingResponse?> HandleServiceHoursQueryAsync(TenantContext tenantContext, string messageText)
+    {
+        try
+        {
+            var messageLower = messageText.ToLower();
+
+            // Map query to service type
+            var serviceType = DetectServiceType(messageLower);
+
+            // Get all hours info from BusinessInfo
+            var hoursInfo = await _context.BusinessInfo
+                .Where(b => b.TenantId == tenantContext.TenantId &&
+                           (b.Category == "hours" || b.Category == "facility_hours" ||
+                            b.Category == "restaurant_hours" || b.Category == "hotel_policies") &&
+                           b.IsActive)
+                .ToListAsync();
+
+            string? foundHours = null;
+            string serviceName = serviceType.name;
+
+            foreach (var info in hoursInfo)
+            {
+                var content = info.Content ?? "";
+                var contentLower = content.ToLower();
+                var titleLower = (info.Title ?? "").ToLower();
+
+                // Check if this info matches the service type
+                if (serviceType.keywords.Any(k => contentLower.Contains(k) || titleLower.Contains(k)))
+                {
+                    // Try to extract hours using various patterns
+                    foundHours = ExtractHoursFromContent(content, serviceType.keywords);
+                    if (!string.IsNullOrEmpty(foundHours))
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(foundHours))
+            {
+                var followUp = GetServiceFollowUp(serviceType.type);
+                return new MessageRoutingResponse
+                {
+                    Reply = $"{serviceName} is {foundHours}.{(string.IsNullOrEmpty(followUp) ? "" : $" {followUp}")}"
+                };
+            }
+
+            // Fallback - return null to let other handlers try
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling service hours query");
+            return null;
+        }
+    }
+
+    private (string type, string name, string[] keywords) DetectServiceType(string messageLower)
+    {
+        // Check in order of specificity
+        if (messageLower.Contains("breakfast"))
+            return ("meal", "Breakfast", new[] { "breakfast" });
+        if (messageLower.Contains("lunch"))
+            return ("meal", "Lunch", new[] { "lunch" });
+        if (messageLower.Contains("dinner") || messageLower.Contains("supper"))
+            return ("meal", "Dinner", new[] { "dinner" });
+        if (messageLower.Contains("brunch"))
+            return ("meal", "Brunch", new[] { "brunch" });
+        if (messageLower.Contains("pool") || messageLower.Contains("swimming"))
+            return ("facility", "The swimming pool", new[] { "pool", "swimming" });
+        if (messageLower.Contains("gym") || messageLower.Contains("fitness"))
+            return ("facility", "The fitness center", new[] { "gym", "fitness" });
+        if (messageLower.Contains("spa") || messageLower.Contains("wellness") || messageLower.Contains("massage"))
+            return ("facility", "The spa", new[] { "spa", "wellness" });
+        if (messageLower.Contains("sauna") || messageLower.Contains("steam"))
+            return ("facility", "The sauna/steam room", new[] { "sauna", "steam" });
+        if (messageLower.Contains("bar") || messageLower.Contains("rooftop") || messageLower.Contains("lounge"))
+            return ("facility", "The bar", new[] { "bar", "rooftop" });
+        if (messageLower.Contains("check-in") || messageLower.Contains("checkin") || messageLower.Contains("check in"))
+            return ("checkin", "Check-in", new[] { "check-in", "checkin" });
+        if (messageLower.Contains("check-out") || messageLower.Contains("checkout") || messageLower.Contains("check out"))
+            return ("checkout", "Check-out", new[] { "check-out", "checkout" });
+        if (messageLower.Contains("room service"))
+            return ("service", "Room service", new[] { "room service" });
+        if (messageLower.Contains("reception") || messageLower.Contains("front desk"))
+            return ("service", "Reception", new[] { "reception", "front desk" });
+        if (messageLower.Contains("restaurant") || messageLower.Contains("kitchen"))
+            return ("meal", "The restaurant", new[] { "restaurant", "breakfast", "lunch", "dinner" });
+
+        return ("general", "Our services", new[] { "" });
+    }
+
+    private string? ExtractHoursFromContent(string content, string[] keywords)
+    {
+        // Pattern for "Service: HH:MM AM/PM - HH:MM AM/PM" or "Open HH:MM - HH:MM"
+        foreach (var keyword in keywords)
+        {
+            if (string.IsNullOrEmpty(keyword)) continue;
+
+            // Try pattern: "Keyword: TIME - TIME" or "Keyword TIME - TIME"
+            var pattern1 = new System.Text.RegularExpressions.Regex(
+                $@"{keyword}[:\s]+(\d{{1,2}}[:\.]?\d{{0,2}}\s*(?:AM|PM|am|pm)?)\s*[-–to]+\s*(\d{{1,2}}[:\.]?\d{{0,2}}\s*(?:AM|PM|am|pm)?)",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            var match1 = pattern1.Match(content);
+            if (match1.Success)
+            {
+                return $"open from {match1.Groups[1].Value.Trim()} to {match1.Groups[2].Value.Trim()}";
+            }
+
+            // Try pattern: "Open daily TIME - TIME" near keyword
+            var pattern2 = new System.Text.RegularExpressions.Regex(
+                @"[Oo]pen\s+(?:daily\s+)?(\d{1,2}[:\.]?\d{0,2}\s*(?:AM|PM|am|pm)?)\s*[-–to]+\s*(\d{1,2}[:\.]?\d{0,2}\s*(?:AM|PM|am|pm)?)",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (content.ToLower().Contains(keyword))
+            {
+                var match2 = pattern2.Match(content);
+                if (match2.Success)
+                {
+                    return $"open daily from {match2.Groups[1].Value.Trim()} to {match2.Groups[2].Value.Trim()}";
+                }
+            }
+
+            // Try pattern for 24/7
+            if (content.ToLower().Contains(keyword) &&
+                (content.Contains("24/7") || content.ToLower().Contains("24 hours") || content.ToLower().Contains("open 24")))
+            {
+                return "open 24/7";
+            }
+
+            // Try pattern: "Check-in: TIME onwards" or "Check-out: TIME"
+            if (keyword.Contains("check"))
+            {
+                var pattern3 = new System.Text.RegularExpressions.Regex(
+                    $@"{keyword}[:\s]+(\d{{1,2}}[:\.]?\d{{0,2}}\s*(?:AM|PM|am|pm)?)\s*(?:onwards)?",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                var match3 = pattern3.Match(content);
+                if (match3.Success)
+                {
+                    var time = match3.Groups[1].Value.Trim();
+                    if (keyword.Contains("in"))
+                        return $"from {time} onwards";
+                    else
+                        return $"by {time}";
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private string GetServiceFollowUp(string serviceType)
+    {
+        return serviceType switch
+        {
+            "meal" => "Would you like to see the menu or make a reservation?",
+            "facility" => "Would you like more information about this facility?",
+            "checkin" => "Would you like to request early check-in?",
+            "checkout" => "Would you like to request late check-out?",
+            _ => "Is there anything else I can help you with?"
+        };
+    }
+
+    private async Task<MessageRoutingResponse?> HandleWiFiPasswordQueryAsync(TenantContext tenantContext)
+    {
+        try
+        {
+            var wifiInfo = await GetTenantWiFiCredentials(tenantContext.TenantId);
+
+            if (wifiInfo.HasCredentials)
+            {
+                return new MessageRoutingResponse
+                {
+                    Reply = $"Here are the WiFi details for your stay:\n\n" +
+                            $"📶 *Network Name:* {wifiInfo.NetworkName}\n" +
+                            $"🔐 *Password:* {wifiInfo.Password}\n\n" +
+                            $"Simply connect to the network and enter the password. If you experience any connection issues, please let me know and I can send someone to assist you."
+                };
+            }
+            else
+            {
+                return new MessageRoutingResponse
+                {
+                    Reply = "I'll get the current WiFi details for you right away! Let me connect you with our front desk who can provide the network name and password for your stay."
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling WiFi password query");
+            return null;
+        }
+    }
+
+    private async Task<MessageRoutingResponse?> HandleServiceBookingFollowUp(string lastBotMessage, TenantContext tenantContext, Conversation conversation)
+    {
+        try
+        {
+            // Extract what services were mentioned in the last bot message
+            var messageLower = lastBotMessage.ToLower();
+            var services = new List<string>();
+
+            // Check for specific services mentioned
+            if (messageLower.Contains("traditional massage"))
+                services.Add("Traditional Massage");
+            if (messageLower.Contains("aromatherapy massage"))
+                services.Add("Aromatherapy Massage");
+            if (messageLower.Contains("spa"))
+                services.Add("Spa");
+            if (messageLower.Contains("safari") || messageLower.Contains("game drive"))
+                services.Add("Safari/Game Drive");
+            if (messageLower.Contains("tour"))
+                services.Add("Tour");
+
+            // Get guest status
+            var guestStatus = await DetermineGuestStatusAsync(conversation.WaUserPhone, tenantContext.TenantId);
+
+            // Build response asking for booking details
+            string response;
+            if (services.Count == 1)
+            {
+                response = $"I'd be happy to book {services[0]} for you! When would you like to schedule it, and for how many people?";
+            }
+            else if (services.Count > 1)
+            {
+                response = $"Excellent! Which service would you like to book?\n• {string.Join("\n• ", services)}\n\nPlease let me know your choice, preferred time, and number of people.";
+            }
+            else
+            {
+                // Fallback - ask what they want to book
+                response = "I'd be happy to help with a booking! What service would you like to book, when would you prefer, and for how many people?";
+            }
+
+            _logger.LogInformation("📋 Service booking follow-up response generated for conversation {ConversationId}", conversation.Id);
+
+            return new MessageRoutingResponse
+            {
+                Reply = response
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling service booking follow-up");
+            return null;
+        }
     }
 
     private bool ContainsWiFiConnectionHelp(string message)
@@ -6189,7 +6783,7 @@ Return only the classification word (TIMING_RESPONSE, GREETING, SERVICE_REQUEST,
 
         // Layer 2: Request Intent + Specific Items (70-85%)
         var requestWords = new[] { "need", "want", "bring", "get", "extra", "more" };
-        var itemWords = new[] { "towel", "pillow", "blanket", "charger", "iron", "hairdryer", "shampoo", "soap", "toilet paper" };
+        var itemWords = new[] { "towel", "pillow", "blanket", "charger", "iron", "hairdryer", "hair dryer", "blow dryer", "shampoo", "soap", "toilet paper" };
 
         var hasRequestIntent = requestWords.Any(word => lowerMessage.Contains(word));
         var hasSpecificItem = itemWords.Any(word => lowerMessage.Contains(word));
@@ -8573,9 +9167,30 @@ Return JSON:
             }
             else if (isCheckOut)
             {
-                baseResponse = hotelInfo?.CheckOutTime != null
-                    ? $"Check-out time is {hotelInfo.CheckOutTime}."
-                    : "Let me check the check-out time for you.";
+                // Look up guest's active booking by phone number for personalized response
+                var booking = await _context.Bookings
+                    .Where(b => b.TenantId == tenantContext.TenantId &&
+                               b.Phone == conversation.WaUserPhone &&
+                               (b.Status == "Confirmed" || b.Status == "CheckedIn"))
+                    .OrderByDescending(b => b.CheckinDate)
+                    .FirstOrDefaultAsync();
+
+                if (booking != null)
+                {
+                    var checkoutDate = booking.CheckoutDate.ToString("dddd, MMMM d, yyyy");
+                    var standardTime = hotelInfo?.CheckOutTime ?? "11:00 AM";
+                    var roomInfo = !string.IsNullOrEmpty(booking.RoomNumber)
+                        ? $" You're in Room {booking.RoomNumber}."
+                        : "";
+
+                    baseResponse = $"Your checkout is on {checkoutDate} at {standardTime}.{roomInfo}\n\nWould you like to request a late checkout?";
+                }
+                else
+                {
+                    baseResponse = hotelInfo?.CheckOutTime != null
+                        ? $"Check-out time is {hotelInfo.CheckOutTime}. Late check-out can be arranged for an additional fee, subject to availability."
+                        : "Check-out time is 11:00 AM. Late check-out can be arranged for an additional fee, subject to availability.";
+                }
             }
             else
             {
@@ -9161,22 +9776,31 @@ Return JSON:
 
             _logger.LogInformation("✅ Created late checkout task {TaskId} for room {RoomNumber}", task.Id, booking.RoomNumber);
 
-            // 6. Create BookingModification record
-            var modification = new BookingModification
+            // 6. Create BookingModification record (optional - don't fail if this doesn't work)
+            try
             {
-                TenantId = tenantContext.TenantId,
-                BookingId = booking.Id,
-                ConversationId = conversation.Id,
-                ModificationType = "late_checkout",
-                RequestDetails = $"{{\"requestedCheckoutTime\": \"{requestedTime:HH:mm}\"}}",
-                RequestedCheckOutTime = requestedTime,
-                Status = "Pending",
-                ApprovalStatus = "Pending",
-                RequestedAt = DateTime.UtcNow
-            };
+                var modification = new BookingModification
+                {
+                    TenantId = tenantContext.TenantId,
+                    BookingId = booking.Id,
+                    ConversationId = conversation.Id,
+                    ModificationType = "late_checkout",
+                    RequestDetails = $"{{\"requestedCheckoutTime\": \"{requestedTime:HH:mm}\"}}",
+                    RequestedCheckOutTime = requestedTime,
+                    Status = "Pending",
+                    ApprovalStatus = "Pending",
+                    RequestedAt = DateTime.UtcNow
+                };
 
-            _context.BookingModifications.Add(modification);
-            await _context.SaveChangesAsync();
+                _context.BookingModifications.Add(modification);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("✅ Created BookingModification for late checkout");
+            }
+            catch (Exception modEx)
+            {
+                _logger.LogWarning(modEx, "⚠️ Failed to create BookingModification, but task was created successfully");
+                // Continue - the task is the important part
+            }
 
             // 7. Get acknowledgement template and replace placeholders
             var acknowledgeTemplate = intentSettings?.CustomResponse ??
@@ -9271,6 +9895,570 @@ Time:";
             _logger.LogError(ex, "Error extracting checkout time from message");
             return null;
         }
+    }
+
+    #endregion
+
+    #region Dedicated Service Handlers
+
+    /// <summary>
+    /// Handles menu inquiries by querying the MenuItems table directly
+    /// </summary>
+    private async Task<MessageRoutingResponse?> HandleMenuInquiryAsync(TenantContext tenantContext, string category)
+    {
+        _logger.LogInformation("HandleMenuInquiryAsync for category: {Category}", category);
+
+        // Determine meal type from category
+        string? mealType = null;
+        var categoryLower = category.ToLower();
+        if (categoryLower.Contains("dinner")) mealType = "dinner";
+        else if (categoryLower.Contains("lunch")) mealType = "lunch";
+        else if (categoryLower.Contains("breakfast")) mealType = "breakfast";
+        else if (categoryLower.Contains("dessert")) mealType = "dessert";
+        else if (categoryLower.Contains("drinks") || categoryLower.Contains("beverage")) mealType = "drinks";
+
+        var query = _context.MenuItems
+            .Include(m => m.MenuCategory)
+            .Where(m => m.TenantId == tenantContext.TenantId && m.IsAvailable);
+
+        if (mealType != null && mealType != "all")
+        {
+            query = query.Where(m =>
+                m.MealType.ToLower() == mealType ||
+                m.MealType.ToLower() == "all" ||
+                (m.MenuCategory != null && m.MenuCategory.MealType.ToLower() == mealType));
+        }
+
+        var menuItems = await query
+            .OrderBy(m => m.MenuCategory != null ? m.MenuCategory.DisplayOrder : 0)
+            .ThenBy(m => m.MenuCategory != null ? m.MenuCategory.Name : "")
+            .ThenBy(m => m.Name)
+            .ToListAsync();
+
+        if (!menuItems.Any())
+        {
+            _logger.LogWarning("No menu items found for tenant {TenantId}, category {Category}", tenantContext.TenantId, category);
+            return null; // Fall through to LLM
+        }
+
+        var response = new StringBuilder();
+        var mealTitle = mealType?.ToUpperInvariant() ?? "Our";
+        response.AppendLine($"Here's our {mealTitle} Menu:\n");
+
+        var grouped = menuItems.GroupBy(m => m.MenuCategory?.Name ?? "Other");
+        foreach (var group in grouped)
+        {
+            if (grouped.Count() > 1 || mealType == null)
+            {
+                response.AppendLine($"*{group.Key}*");
+            }
+            foreach (var item in group)
+            {
+                var price = item.PriceCents / 100.0m;
+                response.AppendLine($"• *{item.Name}* - R{price:F0}");
+                if (!string.IsNullOrEmpty(item.Description))
+                {
+                    response.AppendLine($"  _{item.Description}_");
+                }
+                // Add dietary indicators
+                var dietary = new List<string>();
+                if (item.IsVegetarian) dietary.Add("V");
+                if (item.IsVegan) dietary.Add("VG");
+                if (item.IsGlutenFree) dietary.Add("GF");
+                if (dietary.Any())
+                {
+                    response.AppendLine($"  [{string.Join(", ", dietary)}]");
+                }
+            }
+            response.AppendLine();
+        }
+
+        response.AppendLine("Would you like to order something or need more details about any item?");
+
+        return new MessageRoutingResponse
+        {
+            Reply = response.ToString(),
+            IntentClassification = "DINING"
+        };
+    }
+
+    /// <summary>
+    /// Handles amenities inquiries by querying the Services table
+    /// </summary>
+    private async Task<MessageRoutingResponse?> HandleAmenitiesInquiryAsync(TenantContext tenantContext, string? specificAmenity = null)
+    {
+        _logger.LogInformation("HandleAmenitiesInquiryAsync for tenant: {TenantId}, specific: {Specific}", tenantContext.TenantId, specificAmenity);
+
+        var query = _context.Services
+            .Where(s => s.TenantId == tenantContext.TenantId && s.IsAvailable);
+
+        // Map common synonyms to categories (e.g., "spa" -> "wellness", "gym" -> "recreation")
+        var categoryMappings = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "spa", new[] { "wellness", "massage", "spa" } },
+            { "gym", new[] { "recreation", "fitness", "gym" } },
+            { "fitness", new[] { "recreation", "fitness", "gym" } },
+            { "pool", new[] { "recreation", "pool", "swimming" } },
+            { "restaurant", new[] { "dining", "restaurant", "food" } },
+            { "business", new[] { "business", "conference", "meeting" } }
+        };
+
+        // If a specific amenity is requested, filter for it
+        if (!string.IsNullOrEmpty(specificAmenity))
+        {
+            var searchTerms = new List<string> { specificAmenity.ToLower() };
+
+            // Add mapped synonyms if available
+            if (categoryMappings.TryGetValue(specificAmenity, out var mappedTerms))
+            {
+                searchTerms.AddRange(mappedTerms.Select(t => t.ToLower()));
+            }
+
+            // Build predicate for all search terms (EF Core compatible)
+            // We need to load all services and filter in memory
+            var allServices = await _context.Services
+                .Where(s => s.TenantId == tenantContext.TenantId && s.IsAvailable)
+                .ToListAsync();
+
+            // Filter in memory using the search terms
+            var filteredServices = allServices.Where(s =>
+                searchTerms.Any(term => s.Name.ToLower().Contains(term)) ||
+                searchTerms.Any(term => s.Category.ToLower().Contains(term)) ||
+                (s.Description != null && searchTerms.Any(term => s.Description.ToLower().Contains(term))))
+                .OrderBy(s => s.Category)
+                .ThenBy(s => s.Priority)
+                .ThenBy(s => s.Name)
+                .ToList();
+
+            _logger.LogInformation("Found {Count} services matching '{Amenity}' with search terms: {Terms}",
+                filteredServices.Count, specificAmenity, string.Join(", ", searchTerms));
+
+            if (!filteredServices.Any())
+            {
+                _logger.LogWarning("No services found matching '{Amenity}' for tenant {TenantId}", specificAmenity, tenantContext.TenantId);
+                return null;
+            }
+
+            // Build response for filtered services
+            var response = new StringBuilder();
+            response.AppendLine($"Here's information about our {specificAmenity} services:\n");
+
+            var grouped = filteredServices.GroupBy(s => s.Category);
+            foreach (var group in grouped)
+            {
+                if (grouped.Count() > 1)
+                {
+                    response.AppendLine($"*{group.Key}:*");
+                }
+                foreach (var service in group)
+                {
+                    response.AppendLine($"• *{service.Name}*");
+                    if (!string.IsNullOrEmpty(service.AvailableHours))
+                    {
+                        response.AppendLine($"  _Hours: {service.AvailableHours}_");
+                    }
+                    if (!string.IsNullOrEmpty(service.Description))
+                    {
+                        response.AppendLine($"  {service.Description}");
+                    }
+                    if (service.Price > 0)
+                    {
+                        var priceStr = !string.IsNullOrEmpty(service.PricingUnit)
+                            ? $"R{service.Price:F0} {service.PricingUnit}"
+                            : $"R{service.Price:F0}";
+                        response.AppendLine($"  _Price: {priceStr}_");
+                    }
+                    if (!string.IsNullOrEmpty(service.ContactInfo))
+                    {
+                        response.AppendLine($"  _Contact: {service.ContactInfo}_");
+                    }
+                }
+                response.AppendLine();
+            }
+
+            response.AppendLine("Would you like to make a booking or need more information?");
+
+            return new MessageRoutingResponse
+            {
+                Reply = response.ToString(),
+                IntentClassification = "AMENITIES"
+            };
+        }
+
+        // General amenities list (no specific filter)
+        var services = await query
+            .OrderBy(s => s.Category)
+            .ThenBy(s => s.Priority)
+            .ThenBy(s => s.Name)
+            .ToListAsync();
+
+        var hotelInfo = await _context.HotelInfos
+            .FirstOrDefaultAsync(h => h.TenantId == tenantContext.TenantId);
+
+        if (!services.Any() && hotelInfo == null)
+        {
+            _logger.LogWarning("No services or hotel info found for tenant {TenantId}", tenantContext.TenantId);
+            return null;
+        }
+
+        var generalResponse = new StringBuilder();
+        generalResponse.AppendLine("Here are our Amenities & Facilities:\n");
+
+        if (services.Any())
+        {
+            var grouped = services.GroupBy(s => s.Category);
+            foreach (var group in grouped)
+            {
+                if (grouped.Count() > 1)
+                {
+                    generalResponse.AppendLine($"*{group.Key}:*");
+                }
+                foreach (var service in group)
+                {
+                    generalResponse.AppendLine($"• *{service.Name}*");
+                    if (!string.IsNullOrEmpty(service.AvailableHours))
+                    {
+                        generalResponse.AppendLine($"  _Hours: {service.AvailableHours}_");
+                    }
+                    if (!string.IsNullOrEmpty(service.Description))
+                    {
+                        generalResponse.AppendLine($"  {service.Description}");
+                    }
+                    if (service.Price > 0)
+                    {
+                        var priceStr = !string.IsNullOrEmpty(service.PricingUnit)
+                            ? $"R{service.Price:F0} {service.PricingUnit}"
+                            : $"R{service.Price:F0}";
+                        generalResponse.AppendLine($"  _Price: {priceStr}_");
+                    }
+                    if (!string.IsNullOrEmpty(service.ContactInfo))
+                    {
+                        generalResponse.AppendLine($"  _Contact: {service.ContactInfo}_");
+                    }
+                }
+                generalResponse.AppendLine();
+            }
+        }
+
+        // Add hotel features if showing all amenities
+        if (!string.IsNullOrEmpty(hotelInfo?.Features))
+        {
+            try
+            {
+                var features = System.Text.Json.JsonSerializer.Deserialize<List<string>>(hotelInfo.Features);
+                if (features != null && features.Any())
+                {
+                    generalResponse.AppendLine("*Additional Features:*");
+                    foreach (var feature in features)
+                    {
+                        generalResponse.AppendLine($"• {feature}");
+                    }
+                    generalResponse.AppendLine();
+                }
+            }
+            catch { /* Ignore parsing errors */ }
+        }
+
+        generalResponse.AppendLine("Which amenity would you like to know more about?");
+
+        return new MessageRoutingResponse
+        {
+            Reply = generalResponse.ToString(),
+            IntentClassification = "AMENITIES"
+        };
+    }
+
+    /// <summary>
+    /// Handles services inquiry - bookable services with pricing
+    /// </summary>
+    private async Task<MessageRoutingResponse?> HandleServicesInquiryAsync(TenantContext tenantContext, string? specificService = null)
+    {
+        _logger.LogInformation("HandleServicesInquiryAsync for tenant: {TenantId}, specific: {Specific}", tenantContext.TenantId, specificService);
+
+        var query = _context.Services
+            .Where(s => s.TenantId == tenantContext.TenantId && s.IsAvailable);
+
+        // If a specific service is requested, filter for it
+        if (!string.IsNullOrEmpty(specificService))
+        {
+            query = query.Where(s =>
+                s.Name.ToLower().Contains(specificService) ||
+                s.Category.ToLower().Contains(specificService) ||
+                (s.Description != null && s.Description.ToLower().Contains(specificService)));
+        }
+
+        var services = await query
+            .OrderBy(s => s.Category)
+            .ThenBy(s => s.Priority)
+            .ThenBy(s => s.Name)
+            .ToListAsync();
+
+        if (!services.Any())
+        {
+            _logger.LogWarning("No services found for tenant {TenantId}", tenantContext.TenantId);
+            return null;
+        }
+
+        var response = new StringBuilder();
+
+        // Different header based on whether specific or general
+        if (!string.IsNullOrEmpty(specificService))
+        {
+            response.AppendLine($"Here's information about our {specificService} service:\n");
+        }
+        else
+        {
+            response.AppendLine("Here are the Services You Can Book:\n");
+        }
+
+        var grouped = services.GroupBy(s => s.Category);
+        foreach (var group in grouped)
+        {
+            if (grouped.Count() > 1)
+            {
+                response.AppendLine($"*{group.Key}:*");
+            }
+            foreach (var service in group)
+            {
+                var priceStr = service.Price > 0 ? $" - R{service.Price:F0}" : "";
+                if (!string.IsNullOrEmpty(service.PricingUnit) && service.Price > 0)
+                {
+                    priceStr = $" - R{service.Price:F0} {service.PricingUnit}";
+                }
+                response.AppendLine($"• *{service.Name}*{priceStr}");
+
+                if (!string.IsNullOrEmpty(service.Description))
+                {
+                    response.AppendLine($"  {service.Description}");
+                }
+                if (service.RequiresAdvanceBooking)
+                {
+                    var advanceText = service.AdvanceBookingHours.HasValue
+                        ? $"Advance booking required ({service.AdvanceBookingHours}h notice)"
+                        : "Advance booking required";
+                    response.AppendLine($"  _{advanceText}_");
+                }
+                if (!string.IsNullOrEmpty(service.AvailableHours))
+                {
+                    response.AppendLine($"  _Available: {service.AvailableHours}_");
+                }
+                if (!string.IsNullOrEmpty(service.ContactInfo))
+                {
+                    response.AppendLine($"  _Contact: {service.ContactInfo}_");
+                }
+            }
+            response.AppendLine();
+        }
+
+        if (!string.IsNullOrEmpty(specificService))
+        {
+            response.AppendLine("Would you like to book this service?");
+        }
+        else
+        {
+            response.AppendLine("Would you like to book any of these services?");
+        }
+
+        return new MessageRoutingResponse
+        {
+            Reply = response.ToString(),
+            IntentClassification = "SERVICES"
+        };
+    }
+
+    /// <summary>
+    /// Handles information inquiries - hotel policies, check-in/out times, etc.
+    /// </summary>
+    private async Task<MessageRoutingResponse?> HandleInformationInquiryAsync(TenantContext tenantContext, string query)
+    {
+        _logger.LogInformation("HandleInformationInquiryAsync: {Query}", query);
+
+        var hotelInfo = await _context.HotelInfos
+            .FirstOrDefaultAsync(h => h.TenantId == tenantContext.TenantId);
+
+        if (hotelInfo == null)
+        {
+            _logger.LogWarning("No hotel info found for tenant {TenantId}", tenantContext.TenantId);
+            return null;
+        }
+
+        var response = new StringBuilder();
+        var queryLower = query.ToLower();
+        var hasSpecificInfo = false;
+
+        // Check-in/out times
+        if (queryLower.Contains("check-in") || queryLower.Contains("check in") || queryLower.Contains("checkin") ||
+            queryLower.Contains("arrival"))
+        {
+            response.AppendLine($"*Check-in time:* {hotelInfo.CheckInTime ?? "2:00 PM"}");
+            response.AppendLine("Early check-in may be available upon request, subject to availability.");
+            hasSpecificInfo = true;
+        }
+
+        if (queryLower.Contains("check-out") || queryLower.Contains("check out") || queryLower.Contains("checkout") ||
+            queryLower.Contains("departure"))
+        {
+            if (hasSpecificInfo) response.AppendLine();
+            response.AppendLine($"*Check-out time:* {hotelInfo.CheckOutTime ?? "11:00 AM"}");
+            response.AppendLine("Late check-out can be arranged for an additional fee, subject to availability.");
+            hasSpecificInfo = true;
+        }
+
+        // Policies
+        if (queryLower.Contains("smoking") || queryLower.Contains("smoke"))
+        {
+            if (hasSpecificInfo) response.AppendLine();
+            response.AppendLine($"*Smoking Policy:* {hotelInfo.SmokingPolicy ?? "This is a non-smoking property. Designated smoking areas are available."}");
+            hasSpecificInfo = true;
+        }
+
+        if (queryLower.Contains("pet") || queryLower.Contains("dog") || queryLower.Contains("cat") || queryLower.Contains("animal"))
+        {
+            if (hasSpecificInfo) response.AppendLine();
+            response.AppendLine($"*Pet Policy:* {hotelInfo.PetPolicy ?? "Please contact the front desk for our pet policy."}");
+            hasSpecificInfo = true;
+        }
+
+        if (queryLower.Contains("cancel"))
+        {
+            if (hasSpecificInfo) response.AppendLine();
+            response.AppendLine($"*Cancellation Policy:* {hotelInfo.CancellationPolicy ?? "Please check your booking confirmation for cancellation terms."}");
+            hasSpecificInfo = true;
+        }
+
+        if (queryLower.Contains("child") || queryLower.Contains("kid") || queryLower.Contains("family") || queryLower.Contains("infant"))
+        {
+            if (hasSpecificInfo) response.AppendLine();
+            response.AppendLine($"*Children Policy:* {hotelInfo.ChildPolicy ?? "Children of all ages are welcome."}");
+            hasSpecificInfo = true;
+        }
+
+        // If no specific match, provide general info
+        if (!hasSpecificInfo)
+        {
+            response.AppendLine("*Hotel Information*\n");
+            response.AppendLine($"• *Check-in:* {hotelInfo.CheckInTime ?? "2:00 PM"}");
+            response.AppendLine($"• *Check-out:* {hotelInfo.CheckOutTime ?? "11:00 AM"}");
+            if (!string.IsNullOrEmpty(hotelInfo.SmokingPolicy))
+                response.AppendLine($"• *Smoking:* {hotelInfo.SmokingPolicy}");
+            if (!string.IsNullOrEmpty(hotelInfo.PetPolicy))
+                response.AppendLine($"• *Pets:* {hotelInfo.PetPolicy}");
+            if (!string.IsNullOrEmpty(hotelInfo.Phone))
+                response.AppendLine($"• *Front Desk:* {hotelInfo.Phone}");
+            response.AppendLine("\nIs there anything specific you'd like to know?");
+        }
+
+        return new MessageRoutingResponse
+        {
+            Reply = response.ToString(),
+            IntentClassification = "INFORMATION"
+        };
+    }
+
+    /// <summary>
+    /// Handles item requests directly - creates task without relying on LLM
+    /// </summary>
+    private async Task<MessageRoutingResponse?> HandleItemRequestDirectAsync(
+        TenantContext tenantContext,
+        Conversation conversation,
+        string messageText)
+    {
+        _logger.LogInformation("HandleItemRequestDirectAsync: {Message}", messageText);
+
+        // Common item keywords
+        var itemKeywords = new Dictionary<string, string[]>
+        {
+            { "towels", new[] { "towel", "towels" } },
+            { "pillows", new[] { "pillow", "pillows", "extra pillow" } },
+            { "blankets", new[] { "blanket", "blankets", "extra blanket" } },
+            { "toiletries", new[] { "toiletries", "shampoo", "soap", "toothbrush", "toothpaste", "amenities" } },
+            { "iron", new[] { "iron", "ironing", "ironing board" } },
+            { "hangers", new[] { "hanger", "hangers", "coat hanger" } },
+            { "water", new[] { "water", "bottled water", "drinking water" } },
+            { "coffee", new[] { "coffee", "tea", "kettle" } },
+            { "slippers", new[] { "slipper", "slippers" } },
+            { "bathrobe", new[] { "bathrobe", "robe", "dressing gown" } },
+            { "hair dryer", new[] { "hair dryer", "hairdryer", "blow dryer", "blowdryer" } }
+        };
+
+        string? detectedItem = null;
+        var msgLower = messageText.ToLower();
+
+        foreach (var kvp in itemKeywords)
+        {
+            if (kvp.Value.Any(k => msgLower.Contains(k)))
+            {
+                detectedItem = kvp.Key;
+                break;
+            }
+        }
+
+        if (detectedItem == null)
+        {
+            _logger.LogInformation("No specific item detected in message, falling back to LLM");
+            return null; // Fall through to LLM
+        }
+
+        // Look up in RequestItems table
+        var requestItem = await _context.RequestItems
+            .FirstOrDefaultAsync(r => r.TenantId == tenantContext.TenantId &&
+                                      r.Name.ToLower().Contains(detectedItem) &&
+                                      r.IsAvailable);
+
+        // Get booking for room number
+        var booking = await _context.Bookings
+            .Where(b => b.TenantId == tenantContext.TenantId &&
+                       b.Phone == conversation.WaUserPhone &&
+                       (b.Status == "Confirmed" || b.Status == "CheckedIn"))
+            .OrderByDescending(b => b.CheckinDate)
+            .FirstOrDefaultAsync();
+
+        // Determine department
+        var department = requestItem?.Department ?? "Housekeeping";
+
+        // Create staff task
+        var task = new StaffTask
+        {
+            TenantId = tenantContext.TenantId,
+            ConversationId = conversation.Id,
+            RequestItemId = requestItem?.Id,
+            TaskType = "ItemRequest",
+            Title = $"Deliver {detectedItem}",
+            Description = $"Guest requested: {messageText}",
+            Department = department,
+            Status = "Pending",
+            Priority = "Normal",
+            GuestName = booking?.GuestName,
+            GuestPhone = conversation.WaUserPhone,
+            RoomNumber = booking?.RoomNumber,
+            CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)
+        };
+
+        _context.StaffTasks.Add(task);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Created staff task {TaskId} for item request: {Item}", task.Id, detectedItem);
+
+        // Notify staff about the task
+        try
+        {
+            await _notificationService.NotifyTaskCreatedAsync(tenantContext.TenantId, task, detectedItem);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send task notification for task {TaskId}", task.Id);
+        }
+
+        var roomInfo = !string.IsNullOrEmpty(booking?.RoomNumber) ? $" to Room {booking.RoomNumber}" : "";
+        var estimatedTime = requestItem?.EstimatedTime ?? requestItem?.SlaMinutes ?? 15;
+
+        var response = $"I'll have {detectedItem} sent{roomInfo} right away! Our {department.ToLower()} team will deliver them within {estimatedTime} minutes. Is there anything else you need?";
+
+        return new MessageRoutingResponse
+        {
+            Reply = response,
+            IntentClassification = "REQUEST_ITEM"
+        };
     }
 
     #endregion
