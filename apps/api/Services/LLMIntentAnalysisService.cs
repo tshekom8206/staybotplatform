@@ -459,7 +459,7 @@ Analyze this message and respond with the following JSON structure:
 {{
     ""intents"": [
         {{
-            ""intent"": ""REQUEST_ITEM | REQUEST_SERVICE | INQUIRY | COMPLAINT | BOOKING_CHANGE | BOOKING_INQUIRY | BOOKING_CONFIRMATION | GREETING | ACKNOWLEDGMENT | LOST_AND_FOUND | CANCELLATION | CHECK_IN_OUT | LATE_CHECKOUT | DIRECTIONS | FEEDBACK | RECOMMENDATION | OTHER"",
+            ""intent"": ""REQUEST_ITEM | REQUEST_SERVICE | INQUIRY | COMPLAINT | BOOKING_CHANGE | BOOKING_INQUIRY | BOOKING_CONFIRMATION | GREETING | ACKNOWLEDGMENT | LOST_AND_FOUND | CANCELLATION | CHECK_IN_OUT | EARLY_CHECKIN | LATE_CHECKOUT | DIRECTIONS | FEEDBACK | RECOMMENDATION | NEW_ROOM_BOOKING | OTHER"",
             ""category"": ""BEVERAGE | FOOD | HOUSEKEEPING | MAINTENANCE | AMENITIES | DINING | LOST_ITEMS | OTHER"",
             ""specificityLevel"": ""SPECIFIC | VAGUE | UNCLEAR"",
             ""availableOptions"": [""List ONLY the actual available options from hotel configuration that match the request""],
@@ -575,35 +575,49 @@ CRITICAL ANALYSIS RULES:
     - Extract: WHAT (service/booking type), WHEN (which booking if multiple exist)
     - Do NOT classify as CANCELLATION if asking about cancellation POLICY (use INQUIRY instead)
     - CANCELLATION is for actual cancellation requests, not policy questions
-14. CHECK_IN_OUT intent: Guest asking about check-in or check-out times, procedures (general inquiries, NOT specific late checkout requests)
-    - Examples: ""What time is check-in?"", ""When do I need to check out?"", ""Can I get early check-in?"", ""What's the standard check-out time?""
-    - Trigger phrases: ""check in"", ""check-in"", ""check out"", ""checkout"", ""early check-in"", ""arrival time"", ""departure time""
+14. CHECK_IN_OUT intent: Guest asking about check-in or check-out times, procedures (general inquiries only)
+    - Examples: ""What time is check-in?"", ""When do I need to check out?"", ""What's the standard check-out time?""
+    - Trigger phrases: ""check in time"", ""check-in time"", ""check out time"", ""checkout time"", ""arrival time"", ""departure time""
     - Extract: TYPE (check-in vs check-out)
     - Include questions about check-in/out procedures and requirements
+    - Do NOT use for specific early check-in requests with time mentioned (use EARLY_CHECKIN instead)
     - Do NOT use for specific late checkout requests with time mentioned (use LATE_CHECKOUT instead)
-15. LATE_CHECKOUT intent: Guest specifically requesting late checkout, asking if late checkout is available, or requesting a specific checkout time later than standard
+15. EARLY_CHECKIN intent: Guest specifically requesting early check-in, asking if early check-in is available, or mentioning arrival before standard check-in time
+    - Examples: ""Can I check in at 11am?"", ""Is early check-in available?"", ""I'll be arriving at 2:30pm"", ""Can I arrive early?"", ""I need to check in before 3pm""
+    - Trigger phrases: ""early check-in"", ""early checkin"", ""arrive early"", ""arriving at [time]"", ""check in at [time]"", ""before check-in time""
+    - Extract: REQUESTED_TIME (specific arrival time if mentioned), IS_INQUIRY (asking availability vs requesting specific time)
+    - CRITICAL: This requires front desk approval - create StaffTask for approval workflow
+    - Distinguish from CHECK_IN_OUT: EARLY_CHECKIN is for SPECIFIC early requests, CHECK_IN_OUT is for GENERAL time inquiries
+16. LATE_CHECKOUT intent: Guest specifically requesting late checkout, asking if late checkout is available, or requesting a specific checkout time later than standard
     - Examples: ""Can I checkout at 2pm?"", ""Is late checkout available?"", ""I need to checkout at 3pm"", ""Can we leave later?"", ""Extend checkout time""
     - Trigger phrases: ""late checkout"", ""checkout at [time]"", ""stay until [time]"", ""extend checkout"", ""leave later""
     - Extract: REQUESTED_TIME (specific checkout time if mentioned), IS_INQUIRY (asking availability vs requesting specific time)
     - CRITICAL: This requires front desk approval - create StaffTask for approval workflow
     - Distinguish from CHECK_IN_OUT: LATE_CHECKOUT is for SPECIFIC late requests, CHECK_IN_OUT is for GENERAL time inquiries
-16. DIRECTIONS intent: Guest asking for directions, location information, or how to find hotel facilities/amenities
+17. DIRECTIONS intent: Guest asking for directions, location information, or how to find hotel facilities/amenities
     - Examples: ""Where is the pool?"", ""How do I get to the restaurant?"", ""Where's the gym located?"", ""Directions to the spa please""
     - Trigger phrases: ""where is"", ""where's"", ""how do I get to"", ""directions to"", ""location of"", ""how to find""
     - Extract: DESTINATION (what facility/amenity), CURRENT_LOCATION (if mentioned)
     - Include requests for maps, navigation, or finding specific areas
-16. FEEDBACK intent: Guest providing positive or negative feedback, reviews, compliments, or complaints about their experience
+18. FEEDBACK intent: Guest providing positive or negative feedback, reviews, compliments, or complaints about their experience
     - Examples: ""The room is amazing!"", ""Service was terrible"", ""Love the breakfast!"", ""My room is dirty""
     - Sentiment detection: POSITIVE (compliments, praise), NEGATIVE (complaints, issues), NEUTRAL (observations)
     - Extract: SUBJECT (what they're commenting on), SENTIMENT (positive/negative/neutral), SEVERITY (for negative feedback)
     - Do NOT confuse with COMPLAINT intent (COMPLAINT is for specific issues needing immediate action, FEEDBACK is for general reviews/comments)
     - FEEDBACK can be proactive reviews; COMPLAINT is always about a problem needing resolution
-17. RECOMMENDATION intent: Guest asking for suggestions, recommendations, or advice about hotel services, dining, or amenities
+19. RECOMMENDATION intent: Guest asking for suggestions, recommendations, or advice about hotel services, dining, or amenities
     - Examples: ""What do you recommend for dinner?"", ""Best spa treatment?"", ""Any good drinks?"", ""What should I try?""
     - Trigger phrases: ""recommend"", ""suggest"", ""what should I"", ""what's good"", ""what do you recommend"", ""any suggestions""
     - Extract: CATEGORY (dining/spa/activities/etc), PREFERENCES (if mentioned like dietary restrictions, occasion)
     - Only recommend hotel property amenities - NEVER external restaurants or attractions
     - Use context: time of day, guest history, special occasions
+20. NEW_ROOM_BOOKING intent: Non-guest or potential guest inquiring about making a NEW room reservation or booking a stay
+    - Examples: ""I'd like to book a room"", ""Do you have availability?"", ""I want to make a reservation"", ""Can I book a stay for next week?"", ""How much is a room?"", ""I'm looking to stay at your hotel""
+    - Trigger phrases: ""book a room"", ""make a reservation"", ""room availability"", ""book a stay"", ""reserve a room"", ""looking to stay"", ""want to book"", ""room rates"", ""how much for a room""
+    - Extract: CHECK_IN_DATE (if mentioned), CHECK_OUT_DATE (if mentioned), NUMBER_OF_GUESTS (if mentioned), ROOM_TYPE (if mentioned)
+    - CRITICAL: This is for NEW room reservations, not service bookings (spa, dinner, etc.)
+    - Use this intent when someone without an existing booking wants to stay at the hotel
+    - Should trigger information gathering flow to collect: name, dates, number of guests, contact details, special requests
 
 EXAMPLES:
 
@@ -681,11 +695,18 @@ CANCELLATION EXAMPLES (CRITICAL - must detect cancellation requests):
 33. Guest: ""Please cancel my massage for tomorrow"" -> intents: [{{intent: CANCELLATION, category: OTHER, entityType: ""massage"", originalText: ""Please cancel my massage for tomorrow"", confidence: 0.95}}]
 34. Guest: ""Won't be able to attend dinner tonight"" -> intents: [{{intent: CANCELLATION, category: DINING, entityType: ""dinner"", originalText: ""Won't be able to attend dinner tonight"", confidence: 0.9}}]
 
-CHECK_IN_OUT EXAMPLES (CRITICAL - must detect check-in/out inquiries):
+CHECK_IN_OUT EXAMPLES (general time inquiries only):
 35. Guest: ""What time is check-in?"" -> intents: [{{intent: CHECK_IN_OUT, category: OTHER, entityType: ""check-in time"", originalText: ""What time is check-in?"", confidence: 0.95}}]
 36. Guest: ""When do I need to check out?"" -> intents: [{{intent: CHECK_IN_OUT, category: OTHER, entityType: ""check-out time"", originalText: ""When do I need to check out?"", confidence: 0.95}}]
-37. Guest: ""Can I get early check-in?"" -> intents: [{{intent: CHECK_IN_OUT, category: OTHER, entityType: ""early check-in request"", originalText: ""Can I get early check-in?"", confidence: 0.95}}]
-38. Guest: ""What's the arrival time?"" -> intents: [{{intent: CHECK_IN_OUT, category: OTHER, entityType: ""check-in time"", originalText: ""What's the arrival time?"", confidence: 0.9}}]
+37. Guest: ""What's the standard check-in time?"" -> intents: [{{intent: CHECK_IN_OUT, category: OTHER, entityType: ""check-in time"", originalText: ""What's the standard check-in time?"", confidence: 0.95}}]
+
+EARLY_CHECKIN EXAMPLES (CRITICAL - must detect early check-in requests specifically):
+38. Guest: ""Can I get early check-in?"" -> intents: [{{intent: EARLY_CHECKIN, category: OTHER, entityType: ""early check-in request"", originalText: ""Can I get early check-in?"", confidence: 0.95}}]
+39. Guest: ""Is early check-in available?"" -> intents: [{{intent: EARLY_CHECKIN, category: OTHER, entityType: ""early check-in availability"", originalText: ""Is early check-in available?"", confidence: 0.95}}]
+40. Guest: ""I'll be arriving at 2:30pm"" -> intents: [{{intent: EARLY_CHECKIN, category: OTHER, entityType: ""early arrival time"", originalText: ""I'll be arriving at 2:30pm"", confidence: 0.95}}]
+41. Guest: ""Can I check in at 11am?"" -> intents: [{{intent: EARLY_CHECKIN, category: OTHER, entityType: ""early check-in time request"", originalText: ""Can I check in at 11am?"", confidence: 0.95}}]
+42. Guest: ""I need to arrive before 3pm"" -> intents: [{{intent: EARLY_CHECKIN, category: OTHER, entityType: ""early arrival request"", originalText: ""I need to arrive before 3pm"", confidence: 0.95}}]
+43. Guest: ""Is early check-in possible? I'll arrive around noon"" -> intents: [{{intent: EARLY_CHECKIN, category: OTHER, entityType: ""early check-in request"", originalText: ""Is early check-in possible? I'll arrive around noon"", confidence: 0.95}}]
 
 LATE_CHECKOUT EXAMPLES (CRITICAL - must detect late checkout requests specifically):
 39. Guest: ""Can I checkout at 2pm instead?"" -> intents: [{{intent: LATE_CHECKOUT, category: OTHER, entityType: ""late checkout request"", originalText: ""Can I checkout at 2pm instead?"", confidence: 0.95}}]
@@ -717,12 +738,24 @@ RECOMMENDATION EXAMPLES (CRITICAL - must detect recommendation requests):
 53. Guest: ""What should I try at the restaurant?"" -> intents: [{{intent: RECOMMENDATION, category: DINING, entityType: ""restaurant menu recommendation"", originalText: ""What should I try at the restaurant?"", confidence: 0.95}}]
 54. Guest: ""Suggestions for activities?"" -> intents: [{{intent: RECOMMENDATION, category: AMENITIES, entityType: ""activity recommendation"", originalText: ""Suggestions for activities?"", confidence: 0.95}}]
 
+NEW_ROOM_BOOKING EXAMPLES (CRITICAL - must detect new room reservation requests from non-guests):
+55. Guest: ""I'd like to book a room"" -> intents: [{{intent: NEW_ROOM_BOOKING, category: OTHER, entityType: ""room reservation"", originalText: ""I'd like to book a room"", confidence: 0.95}}]
+56. Guest: ""Do you have availability next weekend?"" -> intents: [{{intent: NEW_ROOM_BOOKING, category: OTHER, entityType: ""room availability inquiry"", originalText: ""Do you have availability next weekend?"", confidence: 0.95}}]
+57. Guest: ""I want to make a reservation for 2 nights"" -> intents: [{{intent: NEW_ROOM_BOOKING, category: OTHER, entityType: ""room reservation"", originalText: ""I want to make a reservation for 2 nights"", confidence: 0.95}}]
+58. Guest: ""How much is a room per night?"" -> intents: [{{intent: NEW_ROOM_BOOKING, category: OTHER, entityType: ""room rate inquiry"", originalText: ""How much is a room per night?"", confidence: 0.9}}]
+59. Guest: ""Can I book a stay for next week?"" -> intents: [{{intent: NEW_ROOM_BOOKING, category: OTHER, entityType: ""room reservation"", originalText: ""Can I book a stay for next week?"", confidence: 0.95}}]
+60. Guest: ""I'm looking to stay at your hotel from Friday to Sunday"" -> intents: [{{intent: NEW_ROOM_BOOKING, category: OTHER, entityType: ""room reservation"", originalText: ""I'm looking to stay at your hotel from Friday to Sunday"", confidence: 0.95}}]
+61. Guest: ""Do you have rooms available for 4 people?"" -> intents: [{{intent: NEW_ROOM_BOOKING, category: OTHER, entityType: ""room availability inquiry"", originalText: ""Do you have rooms available for 4 people?"", confidence: 0.95}}]
+62. Guest: ""I want to reserve a room"" -> intents: [{{intent: NEW_ROOM_BOOKING, category: OTHER, entityType: ""room reservation"", originalText: ""I want to reserve a room"", confidence: 0.95}}]
+
 BOOKING INTENT CLASSIFICATION RULES:
 - Use BOOKING_INQUIRY when guest asks ""what bookings..."", ""do I have..."", ""show me..."", ""check my...""
 - Use BOOKING_CONFIRMATION when guest asks ""do I have [specific booking]?"", ""did I book..."", ""is my [booking] confirmed?""
 - Use BOOKING_CHANGE when guest says ""change..."", ""modify..."", ""cancel..."", ""update..."", ""move..."" regarding existing bookings
-- Use REQUEST_SERVICE when guest is CREATING a NEW booking (e.g., ""Can I book a table for 4 tonight?"")
+- Use REQUEST_SERVICE when guest is CREATING a NEW booking for hotel SERVICES (e.g., ""Can I book a table for 4 tonight?"", ""Book me a spa treatment"")
+- Use NEW_ROOM_BOOKING when guest wants to book a ROOM/STAY at the hotel (e.g., ""I want to book a room"", ""Do you have availability?"", ""How much for a room?"")
 - Use CANCELLATION when guest wants to CANCEL (not change) a booking (e.g., ""Cancel my dinner"", ""I can't make it"")
+- CRITICAL: Distinguish between SERVICE bookings (dinner, spa, tours) and ROOM bookings (accommodation, stay). Use REQUEST_SERVICE for services, NEW_ROOM_BOOKING for rooms.
 
 WARM RESPONSE GENERATION RULES:
 1. Generate warmResponse in the SAME LANGUAGE as the guest message
@@ -739,7 +772,8 @@ WARM RESPONSE GENERATION RULES:
 12. For CANCELLATION: Confirm the cancellation request professionally
 13. For LATE_CHECKOUT: Acknowledge request and inform about approval process
 14. For COMPLAINT: Express empathy and confirm immediate attention
-15. NEVER hallucinate services/items - only mention what's in the configuration
+15. For NEW_ROOM_BOOKING: Welcome the potential guest warmly and ask for booking details (dates, number of guests)
+16. NEVER hallucinate services/items - only mention what's in the configuration
 
 ITEM REQUEST CLASSIFICATION (isItemRequest):
 Set isItemRequest=true when guest is REQUESTING a physical item, food, beverage, service delivery, or bookable service:

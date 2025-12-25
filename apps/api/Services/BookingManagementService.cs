@@ -8,11 +8,16 @@ public class BookingManagementService : IBookingManagementService
 {
     private readonly HostrDbContext _context;
     private readonly ILogger<BookingManagementService> _logger;
+    private readonly IWhatsAppService _whatsAppService;
 
-    public BookingManagementService(HostrDbContext context, ILogger<BookingManagementService> logger)
+    public BookingManagementService(
+        HostrDbContext context,
+        ILogger<BookingManagementService> logger,
+        IWhatsAppService whatsAppService)
     {
         _context = context;
         _logger = logger;
+        _whatsAppService = whatsAppService;
     }
 
     public async Task<(List<Booking> bookings, int totalCount)> GetBookingsAsync(
@@ -133,6 +138,9 @@ public class BookingManagementService : IBookingManagementService
 
         _logger.LogInformation("Created booking {BookingId} for guest {GuestName} in room {RoomNumber}",
             booking.Id, booking.GuestName, booking.RoomNumber);
+
+        // Send welcome WhatsApp message with amenities and upselling
+        await SendWelcomeMessageAsync(tenantId, booking);
 
         return booking;
     }
@@ -344,5 +352,206 @@ public class BookingManagementService : IBookingManagementService
                            (b.CheckinDate >= checkinDate && b.CheckoutDate <= checkoutDate)));
 
         return !conflictingBooking;
+    }
+
+    /// <summary>
+    /// Sends a warm welcome WhatsApp message to the guest when a booking is created
+    /// Includes amenities, WiFi, and upselling opportunities for a premium experience
+    /// </summary>
+    private async Task SendWelcomeMessageAsync(int tenantId, Booking booking)
+    {
+        try
+        {
+            // Get tenant information
+            var tenant = await _context.Tenants.FindAsync(tenantId);
+            if (tenant == null)
+            {
+                _logger.LogWarning("Cannot send welcome message - tenant {TenantId} not found", tenantId);
+                return;
+            }
+
+            // Get all relevant business info in parallel
+            var businessInfoTask = _context.BusinessInfo
+                .Where(b => b.TenantId == tenantId)
+                .ToListAsync();
+
+            // Get featured services for upselling (high priority services)
+            var featuredServicesTask = _context.Services
+                .Where(s => s.TenantId == tenantId && s.IsAvailable && s.Priority > 0)
+                .OrderByDescending(s => s.Priority)
+                .Take(3)
+                .ToListAsync();
+
+            await Task.WhenAll(businessInfoTask, featuredServicesTask);
+
+            var businessInfo = await businessInfoTask;
+            var featuredServices = await featuredServicesTask;
+
+            // Build the welcome message
+            var message = BuildWelcomeMessage(tenant.Name, booking, businessInfo, featuredServices);
+
+            // Send via WhatsApp
+            var sent = await _whatsAppService.SendTextMessageAsync(tenantId, booking.Phone, message);
+
+            if (sent)
+            {
+                _logger.LogInformation("Sent welcome message to {Phone} for booking {BookingId}",
+                    booking.Phone, booking.Id);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to send welcome message to {Phone} for booking {BookingId}",
+                    booking.Phone, booking.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Don't fail the booking creation if welcome message fails
+            _logger.LogError(ex, "Error sending welcome message for booking {BookingId}", booking.Id);
+        }
+    }
+
+    /// <summary>
+    /// Builds a warm, personalized welcome message with premium touches:
+    /// - Booking confirmation
+    /// - WiFi credentials
+    /// - Amenities highlights
+    /// - Featured services (upselling)
+    /// - Restaurant/dining info
+    /// - Concierge invitation
+    /// </summary>
+    private string BuildWelcomeMessage(
+        string hotelName,
+        Booking booking,
+        List<BusinessInfo> businessInfo,
+        List<Service> featuredServices)
+    {
+        var firstName = booking.GuestName.Split(' ')[0];
+        var checkInDate = booking.CheckinDate.ToString("dddd, MMMM d, yyyy");
+        var checkOutDate = booking.CheckoutDate.ToString("dddd, MMMM d, yyyy");
+        var nights = booking.TotalNights ?? 1;
+
+        // Extract relevant info from BusinessInfo
+        string checkInTime = "3:00 PM";
+        string? wifiNetwork = null;
+        string? wifiPassword = null;
+        string? amenitiesInfo = null;
+        string? restaurantHours = null;
+
+        foreach (var info in businessInfo)
+        {
+            try
+            {
+                if (info.Category == "hotel_info" || info.Category == "hours")
+                {
+                    var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(info.Content);
+                    if (data?.TryGetValue("checkInTime", out var time) == true)
+                        checkInTime = time;
+                }
+                else if (info.Category == "wifi_credentials")
+                {
+                    var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(info.Content);
+                    if (data != null)
+                    {
+                        data.TryGetValue("network", out wifiNetwork);
+                        data.TryGetValue("password", out wifiPassword);
+                    }
+                }
+                else if (info.Category == "amenities" && string.IsNullOrEmpty(amenitiesInfo))
+                {
+                    amenitiesInfo = info.Content;
+                }
+                else if (info.Category == "facility_hours" && info.Title?.Contains("Restaurant", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    restaurantHours = info.Content;
+                }
+            }
+            catch { /* Skip malformed entries */ }
+        }
+
+        var sb = new System.Text.StringBuilder();
+
+        // Personal warm greeting
+        sb.AppendLine($"Hello {firstName}!");
+        sb.AppendLine();
+        sb.AppendLine($"Welcome to {hotelName}! We're delighted to confirm your reservation.");
+        sb.AppendLine();
+
+        // Booking details
+        sb.AppendLine("*Booking Details*");
+        sb.AppendLine($"Check-in: {checkInDate} from {checkInTime}");
+        sb.AppendLine($"Check-out: {checkOutDate}");
+        if (!string.IsNullOrEmpty(booking.RoomNumber))
+        {
+            sb.AppendLine($"Room: {booking.RoomNumber}");
+        }
+        sb.AppendLine($"Guests: {booking.NumberOfGuests}");
+
+        // WiFi - guests always want this!
+        if (!string.IsNullOrEmpty(wifiNetwork) && !string.IsNullOrEmpty(wifiPassword))
+        {
+            sb.AppendLine();
+            sb.AppendLine("*WiFi Access*");
+            sb.AppendLine($"Network: {wifiNetwork}");
+            sb.AppendLine($"Password: {wifiPassword}");
+        }
+
+        // Amenities highlights
+        if (!string.IsNullOrEmpty(amenitiesInfo))
+        {
+            sb.AppendLine();
+            sb.AppendLine("*Enjoy Our Amenities*");
+            // Parse amenities if JSON, otherwise use as-is
+            try
+            {
+                var amenitiesList = System.Text.Json.JsonSerializer.Deserialize<List<string>>(amenitiesInfo);
+                if (amenitiesList != null)
+                {
+                    foreach (var amenity in amenitiesList.Take(4))
+                    {
+                        sb.AppendLine($"• {amenity}");
+                    }
+                }
+            }
+            catch
+            {
+                // If not JSON, show first 150 chars
+                sb.AppendLine(amenitiesInfo.Length > 150 ? amenitiesInfo.Substring(0, 150) + "..." : amenitiesInfo);
+            }
+        }
+
+        // Featured services (upselling)
+        if (featuredServices.Any())
+        {
+            sb.AppendLine();
+            sb.AppendLine("*Enhance Your Stay*");
+            foreach (var service in featuredServices)
+            {
+                var price = service.Price.HasValue ? $" - R{service.Price:N0}" : "";
+                sb.AppendLine($"• {service.Name}{price}");
+            }
+        }
+
+        // Early check-in offer
+        sb.AppendLine();
+        sb.AppendLine("Need early check-in or have special requests? Just reply to this message!");
+
+        // Special occasion recognition
+        if (!string.IsNullOrEmpty(booking.SpecialRequests) &&
+            (booking.SpecialRequests.Contains("birthday", StringComparison.OrdinalIgnoreCase) ||
+             booking.SpecialRequests.Contains("anniversary", StringComparison.OrdinalIgnoreCase) ||
+             booking.SpecialRequests.Contains("honeymoon", StringComparison.OrdinalIgnoreCase)))
+        {
+            sb.AppendLine();
+            sb.AppendLine("We noticed you're celebrating something special - our team will make it memorable!");
+        }
+
+        // Closing with concierge availability
+        sb.AppendLine();
+        sb.AppendLine($"We look forward to hosting you at {hotelName}!");
+        sb.AppendLine();
+        sb.AppendLine("Your personal concierge is just a message away. Safe travels!");
+
+        return sb.ToString();
     }
 }

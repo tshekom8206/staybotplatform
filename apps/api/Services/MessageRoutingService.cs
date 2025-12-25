@@ -603,9 +603,19 @@ public class MessageRoutingService : IMessageRoutingService
                     {
                         return await HandleRecommendationAsync(conversation, intentAnalysis, normalizedMessage, tenantContext);
                     }
+                    else if (intentAnalysis.Intent == "EARLY_CHECKIN")
+                    {
+                        _logger.LogInformation("LLM detected early check-in request");
+                        return await HandleEarlyCheckInRequest(tenantContext, conversation, normalizedMessage);
+                    }
                     else if (intentAnalysis.Intent == "LATE_CHECKOUT")
                     {
                         return await HandleLateCheckoutRequest(tenantContext, conversation, normalizedMessage);
+                    }
+                    else if (intentAnalysis.Intent == "NEW_ROOM_BOOKING")
+                    {
+                        _logger.LogInformation("LLM detected new room booking inquiry from potential guest");
+                        return await HandleNewRoomBookingInquiry(tenantContext, conversation, normalizedMessage, intentAnalysis);
                     }
                     else
                     {
@@ -9137,23 +9147,10 @@ Return JSON:
 
             if (isEarlyCheckIn)
             {
-                baseResponse = hotelInfo?.CheckInTime != null
-                    ? $"Our standard check-in time is {hotelInfo.CheckInTime}. I can request early check-in for you."
-                    : "I can request early check-in for you. Let me connect you with our front desk.";
-
-                // Database-driven upsell: Early check-in → Luggage/concierge service
-                var luggageService = await _context.Services
-                    .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId &&
-                                             s.IsAvailable &&
-                                             (s.Name.Contains("Luggage", StringComparison.OrdinalIgnoreCase) ||
-                                              s.Name.Contains("Baggage", StringComparison.OrdinalIgnoreCase) ||
-                                              s.Name.Contains("Porter", StringComparison.OrdinalIgnoreCase) ||
-                                              s.Description.Contains("luggage", StringComparison.OrdinalIgnoreCase)));
-
-                if (luggageService != null)
-                {
-                    upsellSuggestion = $"\n\nWould you also like our {luggageService.Name.ToLower()}? {luggageService.Description}";
-                }
+                // CRITICAL: Delegate to HandleEarlyCheckInRequest for proper task creation
+                // Check for specific arrival time requests (e.g., "arriving at 2pm", "check-in at 1pm")
+                _logger.LogInformation("🔄 Delegating to HandleEarlyCheckInRequest for proper task creation");
+                return await HandleEarlyCheckInRequest(tenantContext, conversation, guestMessage);
             }
             else if (isLateCheckOut)
             {
@@ -9901,6 +9898,485 @@ Time:";
             _logger.LogError(ex, "Error extracting checkout time from message");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Handles new room booking inquiries from potential guests (non-guests)
+    /// Collects required information and creates a front desk task
+    /// </summary>
+    private async Task<MessageRoutingResponse> HandleNewRoomBookingInquiry(
+        TenantContext tenantContext,
+        Conversation conversation,
+        string normalizedMessage,
+        IntentAnalysisResult intentAnalysis)
+    {
+        try
+        {
+            _logger.LogInformation("🏨 Handling new room booking inquiry for conversation {ConversationId}", conversation.Id);
+
+            // Get existing booking inquiry state from conversation
+            var bookingInquiryState = await _conversationStateService.GetVariableAsync<RoomBookingInquiryState>(conversation.Id, "bookingInquiryState")
+                ?? new RoomBookingInquiryState();
+
+            if (!string.IsNullOrEmpty(bookingInquiryState.GuestName) || bookingInquiryState.CheckInDate.HasValue)
+            {
+                _logger.LogInformation("📋 Found existing booking inquiry state: Name={Name}, CheckIn={CheckIn}, CheckOut={CheckOut}, Guests={Guests}",
+                    bookingInquiryState.GuestName, bookingInquiryState.CheckInDate, bookingInquiryState.CheckOutDate, bookingInquiryState.NumberOfGuests);
+            }
+
+            // Extract booking information from current message using LLM
+            var extractedInfo = await ExtractBookingInquiryInfoAsync(normalizedMessage, bookingInquiryState);
+
+            // Merge extracted info with existing state
+            if (!string.IsNullOrEmpty(extractedInfo.GuestName))
+                bookingInquiryState.GuestName = extractedInfo.GuestName;
+            if (extractedInfo.CheckInDate.HasValue)
+                bookingInquiryState.CheckInDate = extractedInfo.CheckInDate;
+            if (extractedInfo.CheckOutDate.HasValue)
+                bookingInquiryState.CheckOutDate = extractedInfo.CheckOutDate;
+            if (extractedInfo.NumberOfGuests.HasValue)
+                bookingInquiryState.NumberOfGuests = extractedInfo.NumberOfGuests;
+            if (!string.IsNullOrEmpty(extractedInfo.Email))
+                bookingInquiryState.Email = extractedInfo.Email;
+            if (!string.IsNullOrEmpty(extractedInfo.SpecialRequests))
+                bookingInquiryState.SpecialRequests = extractedInfo.SpecialRequests;
+            if (!string.IsNullOrEmpty(extractedInfo.RoomPreference))
+                bookingInquiryState.RoomPreference = extractedInfo.RoomPreference;
+
+            // Store phone from conversation
+            bookingInquiryState.Phone = conversation.WaUserPhone;
+
+            // Check what information is still missing
+            var missingFields = GetMissingBookingFields(bookingInquiryState);
+
+            if (missingFields.Count > 0)
+            {
+                // Save current state
+                await SaveBookingInquiryStateAsync(conversation.Id, bookingInquiryState);
+
+                // Generate question for missing info
+                var question = GenerateBookingInquiryQuestion(missingFields, bookingInquiryState);
+
+                _logger.LogInformation("📝 Booking inquiry missing fields: {Fields}. Asking: {Question}",
+                    string.Join(", ", missingFields), question);
+
+                return new MessageRoutingResponse
+                {
+                    Reply = question,
+                    ActionType = "booking_inquiry_collecting_info"
+                };
+            }
+
+            // All required info collected - create front desk task
+            _logger.LogInformation("✅ All booking inquiry info collected, creating front desk task");
+
+            var task = new StaffTask
+            {
+                TenantId = tenantContext.TenantId,
+                ConversationId = conversation.Id,
+                Title = $"New Booking Inquiry - {bookingInquiryState.GuestName}",
+                Description = FormatBookingInquiryDescription(bookingInquiryState),
+                Department = "FrontDesk",
+                Priority = "High",
+                TaskType = "booking_inquiry",
+                Status = "Pending",
+                GuestName = bookingInquiryState.GuestName,
+                GuestPhone = bookingInquiryState.Phone,
+                Notes = $"Check-in: {bookingInquiryState.CheckInDate:yyyy-MM-dd}, Check-out: {bookingInquiryState.CheckOutDate:yyyy-MM-dd}, Guests: {bookingInquiryState.NumberOfGuests}",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.StaffTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("✅ Created booking inquiry task {TaskId} for guest {GuestName}", task.Id, bookingInquiryState.GuestName);
+
+            // Notify front desk
+            await _notificationService.NotifyTaskCreatedAsync(tenantContext.TenantId, task);
+
+            // Clear the booking inquiry state
+            await ClearBookingInquiryStateAsync(conversation.Id);
+
+            // Get tenant name for response
+            var tenant = await _context.Tenants.FindAsync(tenantContext.TenantId);
+            var hotelName = tenant?.Name ?? "our hotel";
+
+            var confirmationResponse = $"Thank you, {bookingInquiryState.GuestName}!\n\n" +
+                $"I've received your booking inquiry:\n" +
+                $"• Check-in: {bookingInquiryState.CheckInDate:MMMM dd, yyyy}\n" +
+                $"• Check-out: {bookingInquiryState.CheckOutDate:MMMM dd, yyyy}\n" +
+                $"• Guests: {bookingInquiryState.NumberOfGuests}\n" +
+                (!string.IsNullOrEmpty(bookingInquiryState.SpecialRequests) ? $"• Special requests: {bookingInquiryState.SpecialRequests}\n" : "") +
+                $"\nOur front desk team will check availability and contact you shortly to confirm your reservation. " +
+                $"We look forward to welcoming you to {hotelName}!";
+
+            return new MessageRoutingResponse
+            {
+                Reply = confirmationResponse,
+                ActionType = "booking_inquiry_submitted",
+                Action = JsonSerializer.SerializeToElement(new { taskId = task.Id })
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling new room booking inquiry");
+            return new MessageRoutingResponse
+            {
+                Reply = "I'd love to help you book a room! Could you please tell me:\n• Your name\n• Check-in and check-out dates\n• Number of guests\n\nOr feel free to contact our front desk directly for immediate assistance."
+            };
+        }
+    }
+
+    /// <summary>
+    /// State class for tracking room booking inquiry information
+    /// </summary>
+    private class RoomBookingInquiryState
+    {
+        public string? GuestName { get; set; }
+        public DateTime? CheckInDate { get; set; }
+        public DateTime? CheckOutDate { get; set; }
+        public int? NumberOfGuests { get; set; }
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
+        public string? SpecialRequests { get; set; }
+        public string? RoomPreference { get; set; }
+    }
+
+    /// <summary>
+    /// Extracts booking inquiry information from a message using LLM
+    /// </summary>
+    private async Task<RoomBookingInquiryState> ExtractBookingInquiryInfoAsync(string message, RoomBookingInquiryState existingState)
+    {
+        try
+        {
+            var today = DateTime.UtcNow.Date;
+            var prompt = $@"Extract booking inquiry information from this message.
+Current date: {today:yyyy-MM-dd}
+
+Message: ""{message}""
+
+Already collected information:
+- Name: {existingState.GuestName ?? "not provided"}
+- Check-in: {(existingState.CheckInDate.HasValue ? existingState.CheckInDate.Value.ToString("yyyy-MM-dd") : "not provided")}
+- Check-out: {(existingState.CheckOutDate.HasValue ? existingState.CheckOutDate.Value.ToString("yyyy-MM-dd") : "not provided")}
+- Guests: {(existingState.NumberOfGuests.HasValue ? existingState.NumberOfGuests.ToString() : "not provided")}
+
+Extract ANY new information from the message. Parse relative dates like ""next Friday"", ""this weekend"", ""tomorrow"".
+For number of nights like ""2 nights"", calculate the checkout date from check-in.
+
+Return JSON with these exact properties (use null for missing values):
+- guestName: string or null
+- checkInDate: string in YYYY-MM-DD format or null
+- checkOutDate: string in YYYY-MM-DD format or null
+- numberOfGuests: number or null
+- email: string or null
+- specialRequests: string or null
+- roomPreference: string or null";
+
+            var extracted = await _openAIService.GetStructuredResponseAsync<RoomBookingInquiryState>(prompt, temperature: 0.3);
+            return extracted ?? new RoomBookingInquiryState();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to extract booking info from message, using fallback");
+
+            // Fallback: Try simple regex extraction
+            var state = new RoomBookingInquiryState();
+
+            // Extract number of guests
+            var guestMatch = System.Text.RegularExpressions.Regex.Match(message, @"(\d+)\s*(people|guests|persons|adults)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (guestMatch.Success)
+            {
+                state.NumberOfGuests = int.Parse(guestMatch.Groups[1].Value);
+            }
+
+            // Extract email
+            var emailMatch = System.Text.RegularExpressions.Regex.Match(message, @"[\w\.-]+@[\w\.-]+\.\w+");
+            if (emailMatch.Success)
+            {
+                state.Email = emailMatch.Value;
+            }
+
+            return state;
+        }
+    }
+
+    /// <summary>
+    /// Gets the list of missing required fields for booking inquiry
+    /// </summary>
+    private List<string> GetMissingBookingFields(RoomBookingInquiryState state)
+    {
+        var missing = new List<string>();
+
+        if (string.IsNullOrEmpty(state.GuestName))
+            missing.Add("name");
+        if (!state.CheckInDate.HasValue)
+            missing.Add("check-in date");
+        if (!state.CheckOutDate.HasValue)
+            missing.Add("check-out date");
+        if (!state.NumberOfGuests.HasValue)
+            missing.Add("number of guests");
+
+        return missing;
+    }
+
+    /// <summary>
+    /// Generates a friendly question to collect missing booking information
+    /// </summary>
+    private string GenerateBookingInquiryQuestion(List<string> missingFields, RoomBookingInquiryState state)
+    {
+        // If this is the first interaction (no info collected yet)
+        if (string.IsNullOrEmpty(state.GuestName) && !state.CheckInDate.HasValue && !state.NumberOfGuests.HasValue)
+        {
+            return "I'd be happy to help you book a room! To get started, could you please tell me:\n\n" +
+                   "1. Your name\n" +
+                   "2. Check-in and check-out dates\n" +
+                   "3. Number of guests";
+        }
+
+        // Ask for specific missing info
+        if (missingFields.Count == 1)
+        {
+            return missingFields[0] switch
+            {
+                "name" => "Could you please tell me your name for the reservation?",
+                "check-in date" => "What date would you like to check in?",
+                "check-out date" => "And what date would you like to check out?",
+                "number of guests" => "How many guests will be staying?",
+                _ => $"Could you please provide your {missingFields[0]}?"
+            };
+        }
+
+        // Multiple fields missing
+        if (missingFields.Contains("check-in date") && missingFields.Contains("check-out date"))
+        {
+            var otherFields = missingFields.Where(f => f != "check-in date" && f != "check-out date").ToList();
+            if (otherFields.Count == 0)
+                return "What dates would you like to check in and check out?";
+            return $"Could you please provide your {string.Join(", ", otherFields)} and your check-in/check-out dates?";
+        }
+
+        var fieldsText = string.Join(" and ", missingFields);
+        return $"To complete your booking inquiry, I still need your {fieldsText}. Could you please provide those details?";
+    }
+
+    /// <summary>
+    /// Formats the booking inquiry details for the staff task description
+    /// </summary>
+    private string FormatBookingInquiryDescription(RoomBookingInquiryState state)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("New room booking inquiry received via WhatsApp:");
+        sb.AppendLine();
+        sb.AppendLine($"Guest Name: {state.GuestName}");
+        sb.AppendLine($"Phone: {state.Phone}");
+        if (!string.IsNullOrEmpty(state.Email))
+            sb.AppendLine($"Email: {state.Email}");
+        sb.AppendLine($"Check-in Date: {state.CheckInDate:dddd, MMMM dd, yyyy}");
+        sb.AppendLine($"Check-out Date: {state.CheckOutDate:dddd, MMMM dd, yyyy}");
+        sb.AppendLine($"Number of Guests: {state.NumberOfGuests}");
+        if (!string.IsNullOrEmpty(state.RoomPreference))
+            sb.AppendLine($"Room Preference: {state.RoomPreference}");
+        if (!string.IsNullOrEmpty(state.SpecialRequests))
+            sb.AppendLine($"Special Requests: {state.SpecialRequests}");
+        sb.AppendLine();
+        sb.AppendLine("Please check availability and contact the guest to confirm the reservation.");
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Saves the booking inquiry state to conversation state
+    /// </summary>
+    private async Task SaveBookingInquiryStateAsync(int conversationId, RoomBookingInquiryState state)
+    {
+        try
+        {
+            await _conversationStateService.SetVariableAsync(conversationId, "bookingInquiryState", state);
+            await _conversationStateService.SetVariableAsync(conversationId, "bookingInquiryActive", true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to save booking inquiry state");
+        }
+    }
+
+    /// <summary>
+    /// Clears the booking inquiry state after completion
+    /// </summary>
+    private async Task ClearBookingInquiryStateAsync(int conversationId)
+    {
+        try
+        {
+            // Set to null to clear the state
+            await _conversationStateService.SetVariableAsync(conversationId, "bookingInquiryState", null!);
+            await _conversationStateService.SetVariableAsync(conversationId, "bookingInquiryActive", false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to clear booking inquiry state");
+        }
+    }
+
+    /// <summary>
+    /// Handles early check-in requests - creates staff task for front desk approval (similar to late checkout)
+    /// </summary>
+    private async Task<MessageRoutingResponse> HandleEarlyCheckInRequest(
+        TenantContext tenantContext,
+        Conversation conversation,
+        string normalizedMessage)
+    {
+        try
+        {
+            _logger.LogInformation("🌅 Handling early check-in request for conversation {ConversationId}", conversation.Id);
+
+            // 1. Extract requested arrival time using regex
+            var requestedTime = ExtractArrivalTimeFromMessage(normalizedMessage);
+
+            if (requestedTime == null)
+            {
+                return new MessageRoutingResponse
+                {
+                    Reply = "I'd be happy to help arrange early check-in! What time would you like to arrive?"
+                };
+            }
+
+            // 2. Get guest's active booking
+            var booking = await _context.Bookings
+                .Where(b => b.TenantId == tenantContext.TenantId &&
+                           b.Phone == conversation.WaUserPhone &&
+                           (b.Status == "Confirmed" || b.Status == "CheckedIn"))
+                .OrderByDescending(b => b.CheckinDate)
+                .FirstOrDefaultAsync();
+
+            if (booking == null)
+            {
+                return new MessageRoutingResponse
+                {
+                    Reply = "I don't have an active booking for your number. Could you please provide your booking details or contact our front desk?"
+                };
+            }
+
+            // 3. Get tenant settings for standard check-in time
+            var tenantSettings = await _context.TenantSettings
+                .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId);
+
+            var hotelInfo = await _tenantCacheService.GetTenantHotelInfoAsync(tenantContext.TenantId);
+            var standardCheckInTime = tenantSettings?.StandardCheckInTime ?? TimeSpan.FromHours(15); // Default 3pm
+
+            // 4. Get intent settings for acknowledgement template
+            var intentSettings = await _context.IntentSettings
+                .FirstOrDefaultAsync(i => i.TenantId == tenantContext.TenantId && i.IntentName == "EARLY_CHECKIN");
+
+            // 5. Create StaffTask for front desk approval
+            var task = new StaffTask
+            {
+                TenantId = tenantContext.TenantId,
+                ConversationId = conversation.Id,
+                BookingId = booking.Id,
+                Title = $"Early Check-In Request - Room {booking.RoomNumber ?? "TBD"}",
+                Description = $"Guest {booking.GuestName} requests early check-in at {requestedTime:hh\\:mm} (standard check-in: {standardCheckInTime:hh\\:mm})\n\nCheck-in Date: {booking.CheckinDate:MMMM dd, yyyy}",
+                Department = intentSettings?.AssignedDepartment ?? "FrontDesk",
+                Priority = intentSettings?.TaskPriority ?? "Normal",
+                TaskType = "checkin_modification",
+                Status = "Pending",
+                RoomNumber = booking.RoomNumber,
+                GuestName = booking.GuestName,
+                GuestPhone = conversation.WaUserPhone,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.StaffTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("✅ Created early check-in task {TaskId} for room {RoomNumber}", task.Id, booking.RoomNumber);
+
+            // 6. Notify staff
+            await _notificationService.NotifyTaskCreatedAsync(tenantContext.TenantId, task);
+
+            // 7. Format response
+            var timeFormatted = DateTime.Today.Add(requestedTime.Value).ToString("h:mm tt");
+            var standardTimeFormatted = hotelInfo?.CheckInTime ?? DateTime.Today.Add(standardCheckInTime).ToString("h:mm tt");
+
+            var response = intentSettings?.CustomResponse ??
+                $"I've submitted your early check-in request for {timeFormatted}. Our standard check-in time is {standardTimeFormatted}, but our team will check if your room can be ready earlier and confirm with you shortly!";
+
+            return new MessageRoutingResponse
+            {
+                Reply = response,
+                ActionType = "early_checkin_request_created",
+                Action = JsonSerializer.SerializeToElement(new { taskId = task.Id, requestedTime })
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling early check-in request");
+            return new MessageRoutingResponse
+            {
+                Reply = "I apologize, but I'm having trouble processing your early check-in request. Please contact our front desk directly."
+            };
+        }
+    }
+
+    /// <summary>
+    /// Extracts arrival time from guest message for early check-in
+    /// </summary>
+    private TimeSpan? ExtractArrivalTimeFromMessage(string message)
+    {
+        var messageLower = message.ToLower();
+
+        // Match patterns like "2:30pm", "14:30", "2pm", etc.
+        var pmWithMinutesMatch = System.Text.RegularExpressions.Regex.Match(messageLower, @"(\d{1,2}):(\d{2})\s*pm");
+        if (pmWithMinutesMatch.Success)
+        {
+            var hour = int.Parse(pmWithMinutesMatch.Groups[1].Value);
+            var minute = int.Parse(pmWithMinutesMatch.Groups[2].Value);
+            if (hour != 12) hour += 12;
+            return new TimeSpan(hour, minute, 0);
+        }
+
+        var amWithMinutesMatch = System.Text.RegularExpressions.Regex.Match(messageLower, @"(\d{1,2}):(\d{2})\s*am");
+        if (amWithMinutesMatch.Success)
+        {
+            var hour = int.Parse(amWithMinutesMatch.Groups[1].Value);
+            var minute = int.Parse(amWithMinutesMatch.Groups[2].Value);
+            if (hour == 12) hour = 0;
+            return new TimeSpan(hour, minute, 0);
+        }
+
+        var pmMatch = System.Text.RegularExpressions.Regex.Match(messageLower, @"(\d{1,2})\s*pm");
+        if (pmMatch.Success)
+        {
+            var hour = int.Parse(pmMatch.Groups[1].Value);
+            if (hour != 12) hour += 12;
+            return new TimeSpan(hour, 0, 0);
+        }
+
+        var amMatch = System.Text.RegularExpressions.Regex.Match(messageLower, @"(\d{1,2})\s*am");
+        if (amMatch.Success)
+        {
+            var hour = int.Parse(amMatch.Groups[1].Value);
+            if (hour == 12) hour = 0;
+            return new TimeSpan(hour, 0, 0);
+        }
+
+        // 24-hour format
+        var timeMatch = System.Text.RegularExpressions.Regex.Match(messageLower, @"(\d{1,2}):(\d{2})");
+        if (timeMatch.Success)
+        {
+            var hour = int.Parse(timeMatch.Groups[1].Value);
+            var minute = int.Parse(timeMatch.Groups[2].Value);
+            return new TimeSpan(hour, minute, 0);
+        }
+
+        // Keywords that suggest early arrival without specific time
+        if (messageLower.Contains("early") || messageLower.Contains("before") || messageLower.Contains("morning"))
+        {
+            // Default to noon for early check-in requests without specific time
+            return null; // Ask for specific time
+        }
+
+        return null;
     }
 
     #endregion
