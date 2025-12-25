@@ -34,7 +34,6 @@ public class DataSeeder
         Console.WriteLine($"Seeding data for tenant: {tenant.Name} (ID: {tenantId})");
 
         await SeedWiFiCredentialsAsync(tenantId);
-        await SeedFAQsAsync(tenantId);
 
         await _context.SaveChangesAsync();
         Console.WriteLine("Demonstration data seeded successfully!");
@@ -72,79 +71,6 @@ public class DataSeeder
 
         _context.BusinessInfo.Add(wifiCredentials);
         Console.WriteLine("✓ WiFi credentials added");
-    }
-
-    private async Task SeedFAQsAsync(int tenantId)
-    {
-        Console.WriteLine("Adding essential FAQ entries...");
-
-        var faqs = new List<(string question, string answer, string[] tags)>
-        {
-            (
-                "What is the WiFi password?",
-                "Our guest WiFi network is 'PanoramaView_Guest' with password 'Welcome2024!'. The network provides high-speed internet throughout the hotel including all rooms, lobby, restaurant, and pool areas.",
-                new[] { "wifi", "internet", "password", "network" }
-            ),
-            (
-                "What time is checkout?",
-                "Standard checkout time is 11:00 AM. Late checkout until 2:00 PM can be arranged subject to availability - just ask at the front desk!",
-                new[] { "checkout", "time", "late checkout", "front desk" }
-            ),
-            (
-                "Do you have room service?",
-                "Yes! Room service is available 24/7. You can view our full menu by asking me to 'show menu' or call extension 7 from your room phone.",
-                new[] { "room service", "menu", "24/7", "extension", "food" }
-            ),
-            (
-                "Where is the gym?",
-                "Our fitness center is located on the 2nd floor and is open 24/7 for guests. Access with your room key. We have cardio equipment, weights, and towels available.",
-                new[] { "gym", "fitness", "2nd floor", "24/7", "equipment", "towels" }
-            ),
-            (
-                "What time is breakfast?",
-                "Breakfast is served daily from 6:30 AM to 10:30 AM in the Garden Restaurant on the ground floor. We offer both continental and full American breakfast options.",
-                new[] { "breakfast", "time", "restaurant", "continental", "american", "ground floor" }
-            ),
-            (
-                "Do you have parking?",
-                "Yes, we offer complimentary valet parking for all guests. Just pull up to the main entrance and our staff will take care of your vehicle.",
-                new[] { "parking", "valet", "complimentary", "free", "car", "vehicle" }
-            ),
-            (
-                "Can I get extra towels?",
-                "Absolutely! I can arrange for housekeeping to bring extra towels to your room. They should arrive within 15-20 minutes. Anything else you need?",
-                new[] { "towels", "housekeeping", "extra", "room", "amenities" }
-            )
-        };
-
-        int addedCount = 0;
-        foreach (var (question, answer, tags) in faqs)
-        {
-            // Check if FAQ already exists
-            var existingFaq = await _context.FAQs
-                .FirstOrDefaultAsync(f => f.TenantId == tenantId && f.Question == question);
-
-            if (existingFaq != null)
-            {
-                Console.WriteLine($"FAQ already exists: {question.Substring(0, Math.Min(50, question.Length))}...");
-                continue;
-            }
-
-            var faq = new FAQ
-            {
-                TenantId = tenantId,
-                Question = question,
-                Answer = answer,
-                Language = "en",
-                Tags = tags,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _context.FAQs.Add(faq);
-            addedCount++;
-        }
-
-        Console.WriteLine($"✓ {addedCount} FAQ entries added");
     }
 }
 

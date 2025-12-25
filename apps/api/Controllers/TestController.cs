@@ -4,7 +4,6 @@ using Hostr.Api.Data;
 using Hostr.Api.Models;
 using Hostr.Api.Services;
 using Microsoft.AspNetCore.Identity;
-using Hostr.Contracts.DTOs.Auth;
 
 namespace Hostr.Api.Controllers;
 
@@ -148,83 +147,6 @@ public class TestController : ControllerBase
         return Ok(conversations);
     }
 
-    [HttpGet("faqs/{tenantId}")]
-    public async Task<IActionResult> GetFAQs(int tenantId)
-    {
-        try
-        {
-            var faqs = await _context.FAQs
-                .IgnoreQueryFilters()
-                .Where(f => f.TenantId == tenantId)
-                .Select(f => new
-                {
-                    f.Id,
-                    f.Question,
-                    f.Answer,
-                    f.Language,
-                    f.Tags,
-                    f.UpdatedAt
-                })
-                .OrderBy(f => f.Question)
-                .ToListAsync();
-
-            return Ok(faqs);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving FAQs for tenant {TenantId}", tenantId);
-            return StatusCode(500, "Internal server error");
-        }
-    }
-
-    [HttpPost("faqs")]
-    public async Task<IActionResult> AddFAQ([FromBody] AddFAQRequest request)
-    {
-        try
-        {
-            // Check if FAQ with similar question already exists
-            var existingFAQ = await _context.FAQs
-                .FirstOrDefaultAsync(f => f.TenantId == request.TenantId &&
-                                         f.Question.ToLower() == request.Question.ToLower());
-
-            if (existingFAQ != null)
-            {
-                return BadRequest("FAQ with similar question already exists");
-            }
-
-            var faq = new FAQ
-            {
-                TenantId = request.TenantId,
-                Question = request.Question,
-                Answer = request.Answer,
-                Language = request.Language ?? "en",
-                Tags = request.Tags ?? Array.Empty<string>(),
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _context.FAQs.Add(faq);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Added new FAQ for tenant {TenantId}: {Question}",
-                request.TenantId, request.Question);
-
-            return Ok(new
-            {
-                Id = faq.Id,
-                Question = faq.Question,
-                Answer = faq.Answer,
-                Language = faq.Language,
-                Tags = faq.Tags,
-                UpdatedAt = faq.UpdatedAt
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error adding FAQ");
-            return StatusCode(500, "Internal server error");
-        }
-    }
-
     [HttpGet("bookings")]
     public async Task<IActionResult> GetBookings()
     {
@@ -262,9 +184,9 @@ public class TestController : ControllerBase
         try
         {
             _logger.LogInformation("Testing guest status for phone number: {PhoneNumber}", phoneNumber);
-
+            
             var guestStatus = await _messageRoutingService.DetermineGuestStatusAsync(phoneNumber, 1); // Tenant ID 1
-
+            
             var result = new
             {
                 OriginalPhoneNumber = phoneNumber,
@@ -301,7 +223,7 @@ public class TestController : ControllerBase
             var logger = HttpContext.RequestServices.GetRequiredService<ILogger<TestController>>();
 
             var tenantId = 1; // Use existing panoramaview tenant ID
-
+            
             // Validate message type
             var validTypes = new[] { "emergency", "power_outage", "water_outage", "internet_down", "custom" };
             if (!validTypes.Contains(request.MessageType.ToLower()))
@@ -327,7 +249,7 @@ public class TestController : ControllerBase
             if (success)
             {
                 logger.LogInformation("TEST: Emergency broadcast initiated by tenant {TenantId}: {BroadcastId}", tenantId, broadcastId);
-
+                
                 return Ok(new
                 {
                     Success = true,
@@ -704,11 +626,8 @@ public class TestBroadcastRequest
     public BroadcastScope BroadcastScope { get; set; } = BroadcastScope.ActiveOnly;
 }
 
-public class AddFAQRequest
+public class ResetPasswordRequest
 {
-    public int TenantId { get; set; }
-    public string Question { get; set; } = string.Empty;
-    public string Answer { get; set; } = string.Empty;
-    public string? Language { get; set; }
-    public string[]? Tags { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
 }

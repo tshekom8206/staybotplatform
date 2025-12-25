@@ -55,7 +55,6 @@ public class DataSeedController : ControllerBase
                 TenantName = tenant.Name,
                 TenantId = tenantId,
                 WiFiCredentialsAdded = await SeedWiFiCredentialsAsync(tenantId),
-                BasicFAQsAdded = await SeedFAQsAsync(tenantId),
                 BusinessInfoAdded = 0 // BusinessInfo data added via SQL script
             };
 
@@ -72,52 +71,6 @@ public class DataSeedController : ControllerBase
         {
             _logger.LogError(ex, "Error seeding demonstration data for tenant {TenantId}", tenantId);
             return StatusCode(500, new { Message = "Error seeding data", Error = ex.Message });
-        }
-    }
-
-    [HttpPost("essential-faqs")]
-    public async Task<IActionResult> SeedEssentialFAQs()
-    {
-        const int tenantId = 1;
-
-        try
-        {
-            _logger.LogInformation("Starting essential FAQ seeding for tenant {TenantId}", tenantId);
-
-            // Check if tenant exists, create if not - bypass global filters for data seeding
-            var tenant = await _context.Tenants
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(t => t.Id == tenantId);
-            if (tenant == null)
-            {
-                _logger.LogInformation("Tenant with ID {TenantId} not found, creating...", tenantId);
-                tenant = await CreateTenantAsync(tenantId);
-            }
-            else
-            {
-                _logger.LogInformation("Found existing tenant: {TenantName} (ID: {TenantId})", tenant.Name, tenantId);
-            }
-
-            // Disable global filters for data seeding operations
-            _context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-
-            var addedCount = await SeedFAQsAsync(tenantId);
-
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Essential FAQs seeded successfully for tenant {TenantId}", tenantId);
-
-            return Ok(new
-            {
-                Message = "Essential FAQs seeded successfully!",
-                TenantName = tenant.Name,
-                TenantId = tenantId,
-                EssentialFAQsAdded = addedCount
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error seeding essential FAQs for tenant {TenantId}", tenantId);
-            return StatusCode(500, new { Message = "Error seeding essential FAQs", Error = ex.Message });
         }
     }
 
@@ -275,79 +228,6 @@ public class DataSeedController : ControllerBase
         _context.BusinessInfo.Add(wifiCredentials);
         _logger.LogInformation("WiFi credentials added for tenant {TenantId}", tenantId);
         return true;
-    }
-
-    private async Task<int> SeedFAQsAsync(int tenantId)
-    {
-        var faqs = new List<(string question, string answer, string[] tags)>
-        {
-            (
-                "What is the WiFi password?",
-                "Our guest WiFi network is 'PanoramaView_Guest' with password 'Welcome2024!'. The network provides high-speed internet throughout the hotel including all rooms, lobby, restaurant, and pool areas.",
-                new[] { "wifi", "internet", "password", "network" }
-            ),
-            (
-                "What time is checkout?",
-                "Standard checkout time is 11:00 AM. Late checkout until 2:00 PM can be arranged subject to availability - just ask at the front desk!",
-                new[] { "checkout", "time", "late checkout", "front desk" }
-            ),
-            (
-                "Do you have room service?",
-                "Yes! Room service is available 24/7. You can view our full menu by asking me to 'show menu' or call extension 7 from your room phone.",
-                new[] { "room service", "menu", "24/7", "extension", "food" }
-            ),
-            (
-                "Where is the gym?",
-                "Our fitness center is located on the 2nd floor and is open 24/7 for guests. Access with your room key. We have cardio equipment, weights, and towels available.",
-                new[] { "gym", "fitness", "2nd floor", "24/7", "equipment", "towels" }
-            ),
-            (
-                "What time is breakfast?",
-                "Breakfast is served daily from 6:30 AM to 10:30 AM in the Garden Restaurant on the ground floor. We offer both continental and full American breakfast options.",
-                new[] { "breakfast", "time", "restaurant", "continental", "american", "ground floor" }
-            ),
-            (
-                "Do you have parking?",
-                "Yes, we offer complimentary valet parking for all guests. Just pull up to the main entrance and our staff will take care of your vehicle.",
-                new[] { "parking", "valet", "complimentary", "free", "car", "vehicle" }
-            ),
-            (
-                "Can I get extra towels?",
-                "Absolutely! I can arrange for housekeeping to bring extra towels to your room. They should arrive within 15-20 minutes. Anything else you need?",
-                new[] { "towels", "housekeeping", "extra", "room", "amenities" }
-            )
-        };
-
-        int addedCount = 0;
-        foreach (var (question, answer, tags) in faqs)
-        {
-            // Check if FAQ already exists
-            var existingFaq = await _context.FAQs
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(f => f.TenantId == tenantId && f.Question == question);
-
-            if (existingFaq != null)
-            {
-                _logger.LogInformation("FAQ already exists for tenant {TenantId}: {Question}", tenantId, question.Substring(0, Math.Min(50, question.Length)));
-                continue;
-            }
-
-            var faq = new FAQ
-            {
-                TenantId = tenantId,
-                Question = question,
-                Answer = answer,
-                Language = "en",
-                Tags = tags,
-                UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)
-            };
-
-            _context.FAQs.Add(faq);
-            addedCount++;
-        }
-
-        _logger.LogInformation("{Count} FAQ entries added for tenant {TenantId}", addedCount, tenantId);
-        return addedCount;
     }
 
     private async Task<Tenant> CreateTenantAsync(int tenantId)

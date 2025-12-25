@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
-  apiUrl: '/api', // Use relative path in production
-  hubUrl: '/hubs/tasks',
+  apiUrl: 'https://staybot-api.azurewebsites.net/api',
+  hubUrl: 'https://staybot-api.azurewebsites.net/hubs/stafftask',
   tenantId: null, // Set after login
   locale: 'en-ZA', // South African English
   timezone: 'Africa/Johannesburg', // South African Standard Time (SAST - UTC+2)

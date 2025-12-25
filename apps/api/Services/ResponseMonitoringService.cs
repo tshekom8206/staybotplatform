@@ -258,7 +258,6 @@ namespace Hostr.Api.Services
                     { "HotelInfo", new ConfigurationSourceUsage { UsageCount = 45, UsagePercentage = 65.2 } },
                     { "BusinessInfo", new ConfigurationSourceUsage { UsageCount = 28, UsagePercentage = 40.6 } },
                     { "Services", new ConfigurationSourceUsage { UsageCount = 32, UsagePercentage = 46.4 } },
-                    { "FAQ", new ConfigurationSourceUsage { UsageCount = 19, UsagePercentage = 27.5 } },
                     { "MenuItems", new ConfigurationSourceUsage { UsageCount = 15, UsagePercentage = 21.7 } }
                 };
 

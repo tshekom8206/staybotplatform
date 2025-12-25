@@ -68,15 +68,7 @@ namespace Hostr.Api.Services
 
                 _logger.LogInformation("Searching for configured response to query: '{Query}' for tenant {TenantId}", query, tenantId);
 
-                // 1. Check FAQs first (exact matches)
-                var faqResponse = await CheckFAQsForExactMatch(queryLower, tenantId);
-                if (faqResponse != null)
-                {
-                    _logger.LogInformation("Found exact FAQ match for query");
-                    return faqResponse;
-                }
-
-                // 2. Check specific information categories
+                // 1. Check specific information categories
                 var category = DetermineInformationCategory(queryLower);
                 if (!string.IsNullOrEmpty(category))
                 {
@@ -271,34 +263,6 @@ namespace Hostr.Api.Services
             {
                 _logger.LogError(ex, "Error checking if configuration exists for topic: {Topic}", topic);
                 return false;
-            }
-        }
-
-        private async Task<ConfigurationResponse?> CheckFAQsForExactMatch(string query, int tenantId)
-        {
-            try
-            {
-                var faq = await _context.FAQs
-                    .Where(f => f.TenantId == tenantId)
-                    .FirstOrDefaultAsync(f => f.Question.ToLower().Contains(query) || query.Contains(f.Question.ToLower()));
-
-                if (faq != null)
-                {
-                    return new ConfigurationResponse
-                    {
-                        HasConfiguredData = true,
-                        Response = faq.Answer,
-                        DataSource = ConfigurationSource.FAQ,
-                        ConfigurationReference = $"FAQ #{faq.Id}"
-                    };
-                }
-
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error checking FAQs for query: {Query}", query);
-                return null;
             }
         }
 
@@ -516,7 +480,6 @@ namespace Hostr.Api.Services
     public enum ConfigurationSource
     {
         None,
-        FAQ,
         HotelInfo,
         BusinessInfo,
         Services,
