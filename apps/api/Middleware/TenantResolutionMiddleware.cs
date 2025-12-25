@@ -16,7 +16,7 @@ public class TenantResolutionMiddleware
     public async Task InvokeAsync(HttpContext context, ITenantService tenantService)
     {
         var tenantContext = await ResolveTenantAsync(context, tenantService);
-        
+
         if (tenantContext != null)
         {
             context.Items["TenantId"] = tenantContext.TenantId;
@@ -25,15 +25,15 @@ public class TenantResolutionMiddleware
             context.Items["TenantPlan"] = tenantContext.Plan;
             context.Items["TenantThemePrimary"] = tenantContext.ThemePrimary;
             context.Items["TenantTimezone"] = tenantContext.Timezone;
-            
-            _logger.LogInformation("Tenant resolved: {TenantSlug} (ID: {TenantId})", 
+
+            _logger.LogInformation("Tenant resolved: {TenantSlug} (ID: {TenantId})",
                 tenantContext.TenantSlug, tenantContext.TenantId);
         }
         else if (RequiresTenant(context))
         {
-            _logger.LogWarning("Tenant not found for request: {Host}{Path}", 
+            _logger.LogWarning("Tenant not found for request: {Host}{Path}",
                 context.Request.Host, context.Request.Path);
-            
+
             context.Response.StatusCode = 404;
             await context.Response.WriteAsync("Tenant not found");
             return;
@@ -108,6 +108,9 @@ public class TenantResolutionMiddleware
             "/api/admin", // Super admin endpoints
             "/api/auth/login", // Login endpoint
             "/api/auth/accept-invite", // Invite acceptance
+            "/api/auth/forgot-password", // Password reset request
+            "/api/auth/verify-otp", // OTP verification
+            "/api/auth/reset-password", // Password reset
             "/api/dataseed", // Data seeding endpoint (temporary for demo)
             "/api/test" // Test endpoints for debugging
         };
@@ -128,6 +131,9 @@ public class TenantResolutionMiddleware
             "/api/admin",
             "/api/auth/login", // Login endpoint
             "/api/auth/accept-invite",
+            "/api/auth/forgot-password", // Password reset request
+            "/api/auth/verify-otp", // OTP verification
+            "/api/auth/reset-password", // Password reset
             "/api/tenant/onboard", // Tenant onboarding endpoint
             "/api/tenant/validate-slug", // Slug validation endpoint
             "/api/tenant/validate-email", // Email validation endpoint

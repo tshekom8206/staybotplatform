@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>hostr-api-secrets</UserSecretsId>
+	<SelfContained>false</SelfContained>
+	<RuntimeIdentifier></RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>

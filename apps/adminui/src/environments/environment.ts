@@ -1,8 +1,10 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5000/api',
-  hubUrl: 'http://localhost:5000/hubs/stafftask',
-  tenantId: null, // Set after login
+  apiUrl: 'https://staybot-api.azurewebsites.net/api',
+  hubUrl: 'https://localhost:5000/hubs/stafftask',
+  tenantId: null,
+  locale: 'en-ZA', // South African English
+  timezone: 'Africa/Johannesburg', // South African Standard Time (SAST - UTC+2)
   theme: {
     primaryColor: '#25D466',
     primaryLight: '#E8FAF0',

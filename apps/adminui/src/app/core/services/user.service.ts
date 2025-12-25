@@ -69,7 +69,7 @@ export class UserService {
     if (role) {
       params.role = role;
     }
-    return this.http.get<{staff: StaffMember[]}>(`${this.apiUrl}`, { params })
+    return this.http.get<{ staff: StaffMember[] }>(`${this.apiUrl}`, { params })
       .pipe(map(response => response.staff));
   }
 
@@ -85,7 +85,7 @@ export class UserService {
     }
 
     // Get all staff members and find the current user
-    return this.http.get<{staff: StaffMember[]}>(`${this.apiUrl}`).pipe(
+    return this.http.get<{ staff: StaffMember[] }>(`${this.apiUrl}`).pipe(
       map(response => {
         const currentStaff = response.staff.find(staff => staff.email === currentUser.email);
         if (!currentStaff) {
@@ -114,17 +114,17 @@ export class UserService {
     }
   }
 
-  deleteStaffMember(id: number): Observable<{message: string}> {
-    return this.http.delete<{message: string}>(`${this.apiUrl}/${id}`);
+  deleteStaffMember(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`);
   }
 
-  changePassword(id: number, request: ChangePasswordRequest): Observable<{message: string}> {
-    return this.http.post<{message: string}>(`${this.apiUrl}/${id}/change-password`, request);
+  changePassword(id: number, request: ChangePasswordRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/${id}/change-password`, request);
   }
 
   // Available roles endpoint
   getAvailableRoles(): Observable<AvailableRole[]> {
-    return this.http.get<{roles: AvailableRole[]}>(`${this.apiUrl}/roles`)
+    return this.http.get<{ roles: AvailableRole[] }>(`${this.apiUrl}/roles`)
       .pipe(map(response => response.roles));
   }
 
@@ -157,7 +157,7 @@ export class UserService {
     return emailRegex.test(email);
   }
 
-  validatePassword(password: string): {isValid: boolean; errors: string[]} {
+  validatePassword(password: string): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (password.length < 6) {
@@ -183,12 +183,13 @@ export class UserService {
   }
 
   formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-ZA', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Africa/Johannesburg'
     });
   }
 
@@ -214,12 +215,12 @@ export class UserService {
   }
 
   // Bulk operations (for future enhancement)
-  bulkUpdateStaffStatus(ids: number[], isActive: boolean): Observable<{message: string}> {
-    return this.http.post<{message: string}>(`${this.apiUrl}/bulk/status`, { ids, isActive });
+  bulkUpdateStaffStatus(ids: number[], isActive: boolean): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/bulk/status`, { ids, isActive });
   }
 
-  bulkAssignRole(ids: number[], role: string): Observable<{message: string}> {
-    return this.http.post<{message: string}>(`${this.apiUrl}/bulk/role`, { ids, role });
+  bulkAssignRole(ids: number[], role: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/bulk/role`, { ids, role });
   }
 
   // Export functionality

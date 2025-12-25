@@ -157,22 +157,22 @@
   }
 }
 
-.nobleui-logo {
+.staybot-logo {
   font-weight: 700;
   font-size: 25px;
-  color: darken($primary, 50%);
+  color: #5fa938;
   span {
-    color: $primary;
-    font-weight: 300;
+    color: #f1643a;
+    font-weight: 500;
   }
   &:hover {
-    color: darken($primary, 50%);
+    color: #5fa938;
   }
 }
 
 @if $enable-dark-mode {
   @include color-mode(dark) {
-    .nobleui-logo {
+    .staybot-logo {
       color: $light;
     }
   }

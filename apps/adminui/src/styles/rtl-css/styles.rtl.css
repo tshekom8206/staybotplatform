@@ -16867,20 +16867,20 @@ body {
   margin-bottom: 0;
 }
 
-.nobleui-logo {
+.staybot-logo {
   font-weight: 700;
   font-size: 25px;
-  color: #000865;
+  color: #5fa938;
 }
-.nobleui-logo span {
-  color: #6571ff;
-  font-weight: 300;
+.staybot-logo span {
+  color: #f1643a;
+  font-weight: 500;
 }
-.nobleui-logo:hover {
-  color: #000865;
+.staybot-logo:hover {
+  color: #5fa938;
 }
 
-[data-bs-theme=dark] .nobleui-logo {
+[data-bs-theme=dark] .staybot-logo {
   color: #e9ecef;
 }
 
@@ -16997,14 +16997,9 @@ body {
   }
 }
 .navbar .logo-mini-wrapper .logo-mini {
-  width: 28px;
-  height: 28px;
-}
-[data-bs-theme=dark] .navbar .logo-mini-wrapper .logo-mini.logo-mini-light {
-  display: none;
-}
-[data-bs-theme=light] .navbar .logo-mini-wrapper .logo-mini.logo-mini-dark {
-  display: none;
+  width: 40px;
+  height: auto;
+  display: block;
 }
 .navbar .search-form {
   width: 100%;

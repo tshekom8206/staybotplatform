@@ -35,18 +35,9 @@
       display: none;
     }
     .logo-mini {
-      width: 28px;
-      height: 28px;
-      &.logo-mini-light {
-        [data-bs-theme='dark'] & {
-          display: none;
-        }
-      }
-      &.logo-mini-dark {
-        [data-bs-theme='light'] & {
-          display: none;
-        }
-      }
+      width: 40px;
+      height: auto;
+      display: block;
     }
   }
 

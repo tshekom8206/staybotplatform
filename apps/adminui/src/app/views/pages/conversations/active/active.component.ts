@@ -697,11 +697,12 @@ export class ActiveConversationsComponent implements OnInit, OnDestroy {
     }
 
     // Otherwise show date and time
-    return d.toLocaleString('en-US', {
+    return d.toLocaleString('en-ZA', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Africa/Johannesburg'
     });
   }
 

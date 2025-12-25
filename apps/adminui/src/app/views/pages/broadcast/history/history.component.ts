@@ -279,7 +279,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
 
-    return messageDate.toLocaleDateString();
+    return messageDate.toLocaleDateString('en-ZA', { timeZone: 'Africa/Johannesburg' });
   }
 
   viewMessage(content: any, message: BroadcastHistoryItem): void {

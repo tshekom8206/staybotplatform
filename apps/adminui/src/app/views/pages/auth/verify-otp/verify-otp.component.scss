@@ -1,0 +1,121 @@
+// Import the same styles as login component
+@import '../login/login.component.scss';
+
+// Additional styles for OTP verification specific elements
+.otp-input {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.5rem;
+}
+
+.resend-section {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.resend-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.resend-link {
+  background: none;
+  border: none;
+  color: #66cc33;
+  text-decoration: none;
+  font-size: 0.875rem;
+  padding: 0;
+
+  &:hover:not(:disabled) {
+    color: #2bb85a;
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+}
+
+.back-to-login {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 0.875rem;
+
+  &:hover {
+    color: #66cc33;
+    text-decoration: none;
+  }
+}
+
+// Security info for promo card
+.security-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.security-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  text-align: left;
+}
+
+.security-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    color: white;
+    font-size: 1.25rem;
+  }
+}
+
+.security-text {
+  h4 {
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    margin: 0;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 991.98px) {
+  .security-info {
+    gap: 1rem;
+  }
+
+  .security-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+}

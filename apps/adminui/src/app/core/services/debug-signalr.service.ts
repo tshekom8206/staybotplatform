@@ -39,7 +39,7 @@ export class DebugSignalRService {
 
   addLog(message: string): void {
     const current = this.debugInfoSubject.value;
-    const timestamp = new Date().toLocaleTimeString();
+    const timestamp = new Date().toLocaleTimeString('en-ZA', { timeZone: 'Africa/Johannesburg' });
     const logEntry = `[${timestamp}] ${message}`;
 
     const updatedLogs = [...current.connectionLogs, logEntry];

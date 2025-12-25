@@ -1,54 +1,139 @@
-<div class="container">
-  <div class="row w-100 mx-0 auth-page">
-    <div class="col-md-8 col-xl-6 mx-auto">
-      <div class="card">
-        <div class="row">
-          <div class="col-md-4 pe-md-0">
-            <div class="auth-side-wrapper" [ngStyle]="{ 'background-image': 'url(https://placehold.co/250x650)' }">
-  
+<div class="login-page-wrapper">
+  <div class="cards-container">
+    <!-- Left Card - Login Form -->
+    <div class="login-card">
+      <div class="login-form-wrapper">
+        <!-- Logo -->
+        <div class="logo-section">
+          <div class="logo-container">
+            <div class="logo-icon">
+              <span>🏨</span>
+            </div>
+            <span class="logo-text"
+              >STAY<span class="logo-accent">BOT</span></span
+            >
+          </div>
+        </div>
+
+        <!-- Welcome Message -->
+        <div class="welcome-section">
+          <h1 class="welcome-title">Welcome Back!</h1>
+          <p class="welcome-description">
+            Sign in to access your dashboard and continue transforming your
+            guest experience with our AI-powered WhatsApp concierge.
+          </p>
+        </div>
+
+        <!-- Login Form -->
+        <form
+          [formGroup]="loginForm"
+          (ngSubmit)="onSubmit()"
+          class="login-form"
+        >
+          <!-- Email Field -->
+          <div class="form-group">
+            <label for="email" class="form-label">Email</label>
+            <div class="input-group">
+              <div class="input-icon">
+                <i class="feather icon-mail"></i>
+              </div>
+              <input
+                type="email"
+                id="email"
+                formControlName="email"
+                class="form-control modern-input"
+                placeholder="Enter your email"
+              />
+            </div>
+            <div
+              *ngIf="f['email'].invalid && f['email'].touched"
+              class="error-message"
+            >
+              <small *ngIf="f['email'].errors?.['required']"
+                >Email is required</small
+              >
+              <small *ngIf="f['email'].errors?.['email']"
+                >Please enter a valid email</small
+              >
             </div>
           </div>
-          <div class="col-md-8 ps-md-0">
-            <div class="auth-form-wrapper px-4 py-5">
-              <a routerLink="." class="nobleui-logo d-block mb-2">Noble<span>UI</span></a>
-              <h5 class="text-secondary fw-normal mb-4">Welcome back! Log in to your account.</h5>
-              <form class="forms-sample" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-                <div class="mb-3">
-                  <label for="email" class="form-label">Email address</label>
-                  <input type="email" class="form-control" id="email" formControlName="email" placeholder="Email" value="test@admin.com">
-                  <div *ngIf="f['email'].invalid && f['email'].touched" class="text-danger">
-                    <small *ngIf="f['email'].errors?.['required']">Email is required</small>
-                    <small *ngIf="f['email'].errors?.['email']">Please enter a valid email</small>
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <label for="password" class="form-label">Password</label>
-                  <input type="password" class="form-control" id="password" formControlName="password" autocomplete="current-password" placeholder="Password" value="Password123!">
-                  <div *ngIf="f['password'].invalid && f['password'].touched" class="text-danger">
-                    <small *ngIf="f['password'].errors?.['required']">Password is required</small>
-                  </div>
-                </div>
-                <div class="form-check mb-3">
-                  <input type="checkbox" class="form-check-input" id="authCheck">
-                  <label class="form-check-label" for="authCheck">
-                    Remember me
-                  </label>
-                </div>
-                <div *ngIf="error" class="alert alert-danger">{{error}}</div>
-                <div>
-                  <button type="submit" class="btn btn-primary me-2 mb-2 mb-md-0" [disabled]="loading || loginForm.invalid">
-                    <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-                    {{ loading ? 'Logging in...' : 'Login' }}
-                  </button>
-                  <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0">
-                    <i class="feather icon-twitter btn-icon-prepend"></i>
-                    Login with twitter
-                  </button>
-                </div>
-                <a routerLink="/auth/register" class="d-block mt-3 text-secondary">Not a user? Sign up</a>
-              </form>
+
+          <!-- Password Field -->
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+              <div class="input-icon">
+                <i class="feather icon-lock"></i>
+              </div>
+              <input
+                type="password"
+                id="password"
+                formControlName="password"
+                autocomplete="current-password"
+                class="form-control modern-input"
+                placeholder="Enter your password"
+              />
+              <div class="input-icon-right">
+                <i class="feather icon-eye-off"></i>
+              </div>
+            </div>
+            <div
+              *ngIf="f['password'].invalid && f['password'].touched"
+              class="error-message"
+            >
+              <small *ngIf="f['password'].errors?.['required']"
+                >Password is required</small
+              >
             </div>
           </div>
+
+          <!-- Forgot Password -->
+          <div class="forgot-password">
+            <a routerLink="/auth/forgot-password" class="forgot-link"
+              >Forgot Password?</a
+            >
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="error" class="alert alert-danger modern-alert">
+            {{ error }}
+          </div>
+
+          <!-- Sign In Button -->
+          <button
+            type="submit"
+            class="btn btn-primary modern-btn"
+            [disabled]="loading || loginForm.invalid"
+          >
+            <span
+              *ngIf="loading"
+              class="spinner-border spinner-border-sm me-2"
+            ></span>
+            {{ loading ? "Logging in..." : "Sign In" }}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Card - Promotional Section -->
+    <div class="promo-card">
+      <div class="promo-content">
+        <!-- Headline -->
+        <h2 class="promo-title">
+          Transform Your Guest Experience with Staybot
+        </h2>
+        <p class="promo-subtitle">
+          South Africa's Premier Hotel WhatsApp Concierge
+        </p>
+
+        <!-- Testimonial -->
+        <div class="testimonial">
+          <div class="quote-mark">"</div>
+          <p class="testimonial-text">
+            Since implementing Staybot, our guest satisfaction scores have
+            increased by 32%, while our front desk staff can focus on providing
+            more meaningful in-person interactions.
+          </p>
         </div>
       </div>
     </div>
