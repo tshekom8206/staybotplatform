@@ -699,7 +699,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const dayLabels = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
+      return date.toLocaleDateString('en-ZA', { weekday: 'short', timeZone: 'Africa/Johannesburg' });
     });
 
     const hasData = trendData &&
@@ -1454,10 +1454,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
           enabled: false
         }
       },
-      colors: [themeVariables.primary],  
+      colors: [themeVariables.primary],
       fill: {
         opacity: .9
-      } , 
+      } ,
       grid: {
         padding: {
           bottom: -4
@@ -1549,7 +1549,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             background: themeVariables.gridBorder,
             strokeWidth: '100%',
             opacity: 1,
-            margin: 5, 
+            margin: 5,
           },
           dataLabels: {
             showOn: "always",
@@ -1576,5 +1576,5 @@ export class DashboardComponent implements OnInit, OnDestroy {
       labels: ["Storage Used"]
     }
   };
-  
+
 }

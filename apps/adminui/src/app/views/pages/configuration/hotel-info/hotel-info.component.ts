@@ -46,11 +46,11 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
   currentHotelInfo: HotelInformation | null = null;
 
   // Available options (loaded from API)
-  hotelCategories: Array<{value: string, label: string}> = [];
-  availableLanguages: Array<{code: string, name: string}> = [];
+  hotelCategories: Array<{ value: string, label: string }> = [];
+  availableLanguages: Array<{ code: string, name: string }> = [];
   hotelServices: HotelService[] = [];
   timezones: string[] = [];
-  currencies: Array<{code: string, name: string}> = [];
+  currencies: Array<{ code: string, name: string }> = [];
 
   constructor() {
     this.initializeForms();
@@ -114,8 +114,8 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
       requirePhoneVerification: [true],
       enableNotifications: [true],
       enableChatbot: [true],
-      timezone: ['UTC', Validators.required],
-      currency: ['USD', Validators.required]
+      timezone: ['Africa/Johannesburg', Validators.required],
+      currency: ['ZAR', Validators.required]
     });
   }
 
@@ -132,28 +132,28 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
       timezones: this.hotelInfoService.getTimezones(),
       currencies: this.hotelInfoService.getCurrencies()
     })
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: (data) => {
-        this.currentHotelInfo = data.hotelInfo;
-        this.hotelCategories = data.categories;
-        this.availableLanguages = data.languages;
-        this.hotelServices = data.services;
-        this.timezones = data.timezones;
-        this.currencies = data.currencies;
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.currentHotelInfo = data.hotelInfo;
+          this.hotelCategories = data.categories;
+          this.availableLanguages = data.languages;
+          this.hotelServices = data.services;
+          this.timezones = data.timezones;
+          this.currencies = data.currencies;
 
-        this.populateForms();
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading hotel information:', error);
-        this.error = 'Failed to load hotel information. Please try again.';
-        this.loading = false;
+          this.populateForms();
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading hotel information:', error);
+          this.error = 'Failed to load hotel information. Please try again.';
+          this.loading = false;
 
-        // Load fallback data if API calls fail
-        this.loadFallbackData();
-      }
-    });
+          // Load fallback data if API calls fail
+          this.loadFallbackData();
+        }
+      });
   }
 
   private loadFallbackData(): void {
@@ -179,8 +179,17 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
     this.hotelServices = []; // Services will be loaded from API or left empty
 
     this.timezones = [
-      'UTC', 'America/New_York', 'America/Chicago', 'America/Denver',
-      'America/Los_Angeles', 'Europe/London', 'Europe/Paris'
+      'Africa/Johannesburg',
+      'UTC',
+      'America/New_York',
+      'America/Chicago',
+      'America/Denver',
+      'America/Los_Angeles',
+      'Europe/London',
+      'Europe/Paris',
+      'Africa/Cairo',
+      'Africa/Lagos',
+      'Africa/Nairobi'
     ];
 
     this.currencies = [

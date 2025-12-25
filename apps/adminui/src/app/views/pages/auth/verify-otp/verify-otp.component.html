@@ -1,0 +1,154 @@
+<div class="login-page-wrapper">
+  <div class="cards-container">
+    <!-- Left Card - OTP Verification Form -->
+    <div class="login-card">
+      <div class="login-form-wrapper">
+        <!-- Logo -->
+        <div class="logo-section">
+          <div class="logo-container">
+            <div class="logo-icon">
+              <span>🏨</span>
+            </div>
+            <span class="logo-text"
+              >STAY<span class="logo-accent">BOT</span></span
+            >
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div class="welcome-section">
+          <h1 class="welcome-title">Verify Your Code</h1>
+          <p class="welcome-description">
+            We've sent a 6-digit verification code to <strong>{{ email }}</strong>.
+            Please enter the code below.
+          </p>
+        </div>
+
+        <!-- Form -->
+        <form
+          [formGroup]="verifyOTPForm"
+          (ngSubmit)="onSubmit()"
+          class="login-form"
+        >
+          <!-- OTP Field -->
+          <div class="form-group">
+            <label for="otp" class="form-label">Verification Code</label>
+            <div class="input-group">
+              <div class="input-icon">
+                <i class="feather icon-key"></i>
+              </div>
+              <input
+                type="text"
+                id="otp"
+                formControlName="otp"
+                class="form-control modern-input otp-input"
+                placeholder="Enter 6-digit code"
+                maxlength="6"
+                (input)="onOtpInput($event)"
+              />
+            </div>
+            <div
+              *ngIf="f['otp'].invalid && f['otp'].touched"
+              class="error-message"
+            >
+              <small *ngIf="f['otp'].errors?.['required']"
+                >Verification code is required</small
+              >
+              <small *ngIf="f['otp'].errors?.['minlength'] || f['otp'].errors?.['maxlength']"
+                >Please enter a 6-digit code</small
+              >
+            </div>
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="error" class="alert alert-danger modern-alert">
+            {{ error }}
+          </div>
+
+          <!-- Verify Button -->
+          <button
+            type="submit"
+            class="btn btn-primary modern-btn"
+            [disabled]="loading || verifyOTPForm.invalid"
+          >
+            <span
+              *ngIf="loading"
+              class="spinner-border spinner-border-sm me-2"
+            ></span>
+            {{ loading ? "Verifying..." : "Verify Code" }}
+          </button>
+        </form>
+
+        <!-- Resend Section -->
+        <div class="resend-section">
+          <p class="resend-text">
+            Didn't receive the code?
+          </p>
+          <button
+            type="button"
+            class="btn btn-link resend-link"
+            (click)="resendCode()"
+            [disabled]="!canResend"
+          >
+            <span *ngIf="!canResend">Resend in {{ resendTimer }}s</span>
+            <span *ngIf="canResend">Resend Code</span>
+          </button>
+        </div>
+
+        <!-- Back to Login -->
+        <div class="back-to-login">
+          <a routerLink="/auth/login" class="back-link">
+            <i class="feather icon-arrow-left"></i>
+            Back to Login
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Card - Promotional Section -->
+    <div class="promo-card">
+      <div class="promo-content">
+        <!-- Headline -->
+        <h2 class="promo-title">
+          Almost There!
+        </h2>
+        <p class="promo-subtitle">
+          Just one more step to reset your password
+        </p>
+
+        <!-- Security Info -->
+        <div class="security-info">
+          <div class="security-item">
+            <div class="security-icon">
+              <i class="feather icon-shield"></i>
+            </div>
+            <div class="security-text">
+              <h4>Secure Verification</h4>
+              <p>Your verification code is valid for 15 minutes for your security.</p>
+            </div>
+          </div>
+
+          <div class="security-item">
+            <div class="security-icon">
+              <i class="feather icon-clock"></i>
+            </div>
+            <div class="security-text">
+              <h4>Quick Process</h4>
+              <p>Enter the code and you'll be able to set a new password immediately.</p>
+            </div>
+          </div>
+
+          <div class="security-item">
+            <div class="security-icon">
+              <i class="feather icon-help-circle"></i>
+            </div>
+            <div class="security-text">
+              <h4>Need Help?</h4>
+              <p>Check your spam folder or contact support if you don't see the email.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

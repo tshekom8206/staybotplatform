@@ -291,18 +291,6 @@
   }
 }
 
-// Progress bar styling
-::ng-deep ngb-progressbar {
-  .progress {
-    height: 4px !important;
-    background-color: rgba(37, 212, 102, 0.2);
-  }
-
-  .progress-bar {
-    background-color: #25D466 !important;
-  }
-}
-
 // Responsive design
 @media (max-width: 992px) {
   .stats-card {
