@@ -22,7 +22,6 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<WhatsAppNumber> WhatsAppNumbers { get; set; }
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<Message> Messages { get; set; }
-    public DbSet<FAQ> FAQs { get; set; }
     public DbSet<KnowledgeBaseChunk> KnowledgeBaseChunks { get; set; }
     public DbSet<UpsellItem> UpsellItems { get; set; }
     public DbSet<GuideItem> GuideItems { get; set; }
@@ -213,15 +212,6 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             entity.HasOne(e => e.Tenant).WithMany(e => e.Messages).HasForeignKey(e => e.TenantId);
             entity.HasOne(e => e.Conversation).WithMany(e => e.Messages).HasForeignKey(e => e.ConversationId);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-        });
-
-        builder.Entity<FAQ>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.HasOne(e => e.Tenant).WithMany(e => e.FAQs).HasForeignKey(e => e.TenantId);
-            entity.Property(e => e.Tags)
-                .HasColumnType("text[]");
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
 
         builder.Entity<KnowledgeBaseChunk>(entity =>
@@ -467,12 +457,6 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
         builder.Entity<Message>()
             .HasIndex(e => new { e.TenantId, e.ConversationId, e.CreatedAt });
 
-        // FAQs with trigram index
-        builder.Entity<FAQ>()
-            .HasIndex(e => e.Question)
-            .HasMethod("gin")
-            .HasOperators("gin_trgm_ops");
-
         // Knowledge base chunks with vector index
         builder.Entity<KnowledgeBaseChunk>()
             .HasIndex(e => e.Embedding)
@@ -529,7 +513,6 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
         {
             builder.Entity<Conversation>().HasQueryFilter(e => e.TenantId == tenantId);
             builder.Entity<Message>().HasQueryFilter(e => e.TenantId == tenantId);
-            builder.Entity<FAQ>().HasQueryFilter(e => e.TenantId == tenantId);
             builder.Entity<KnowledgeBaseChunk>().HasQueryFilter(e => e.TenantId == tenantId);
             builder.Entity<UpsellItem>().HasQueryFilter(e => e.TenantId == tenantId);
             builder.Entity<GuideItem>().HasQueryFilter(e => e.TenantId == tenantId);

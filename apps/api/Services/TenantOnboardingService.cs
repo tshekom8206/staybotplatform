@@ -291,13 +291,6 @@ public class TenantOnboardingService : ITenantOnboardingService
             seededCounts["BusinessInfo"] = businessInfo.Count;
         }
 
-        if (options.Templates) // This includes FAQs
-        {
-            var faqs = DefaultDataTemplates.FAQs.GetEssentialFAQs(tenantId);
-            _context.FAQs.AddRange(faqs);
-            seededCounts["FAQs"] = faqs.Count;
-        }
-
         if (options.EmergencyData)
         {
             var emergencyTypes = DefaultDataTemplates.EmergencyTypes.GetDefaultEmergencyTypes(tenantId);

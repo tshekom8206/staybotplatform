@@ -17,11 +17,6 @@ export default [
     title: 'Services & Amenities - Hostr Admin'
   },
   {
-    path: 'faqs',
-    loadComponent: () => import('./faqs/faqs.component').then(c => c.FAQsComponent),
-    title: 'FAQ Management - Hostr Admin'
-  },
-  {
     path: 'menu',
     loadComponent: () => import('./menu/menu.component').then(c => c.MenuComponent),
     title: 'Menu Management - Hostr Admin'

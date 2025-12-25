@@ -33,7 +33,6 @@ namespace Hostr.Api.Services
             { "Amenities", 75 },           // Hotel amenities (legacy reference)
             { "Policies", 70 },            // Hotel policies and rules
             { "ContactInfo", 65 },         // Contact information
-            { "FAQ", 60 },                 // Frequently asked questions
             { "KnowledgeBase", 50 },       // General knowledge base chunks
             { "Default", 10 }              // System defaults (lowest priority)
         };
@@ -257,8 +256,7 @@ namespace Hostr.Api.Services
                     sources.AddRange(new[]
                     {
                         new DataSource { SourceType = "HotelInfo", Priority = _dataSourcePriorities["HotelInfo"] },
-                        new DataSource { SourceType = "BusinessInfo", Priority = _dataSourcePriorities["BusinessInfo"] },
-                        new DataSource { SourceType = "FAQ", Priority = _dataSourcePriorities["FAQ"] }
+                        new DataSource { SourceType = "BusinessInfo", Priority = _dataSourcePriorities["BusinessInfo"] }
                     });
                     break;
 
@@ -266,8 +264,7 @@ namespace Hostr.Api.Services
                     sources.AddRange(new[]
                     {
                         new DataSource { SourceType = "Services", Priority = _dataSourcePriorities["Services"] },
-                        new DataSource { SourceType = "HotelInfo", Priority = _dataSourcePriorities["HotelInfo"] },
-                        new DataSource { SourceType = "FAQ", Priority = _dataSourcePriorities["FAQ"] }
+                        new DataSource { SourceType = "HotelInfo", Priority = _dataSourcePriorities["HotelInfo"] }
                     });
                     break;
 
@@ -297,7 +294,6 @@ namespace Hostr.Api.Services
                     "BusinessInfo" => await GetBusinessInfoDataAsync(query, tenantId),
                     "Services" => await GetServicesDataAsync(query, tenantId),
                     "Amenities" => await GetAmenitiesDataAsync(query, tenantId),
-                    "FAQ" => await GetFAQDataAsync(query, tenantId),
                     "KnowledgeBase" => await GetKnowledgeBaseDataAsync(query, tenantId),
                     _ => null
                 };
@@ -470,27 +466,6 @@ namespace Hostr.Api.Services
             return null;
         }
 
-        private async Task<DataSourceEntry?> GetFAQDataAsync(string query, int tenantId)
-        {
-            var queryLower = query.ToLower();
-
-            var faq = await _context.FAQs
-                .FirstOrDefaultAsync(f => f.Question.ToLower().Contains(queryLower));
-
-            if (faq != null)
-            {
-                return new DataSourceEntry
-                {
-                    SourceType = "FAQ",
-                    Content = faq.Answer,
-                    Confidence = 0.80,
-                    LastUpdated = faq.UpdatedAt
-                };
-            }
-
-            return null;
-        }
-
         private async Task<DataSourceEntry?> GetKnowledgeBaseDataAsync(string query, int tenantId)
         {
             // This would use semantic search with embeddings in a real implementation
@@ -524,7 +499,6 @@ namespace Hostr.Api.Services
                 "BusinessInfo" => await _context.BusinessInfo.AnyAsync(),
                 "Services" => await _context.Services.AnyAsync(),
                 "Amenities" => await _context.Services.AnyAsync(),
-                "FAQ" => await _context.FAQs.AnyAsync(),
                 "KnowledgeBase" => await _context.KnowledgeBaseChunks.AnyAsync(),
                 _ => false
             };
@@ -667,17 +641,8 @@ namespace Hostr.Api.Services
 
         private async Task<string?> GetGenericDataAsync(string category, string key, int tenantId)
         {
-            // Try to find relevant data in knowledge base or FAQ
+            // Try to find relevant data in knowledge base
             var combinedQuery = $"{category} {key}".ToLower();
-
-            var faq = await _context.FAQs
-                .FirstOrDefaultAsync(f => f.Question.ToLower().Contains(combinedQuery) ||
-                                        f.Answer.ToLower().Contains(combinedQuery));
-
-            if (faq != null)
-            {
-                return faq.Answer;
-            }
 
             var chunk = await _context.KnowledgeBaseChunks
                 .FirstOrDefaultAsync(k => k.Content.ToLower().Contains(combinedQuery));

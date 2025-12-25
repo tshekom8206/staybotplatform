@@ -310,69 +310,6 @@ public static class DefaultDataTemplates
         }
     }
 
-    public static class FAQs
-    {
-        public static List<FAQ> GetEssentialFAQs(int tenantId) => new()
-        {
-            new FAQ
-            {
-                TenantId = tenantId,
-                Question = "What is the WiFi password?",
-                Answer = "Our guest WiFi network is 'Hotel_Guest' with password 'Welcome2024!'. The network provides high-speed internet throughout the hotel including all rooms, lobby, restaurant, and pool areas.",
-                Language = "en",
-                Tags = new[] { "wifi", "internet", "password", "network" }
-            },
-            new FAQ
-            {
-                TenantId = tenantId,
-                Question = "What time is checkout?",
-                Answer = "Standard checkout time is 11:00 AM. Late checkout until 2:00 PM can be arranged subject to availability - just ask at the front desk!",
-                Language = "en",
-                Tags = new[] { "checkout", "time", "late checkout", "front desk" }
-            },
-            new FAQ
-            {
-                TenantId = tenantId,
-                Question = "Do you have room service?",
-                Answer = "Yes! Room service is available 24/7. You can view our full menu by asking me to 'show menu' or call extension 7 from your room phone.",
-                Language = "en",
-                Tags = new[] { "room service", "menu", "24/7", "extension", "food" }
-            },
-            new FAQ
-            {
-                TenantId = tenantId,
-                Question = "Where is the gym?",
-                Answer = "Our fitness center is located on the 2nd floor and is open 24/7 for guests. Access with your room key. We have cardio equipment, weights, and towels available.",
-                Language = "en",
-                Tags = new[] { "gym", "fitness", "2nd floor", "24/7", "equipment", "towels" }
-            },
-            new FAQ
-            {
-                TenantId = tenantId,
-                Question = "What time is breakfast?",
-                Answer = "Breakfast is served daily from 6:30 AM to 10:30 AM in the main restaurant on the ground floor. We offer both continental and full breakfast options.",
-                Language = "en",
-                Tags = new[] { "breakfast", "time", "restaurant", "continental", "ground floor" }
-            },
-            new FAQ
-            {
-                TenantId = tenantId,
-                Question = "Do you have parking?",
-                Answer = "Yes, we offer complimentary valet parking for all guests. Just pull up to the main entrance and our staff will take care of your vehicle.",
-                Language = "en",
-                Tags = new[] { "parking", "valet", "complimentary", "free", "car", "vehicle" }
-            },
-            new FAQ
-            {
-                TenantId = tenantId,
-                Question = "Can I get extra towels?",
-                Answer = "Absolutely! I can arrange for housekeeping to bring extra towels to your room. They should arrive within 15-20 minutes. Anything else you need?",
-                Language = "en",
-                Tags = new[] { "towels", "housekeeping", "extra", "room", "amenities" }
-            }
-        };
-    }
-
     public static class BusinessInfoTemplates
     {
         public static List<BusinessInfo> GetEssentialBusinessInfo(int tenantId) => new()

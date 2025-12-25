@@ -10,7 +10,7 @@
 - **Host**: `localhost`
 - **Port**: `5432`
 
-**Connection String**: `Host=staybot-prod-psql.postgres.database.azure.com;Database=staybot;Username=staybot_admin;Password=5tayB0t2025Prod;SSL Mode=Require;`
+**Connection String**: `Host=staybot-prod-psql.postgres.database.azure.com;Database=staybot;Username=staybot_admin;Password=staybotsecure2025;SSL Mode=Require;`
 
 ## Common Commands
 

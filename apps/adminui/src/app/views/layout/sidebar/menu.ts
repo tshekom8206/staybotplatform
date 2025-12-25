@@ -131,10 +131,6 @@ export const MENU: MenuItem[] = [
         label: 'Services & Amenities',
         link: '/configuration/services'
       },
-      // {
-      //   label: 'FAQs',
-      //   link: '/configuration/faqs'
-      // },
       {
         label: 'Menu Items',
         link: '/configuration/menu'

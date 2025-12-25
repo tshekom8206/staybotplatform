@@ -76,28 +76,6 @@ public class Message
     public virtual Conversation Conversation { get; set; } = null!;
 }
 
-public class FAQ
-{
-    public int Id { get; set; }
-    public int TenantId { get; set; }
-    
-    [Required]
-    public string Question { get; set; } = string.Empty;
-    
-    [Required]
-    public string Answer { get; set; } = string.Empty;
-    
-    [MaxLength(5)]
-    public string Language { get; set; } = "en";
-    
-    public string[] Tags { get; set; } = Array.Empty<string>();
-    
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    
-    // Navigation properties
-    public virtual Tenant Tenant { get; set; } = null!;
-}
-
 public class KnowledgeBaseChunk
 {
     public int Id { get; set; }

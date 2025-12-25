@@ -34,7 +34,6 @@ public class Tenant
     public virtual ICollection<WhatsAppNumber> WhatsAppNumbers { get; set; } = new List<WhatsAppNumber>();
     public virtual ICollection<Conversation> Conversations { get; set; } = new List<Conversation>();
     public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
-    public virtual ICollection<FAQ> FAQs { get; set; } = new List<FAQ>();
     public virtual ICollection<KnowledgeBaseChunk> KnowledgeBaseChunks { get; set; } = new List<KnowledgeBaseChunk>();
     public virtual ICollection<UpsellItem> UpsellItems { get; set; } = new List<UpsellItem>();
     public virtual ICollection<GuideItem> GuideItems { get; set; } = new List<GuideItem>();
