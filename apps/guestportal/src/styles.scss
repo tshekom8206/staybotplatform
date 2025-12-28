@@ -1,0 +1,108 @@
+/* Global Styles for Guest Portal */
+
+:root {
+  --theme-primary: #1976d2;
+  --theme-primary-dark: #1565c0;
+  --theme-secondary: #6c757d;
+  --theme-success: #27ae60;
+  --theme-warning: #f1c40f;
+  --theme-danger: #e74c3c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f5f7fa;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Override Bootstrap primary color */
+.btn-primary {
+  background-color: var(--theme-primary);
+  border-color: var(--theme-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--theme-primary-dark);
+  border-color: var(--theme-primary-dark);
+}
+
+.btn-outline-primary {
+  color: var(--theme-primary);
+  border-color: var(--theme-primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--theme-primary);
+  border-color: var(--theme-primary);
+}
+
+.text-primary {
+  color: var(--theme-primary) !important;
+}
+
+.bg-primary {
+  background-color: var(--theme-primary) !important;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Form styling */
+.form-control:focus {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.25);
+}
+
+/* Mobile-first adjustments */
+.container {
+  max-width: 640px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+  }
+}
+
+/* Button sizing for mobile */
+.btn-lg {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 12px;
+}
+
+/* Card styling */
+.card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Badge styling */
+.badge {
+  font-weight: 500;
+  padding: 0.5em 0.75em;
+  border-radius: 8px;
+}
+
+/* Consistent chevron/arrow colors - dark monochrome */
+.bi-chevron-right,
+.bi-chevron-left,
+.bi-chevron-up,
+.bi-chevron-down,
+.bi-arrow-right,
+.bi-caret-right,
+.bi-caret-right-fill {
+  color: #1a1a1a;
+}

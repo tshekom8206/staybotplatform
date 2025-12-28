@@ -12,6 +12,11 @@ export default [
     title: 'Hotel Information - Hostr Admin'
   },
   {
+    path: 'guest-portal',
+    loadComponent: () => import('./guest-portal/guest-portal.component').then(c => c.GuestPortalComponent),
+    title: 'Guest Portal Settings - Hostr Admin'
+  },
+  {
     path: 'services',
     loadComponent: () => import('./services/services.component').then(c => c.ServicesComponent),
     title: 'Services & Amenities - Hostr Admin'

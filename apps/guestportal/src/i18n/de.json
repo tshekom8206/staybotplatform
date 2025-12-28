@@ -1,0 +1,150 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Ein Fehler ist aufgetreten",
+    "submit": "Absenden",
+    "cancel": "Abbrechen",
+    "back": "Zurück",
+    "close": "Schließen",
+    "save": "Speichern",
+    "seeAll": "Alle Anzeigen",
+    "roomNumber": "Zimmernummer",
+    "enterRoomNumber": "Geben Sie Ihre Zimmernummer ein"
+  },
+  "home": {
+    "welcome": "Willkommen",
+    "howCanWeHelp": "Wie können wir Ihnen heute helfen?",
+    "menu": {
+      "foodDrinks": "Speisen & Getränke",
+      "foodDrinksDesc": "Unsere Speisekarte",
+      "maintenance": "Schnelle Reparatur",
+      "maintenanceDesc": "Problem melden",
+      "amenities": "Annehmlichkeiten",
+      "amenitiesDesc": "Unsere Dienstleistungen",
+      "contact": "Kontakt",
+      "contactDesc": "Mit Rezeption sprechen",
+      "rateUs": "Bewerten Sie uns",
+      "rateUsDesc": "Teilen Sie Ihre Erfahrung",
+      "promise": "Unser Versprechen",
+      "promiseDesc": "Unsere Verpflichtung",
+      "lostFound": "Fundbüro",
+      "lostFoundDesc": "Melden oder finden"
+    }
+  },
+  "foodDrinks": {
+    "title": "Speisen & Getränke",
+    "categories": "Durchstöbern Sie unsere Menükategorien",
+    "viewMenu": "Menü Anzeigen",
+    "noMenu": "Menü derzeit nicht verfügbar",
+    "noItems": "Keine Artikel in dieser Kategorie verfügbar",
+    "items": "Artikel",
+    "vegetarian": "Vegetarisch",
+    "vegan": "Vegan",
+    "glutenFree": "Glutenfrei",
+    "spicy": "Scharf",
+    "special": "Spezial"
+  },
+  "maintenance": {
+    "title": "Schnelle Reparatur",
+    "subtitle": "Teilen Sie uns mit, was Aufmerksamkeit braucht",
+    "selectIssues": "Wählen Sie die aufgetretenen Probleme",
+    "otherDetails": "Zusätzliche Details",
+    "otherPlaceholder": "Bitte beschreiben Sie das Problem...",
+    "submitRequest": "Anfrage Absenden",
+    "success": "Anfrage erfolgreich gesendet!",
+    "successMessage": "Unser Team wird sich zeitnah darum kümmern.",
+    "reportAnother": "Weiteres Problem Melden",
+    "categories": {
+      "plumbing": "Sanitär",
+      "electrical": "Elektrik",
+      "aircon": "Klimaanlage",
+      "tv": "TV / Unterhaltung",
+      "wifi": "WiFi / Internet",
+      "cleaning": "Reinigung",
+      "other": "Sonstiges"
+    }
+  },
+  "amenities": {
+    "title": "Annehmlichkeiten",
+    "subtitle": "Entdecken Sie unsere Dienstleistungen und Einrichtungen",
+    "hours": "Öffnungszeiten",
+    "location": "Standort",
+    "noServices": "Derzeit keine Dienstleistungen verfügbar",
+    "bookingRequired": "Reservierung Erforderlich",
+    "complimentary": "Kostenlos"
+  },
+  "rateUs": {
+    "title": "Bewerten Sie Ihren Aufenthalt",
+    "subtitle": "Ihr Feedback ist uns wichtig",
+    "howWasStay": "Wie war Ihr Aufenthalt?",
+    "comment": "Erzählen Sie uns mehr (optional)",
+    "commentPlaceholder": "Teilen Sie Ihre Erfahrung...",
+    "yourName": "Ihr Name",
+    "namePlaceholder": "Geben Sie Ihren Namen ein",
+    "submit": "Bewertung Absenden",
+    "thankYou": "Danke!",
+    "thankYouMessage": "Wir schätzen Ihr Feedback.",
+    "rateAnother": "Weitere Bewertung Absenden"
+  },
+  "promise": {
+    "title": "Unser Gästeversprechen",
+    "signature": "- Das Management-Team"
+  },
+  "lostFound": {
+    "title": "Fundbüro",
+    "foundItems": "Gefundene Gegenstände",
+    "reportLost": "Verlust Melden",
+    "foundItemsDescription": "Von unserem Personal gefundene Gegenstände. Kontaktieren Sie die Rezeption zur Abholung.",
+    "reportDescription": "Etwas verloren? Füllen Sie das Formular aus und wir helfen Ihnen bei der Suche.",
+    "noFoundItems": "Derzeit keine Gegenstände im Fundbüro",
+    "contactNote": "Wenn Sie einen dieser Gegenstände erkennen, kontaktieren Sie bitte die Rezeption mit Ihrem Ausweis.",
+    "foundOn": "Gefunden am",
+    "itemName": "Artikelname",
+    "itemNamePlaceholder": "z.B. Schwarze Brieftasche, iPhone Ladegerät",
+    "category": "Kategorie",
+    "selectCategory": "Kategorie auswählen",
+    "categoryElectronics": "Elektronik",
+    "categoryJewelry": "Schmuck",
+    "categoryClothing": "Kleidung",
+    "categoryDocuments": "Dokumente",
+    "categoryBags": "Taschen & Gepäck",
+    "categoryKeys": "Schlüssel",
+    "categoryOther": "Sonstiges",
+    "description": "Beschreibung",
+    "descriptionPlaceholder": "Geben Sie Details an, die bei der Identifizierung helfen können...",
+    "color": "Farbe",
+    "colorPlaceholder": "z.B. Schwarz, Rot",
+    "brand": "Marke",
+    "brandPlaceholder": "z.B. Apple, Samsung",
+    "locationLost": "Wo haben Sie es verloren?",
+    "locationPlaceholder": "z.B. Restaurant, Poolbereich",
+    "yourName": "Ihr Name",
+    "namePlaceholder": "Geben Sie Ihren Namen ein",
+    "phone": "Telefonnummer",
+    "phonePlaceholder": "+27...",
+    "roomNumber": "Zimmernummer",
+    "roomPlaceholder": "z.B. 205",
+    "submitReport": "Meldung Absenden",
+    "reportSubmitted": "Meldung Gesendet!",
+    "reportSubmittedMessage": "Wir kontaktieren Sie, wenn wir einen passenden Gegenstand finden.",
+    "reportAnother": "Weiteren Gegenstand Melden"
+  },
+  "contact": {
+    "title": "Rezeption Kontaktieren",
+    "openWhatsApp": "WhatsApp Öffnen",
+    "call": "Uns Anrufen"
+  },
+  "pwa": {
+    "installTitle": "App Installieren",
+    "installMessage": "Zum Startbildschirm hinzufügen",
+    "install": "Installieren",
+    "notNow": "Nicht Jetzt",
+    "updateTitle": "Update Verfügbar",
+    "updateMessage": "Eine neue Version ist verfügbar",
+    "update": "Jetzt Aktualisieren"
+  },
+  "language": {
+    "title": "Sprache",
+    "select": "Sprache Wählen"
+  }
+}

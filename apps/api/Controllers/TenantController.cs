@@ -472,6 +472,118 @@ public class TenantController : ControllerBase
             });
         }
     }
+
+    /// <summary>
+    /// Get Guest Portal settings for the current tenant
+    /// </summary>
+    [HttpGet("portal-settings")]
+    public async Task<IActionResult> GetPortalSettings()
+    {
+        try
+        {
+            var tenantId = int.Parse(HttpContext.Items["TenantId"]?.ToString() ?? "0");
+            if (tenantId == 0)
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Error = "Tenant not found"
+                });
+            }
+
+            var tenant = await _context.Tenants.FindAsync(tenantId);
+            if (tenant == null)
+            {
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    Error = "Tenant not found"
+                });
+            }
+
+            return Ok(new
+            {
+                logoUrl = tenant.LogoUrl,
+                backgroundImageUrl = tenant.BackgroundImageUrl,
+                whatsappNumber = tenant.WhatsAppNumber ?? tenant.Phone,
+                guestPortalEnabled = tenant.GuestPortalEnabled
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Error = $"An error occurred: {ex.Message}"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Update Guest Portal settings for the current tenant
+    /// </summary>
+    [HttpPut("portal-settings")]
+    public async Task<IActionResult> UpdatePortalSettings([FromBody] PortalSettingsRequest request)
+    {
+        try
+        {
+            var tenantId = int.Parse(HttpContext.Items["TenantId"]?.ToString() ?? "0");
+            if (tenantId == 0)
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Error = "Tenant not found"
+                });
+            }
+
+            var tenant = await _context.Tenants.FindAsync(tenantId);
+            if (tenant == null)
+            {
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    Error = "Tenant not found"
+                });
+            }
+
+            // Update portal settings
+            tenant.LogoUrl = request.LogoUrl;
+            tenant.BackgroundImageUrl = request.BackgroundImageUrl;
+            tenant.WhatsAppNumber = request.WhatsappNumber;
+            tenant.GuestPortalEnabled = request.GuestPortalEnabled;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Data = new
+                {
+                    logoUrl = tenant.LogoUrl,
+                    backgroundImageUrl = tenant.BackgroundImageUrl,
+                    whatsappNumber = tenant.WhatsAppNumber,
+                    guestPortalEnabled = tenant.GuestPortalEnabled
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Error = $"An error occurred: {ex.Message}"
+            });
+        }
+    }
+}
+
+public class PortalSettingsRequest
+{
+    public string? LogoUrl { get; set; }
+    public string? BackgroundImageUrl { get; set; }
+    public string? WhatsappNumber { get; set; }
+    public bool GuestPortalEnabled { get; set; } = true;
 }
 
 [ApiController]

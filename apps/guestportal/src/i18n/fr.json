@@ -1,0 +1,150 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "submit": "Soumettre",
+    "cancel": "Annuler",
+    "back": "Retour",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "seeAll": "Voir Tout",
+    "roomNumber": "Numéro de Chambre",
+    "enterRoomNumber": "Entrez votre numéro de chambre"
+  },
+  "home": {
+    "welcome": "Bienvenue",
+    "howCanWeHelp": "Comment pouvons-nous vous aider aujourd'hui?",
+    "menu": {
+      "foodDrinks": "Nourriture & Boissons",
+      "foodDrinksDesc": "Voir notre menu",
+      "maintenance": "Réparation Rapide",
+      "maintenanceDesc": "Signaler un problème",
+      "amenities": "Services",
+      "amenitiesDesc": "Nos services",
+      "contact": "Contactez-nous",
+      "contactDesc": "Parler à la réception",
+      "rateUs": "Évaluez-nous",
+      "rateUsDesc": "Partagez votre expérience",
+      "promise": "Notre Promesse",
+      "promiseDesc": "Notre engagement envers vous",
+      "lostFound": "Objets Trouvés",
+      "lostFoundDesc": "Signaler ou trouver des objets"
+    }
+  },
+  "foodDrinks": {
+    "title": "Nourriture & Boissons",
+    "categories": "Parcourez nos catégories de menu",
+    "viewMenu": "Voir le Menu",
+    "noMenu": "Menu actuellement indisponible",
+    "noItems": "Aucun article disponible dans cette catégorie",
+    "items": "articles",
+    "vegetarian": "Végétarien",
+    "vegan": "Végétalien",
+    "glutenFree": "Sans Gluten",
+    "spicy": "Épicé",
+    "special": "Spécial"
+  },
+  "maintenance": {
+    "title": "Réparation Rapide",
+    "subtitle": "Faites-nous savoir ce qui nécessite attention",
+    "selectIssues": "Sélectionnez les problèmes rencontrés",
+    "otherDetails": "Détails supplémentaires",
+    "otherPlaceholder": "Veuillez décrire le problème...",
+    "submitRequest": "Soumettre la Demande",
+    "success": "Demande soumise avec succès!",
+    "successMessage": "Notre équipe s'en occupera rapidement.",
+    "reportAnother": "Signaler un Autre Problème",
+    "categories": {
+      "plumbing": "Plomberie",
+      "electrical": "Électricité",
+      "aircon": "Climatisation",
+      "tv": "TV / Divertissement",
+      "wifi": "WiFi / Internet",
+      "cleaning": "Nettoyage",
+      "other": "Autre"
+    }
+  },
+  "amenities": {
+    "title": "Services",
+    "subtitle": "Découvrez nos services et installations",
+    "hours": "Horaires",
+    "location": "Emplacement",
+    "noServices": "Aucun service disponible actuellement",
+    "bookingRequired": "Réservation Requise",
+    "complimentary": "Gratuit"
+  },
+  "rateUs": {
+    "title": "Évaluez Votre Séjour",
+    "subtitle": "Vos commentaires sont précieux",
+    "howWasStay": "Comment était votre séjour?",
+    "comment": "Dites-nous en plus (optionnel)",
+    "commentPlaceholder": "Partagez votre expérience...",
+    "yourName": "Votre Nom",
+    "namePlaceholder": "Entrez votre nom",
+    "submit": "Soumettre l'Évaluation",
+    "thankYou": "Merci!",
+    "thankYouMessage": "Nous apprécions vos commentaires.",
+    "rateAnother": "Soumettre une Autre Évaluation"
+  },
+  "promise": {
+    "title": "Notre Promesse aux Clients",
+    "signature": "- L'Équipe de Direction"
+  },
+  "lostFound": {
+    "title": "Objets Trouvés",
+    "foundItems": "Objets Trouvés",
+    "reportLost": "Signaler une Perte",
+    "foundItemsDescription": "Objets trouvés par notre personnel. Contactez la réception pour les récupérer.",
+    "reportDescription": "Vous avez perdu quelque chose? Remplissez le formulaire ci-dessous et nous vous aiderons à le retrouver.",
+    "noFoundItems": "Aucun objet aux objets trouvés actuellement",
+    "contactNote": "Si vous reconnaissez l'un de ces objets, veuillez contacter la réception avec votre pièce d'identité.",
+    "foundOn": "Trouvé le",
+    "itemName": "Nom de l'Objet",
+    "itemNamePlaceholder": "ex. Portefeuille noir, chargeur iPhone",
+    "category": "Catégorie",
+    "selectCategory": "Sélectionnez une catégorie",
+    "categoryElectronics": "Électronique",
+    "categoryJewelry": "Bijoux",
+    "categoryClothing": "Vêtements",
+    "categoryDocuments": "Documents",
+    "categoryBags": "Sacs & Bagages",
+    "categoryKeys": "Clés",
+    "categoryOther": "Autre",
+    "description": "Description",
+    "descriptionPlaceholder": "Fournissez tous les détails qui pourraient aider à identifier l'objet...",
+    "color": "Couleur",
+    "colorPlaceholder": "ex. Noir, Rouge",
+    "brand": "Marque",
+    "brandPlaceholder": "ex. Apple, Samsung",
+    "locationLost": "Où l'avez-vous perdu?",
+    "locationPlaceholder": "ex. Restaurant, Piscine",
+    "yourName": "Votre Nom",
+    "namePlaceholder": "Entrez votre nom",
+    "phone": "Numéro de Téléphone",
+    "phonePlaceholder": "+27...",
+    "roomNumber": "Numéro de Chambre",
+    "roomPlaceholder": "ex. 205",
+    "submitReport": "Soumettre le Signalement",
+    "reportSubmitted": "Signalement Soumis!",
+    "reportSubmittedMessage": "Nous vous contacterons si nous trouvons un objet correspondant.",
+    "reportAnother": "Signaler un Autre Objet"
+  },
+  "contact": {
+    "title": "Contacter la Réception",
+    "openWhatsApp": "Ouvrir WhatsApp",
+    "call": "Nous Appeler"
+  },
+  "pwa": {
+    "installTitle": "Installer l'App",
+    "installMessage": "Ajoutez à votre écran d'accueil pour un accès rapide",
+    "install": "Installer",
+    "notNow": "Pas Maintenant",
+    "updateTitle": "Mise à Jour Disponible",
+    "updateMessage": "Une nouvelle version est disponible",
+    "update": "Mettre à Jour"
+  },
+  "language": {
+    "title": "Langue",
+    "select": "Sélectionner la Langue"
+  }
+}
