@@ -24,11 +24,26 @@ public class Tenant
     
     [Required, MaxLength(20)]
     public string Status { get; set; } = "Active"; // Active|Suspended|Cancelled
-    
+
     public int RetentionDays { get; set; } = 30;
-    
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
+    // Guest Portal fields
+    [MaxLength(500)]
+    public string? LogoUrl { get; set; }
+
+    [MaxLength(500)]
+    public string? BackgroundImageUrl { get; set; }
+
+    [MaxLength(50)]
+    public string? Phone { get; set; }
+
+    [MaxLength(50)]
+    public string? WhatsAppNumber { get; set; }
+
+    public bool GuestPortalEnabled { get; set; } = true;
+
     // Navigation properties
     public virtual ICollection<UserTenant> UserTenants { get; set; } = new List<UserTenant>();
     public virtual ICollection<WhatsAppNumber> WhatsAppNumbers { get; set; } = new List<WhatsAppNumber>();

@@ -1,0 +1,150 @@
+{
+  "common": {
+    "loading": "Laai...",
+    "error": "'n Fout het voorgekom",
+    "submit": "Stuur",
+    "cancel": "Kanselleer",
+    "back": "Terug",
+    "close": "Sluit",
+    "save": "Stoor",
+    "seeAll": "Sien Alles",
+    "roomNumber": "Kamernommer",
+    "enterRoomNumber": "Voer jou kamernommer in"
+  },
+  "home": {
+    "welcome": "Welkom",
+    "howCanWeHelp": "Hoe kan ons jou vandag help?",
+    "menu": {
+      "foodDrinks": "Kos & Drankies",
+      "foodDrinksDesc": "Bekyk ons spyskaart",
+      "maintenance": "Vinnige Herstel",
+      "maintenanceDesc": "Rapporteer 'n probleem",
+      "amenities": "Geriewe",
+      "amenitiesDesc": "Ons dienste",
+      "contact": "Kontak Ons",
+      "contactDesc": "Praat met ontvangs",
+      "rateUs": "Gradeer Ons",
+      "rateUsDesc": "Deel jou ervaring",
+      "promise": "Ons Belofte",
+      "promiseDesc": "Ons verbintenis aan jou",
+      "lostFound": "Verlore & Gevind",
+      "lostFoundDesc": "Rapporteer of vind items"
+    }
+  },
+  "foodDrinks": {
+    "title": "Kos & Drankies",
+    "categories": "Blaai deur ons spyskaartkategorieë",
+    "viewMenu": "Bekyk Spyskaart",
+    "noMenu": "Spyskaart is tans nie beskikbaar nie",
+    "noItems": "Geen items beskikbaar in hierdie kategorie nie",
+    "items": "items",
+    "vegetarian": "Vegetaries",
+    "vegan": "Vegan",
+    "glutenFree": "Glutenvry",
+    "spicy": "Speserye",
+    "special": "Spesiaal"
+  },
+  "maintenance": {
+    "title": "Vinnige Herstel",
+    "subtitle": "Laat ons weet wat aandag nodig het",
+    "selectIssues": "Kies die probleme wat jy ervaar",
+    "otherDetails": "Bykomende besonderhede",
+    "otherPlaceholder": "Beskryf asseblief die probleem...",
+    "submitRequest": "Stuur Versoek",
+    "success": "Versoek suksesvol gestuur!",
+    "successMessage": "Ons span sal dit binnekort hanteer.",
+    "reportAnother": "Rapporteer Nog 'n Probleem",
+    "categories": {
+      "plumbing": "Loodgieterswerk",
+      "electrical": "Elektries",
+      "aircon": "Lugversorging",
+      "tv": "TV / Vermaak",
+      "wifi": "WiFi / Internet",
+      "cleaning": "Skoonmaak",
+      "other": "Ander"
+    }
+  },
+  "amenities": {
+    "title": "Geriewe",
+    "subtitle": "Ontdek ons dienste en fasiliteite",
+    "hours": "Ure",
+    "location": "Ligging",
+    "noServices": "Geen dienste tans beskikbaar nie",
+    "bookingRequired": "Bespreking Vereis",
+    "complimentary": "Gratis"
+  },
+  "rateUs": {
+    "title": "Gradeer Jou Verblyf",
+    "subtitle": "Ons waardeer jou terugvoer",
+    "howWasStay": "Hoe was jou verblyf?",
+    "comment": "Vertel ons meer (opsioneel)",
+    "commentPlaceholder": "Deel jou ervaring...",
+    "yourName": "Jou Naam",
+    "namePlaceholder": "Voer jou naam in",
+    "submit": "Stuur Gradering",
+    "thankYou": "Dankie!",
+    "thankYouMessage": "Ons waardeer jou terugvoer.",
+    "rateAnother": "Stuur Nog 'n Gradering"
+  },
+  "promise": {
+    "title": "Ons Gasbelofte",
+    "signature": "- Die Bestuurspan"
+  },
+  "lostFound": {
+    "title": "Verlore & Gevind",
+    "foundItems": "Gevonde Items",
+    "reportLost": "Rapporteer Verlore",
+    "foundItemsDescription": "Items wat deur ons personeel gevind is. Kontak ontvangs om te eis.",
+    "reportDescription": "Iets verloor? Vul die vorm hieronder in en ons sal help om dit te vind.",
+    "noFoundItems": "Geen items tans in verlore en gevind nie",
+    "contactNote": "As jy enige van hierdie items herken, kontak asseblief die ontvangs met jou ID.",
+    "foundOn": "Gevind",
+    "itemName": "Item Naam",
+    "itemNamePlaceholder": "bv. Swart beursie, iPhone laaier",
+    "category": "Kategorie",
+    "selectCategory": "Kies 'n kategorie",
+    "categoryElectronics": "Elektronika",
+    "categoryJewelry": "Juwele",
+    "categoryClothing": "Klere",
+    "categoryDocuments": "Dokumente",
+    "categoryBags": "Tasse & Bagasie",
+    "categoryKeys": "Sleutels",
+    "categoryOther": "Ander",
+    "description": "Beskrywing",
+    "descriptionPlaceholder": "Verskaf enige besonderhede wat kan help om die item te identifiseer...",
+    "color": "Kleur",
+    "colorPlaceholder": "bv. Swart, Rooi",
+    "brand": "Handelsmerk",
+    "brandPlaceholder": "bv. Apple, Samsung",
+    "locationLost": "Waar het jy dit verloor?",
+    "locationPlaceholder": "bv. Restaurant, Swembadarea",
+    "yourName": "Jou Naam",
+    "namePlaceholder": "Voer jou naam in",
+    "phone": "Telefoonnommer",
+    "phonePlaceholder": "+27...",
+    "roomNumber": "Kamernommer",
+    "roomPlaceholder": "bv. 205",
+    "submitReport": "Stuur Verslag",
+    "reportSubmitted": "Verslag Gestuur!",
+    "reportSubmittedMessage": "Ons sal jou kontak as ons 'n passende item vind.",
+    "reportAnother": "Rapporteer Nog 'n Item"
+  },
+  "contact": {
+    "title": "Kontak Ontvangs",
+    "openWhatsApp": "Open WhatsApp",
+    "call": "Bel Ons"
+  },
+  "pwa": {
+    "installTitle": "Installeer App",
+    "installMessage": "Voeg by jou tuisskerm vir vinnige toegang",
+    "install": "Installeer",
+    "notNow": "Nie Nou Nie",
+    "updateTitle": "Opdatering Beskikbaar",
+    "updateMessage": "'n Nuwe weergawe is beskikbaar",
+    "update": "Dateer Nou Op"
+  },
+  "language": {
+    "title": "Taal",
+    "select": "Kies Taal"
+  }
+}

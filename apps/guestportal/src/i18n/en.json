@@ -1,0 +1,153 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "back": "Back",
+    "close": "Close",
+    "save": "Save",
+    "seeAll": "See All",
+    "roomNumber": "Room Number",
+    "enterRoomNumber": "Enter your room number"
+  },
+  "home": {
+    "welcome": "Welcome",
+    "howCanWeHelp": "How can we help you today?",
+    "menu": {
+      "foodDrinks": "Food & Drinks",
+      "foodDrinksDesc": "View our menu",
+      "maintenance": "Quick Fix",
+      "maintenanceDesc": "Report an issue",
+      "amenities": "Amenities",
+      "amenitiesDesc": "Our services",
+      "contact": "Contact Us",
+      "contactDesc": "Speak to front desk",
+      "rateUs": "Rate Us",
+      "rateUsDesc": "Share your experience",
+      "promise": "Our Promise",
+      "promiseDesc": "Our commitment to you",
+      "lostFound": "Lost & Found",
+      "lostFoundDesc": "Report or find items"
+    }
+  },
+  "foodDrinks": {
+    "title": "Food & Drinks",
+    "categories": "Browse our menu categories",
+    "viewMenu": "View Menu",
+    "noMenu": "Menu is currently unavailable",
+    "noItems": "No items available in this category",
+    "items": "items",
+    "vegetarian": "Vegetarian",
+    "vegetarianOption": "Vegetarian Option",
+    "vegan": "Vegan",
+    "glutenFree": "Gluten-Free Option",
+    "spicy": "Spicy",
+    "special": "Special",
+    "popular": "Most Popular",
+    "chefPick": "Chef's Pick"
+  },
+  "maintenance": {
+    "title": "Quick Fix",
+    "subtitle": "Let us know what needs attention",
+    "selectIssues": "Select the issues you're experiencing",
+    "otherDetails": "Additional details",
+    "otherPlaceholder": "Please describe the issue...",
+    "submitRequest": "Submit Request",
+    "success": "Request submitted successfully!",
+    "successMessage": "Our team will address this shortly.",
+    "reportAnother": "Report Another Issue",
+    "categories": {
+      "plumbing": "Plumbing",
+      "electrical": "Electrical",
+      "aircon": "Air Conditioning",
+      "tv": "TV / Entertainment",
+      "wifi": "WiFi / Internet",
+      "cleaning": "Cleaning",
+      "other": "Other"
+    }
+  },
+  "amenities": {
+    "title": "Amenities",
+    "subtitle": "Discover our services and facilities",
+    "hours": "Hours",
+    "location": "Location",
+    "noServices": "No services available at this time",
+    "bookingRequired": "Booking Required",
+    "complimentary": "Complimentary"
+  },
+  "rateUs": {
+    "title": "Rate Your Stay",
+    "subtitle": "We value your feedback",
+    "howWasStay": "How was your stay?",
+    "comment": "Tell us more (optional)",
+    "commentPlaceholder": "Share your experience...",
+    "yourName": "Your Name",
+    "namePlaceholder": "Enter your name",
+    "submit": "Submit Rating",
+    "thankYou": "Thank you!",
+    "thankYouMessage": "We appreciate your feedback.",
+    "rateAnother": "Submit Another Rating"
+  },
+  "promise": {
+    "title": "Our Guest Promise",
+    "signature": "- The Management Team"
+  },
+  "lostFound": {
+    "title": "Lost & Found",
+    "foundItems": "Found Items",
+    "reportLost": "Report Lost",
+    "foundItemsDescription": "Items found by our staff. Contact front desk to claim.",
+    "reportDescription": "Lost something? Fill out the form below and we'll help find it.",
+    "noFoundItems": "No items currently in lost and found",
+    "contactNote": "If you recognize any of these items, please contact the front desk with your ID.",
+    "foundOn": "Found",
+    "itemName": "Item Name",
+    "itemNamePlaceholder": "e.g., Black wallet, iPhone charger",
+    "category": "Category",
+    "selectCategory": "Select a category",
+    "categoryElectronics": "Electronics",
+    "categoryJewelry": "Jewelry",
+    "categoryClothing": "Clothing",
+    "categoryDocuments": "Documents",
+    "categoryBags": "Bags & Luggage",
+    "categoryKeys": "Keys",
+    "categoryOther": "Other",
+    "description": "Description",
+    "descriptionPlaceholder": "Provide any details that would help identify the item...",
+    "color": "Color",
+    "colorPlaceholder": "e.g., Black, Red",
+    "brand": "Brand",
+    "brandPlaceholder": "e.g., Apple, Samsung",
+    "locationLost": "Where did you lose it?",
+    "locationPlaceholder": "e.g., Restaurant, Pool area",
+    "yourName": "Your Name",
+    "namePlaceholder": "Enter your name",
+    "phone": "Phone Number",
+    "phonePlaceholder": "+27...",
+    "roomNumber": "Room Number",
+    "roomPlaceholder": "e.g., 205",
+    "submitReport": "Submit Report",
+    "reportSubmitted": "Report Submitted!",
+    "reportSubmittedMessage": "We will contact you if we find a matching item.",
+    "reportAnother": "Report Another Item"
+  },
+  "contact": {
+    "title": "Contact Front Desk",
+    "openWhatsApp": "Open WhatsApp",
+    "call": "Call Us"
+  },
+  "pwa": {
+    "installTitle": "Install App",
+    "installMessage": "Add to your home screen for quick access",
+    "install": "Install",
+    "notNow": "Not Now",
+    "updateTitle": "Update Available",
+    "updateMessage": "A new version is available",
+    "update": "Update Now"
+  },
+  "language": {
+    "title": "Language",
+    "select": "Select Language"
+  }
+}

@@ -128,6 +128,14 @@ export const MENU: MenuItem[] = [
         link: '/configuration/hotel-info'
       },
       {
+        label: 'Guest Portal',
+        link: '/configuration/guest-portal',
+        badge: {
+          variant: 'info',
+          text: 'NEW'
+        }
+      },
+      {
         label: 'Services & Amenities',
         link: '/configuration/services'
       },

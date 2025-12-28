@@ -1,0 +1,150 @@
+{
+  "common": {
+    "loading": "Iyalayisha...",
+    "error": "Kwenzeke iphutha",
+    "submit": "Thumela",
+    "cancel": "Khansela",
+    "back": "Emuva",
+    "close": "Vala",
+    "save": "Gcina",
+    "seeAll": "Bona Konke",
+    "roomNumber": "Inombolo Yekamelo",
+    "enterRoomNumber": "Faka inombolo yekamelo lakho"
+  },
+  "home": {
+    "welcome": "Siyakwamukela",
+    "howCanWeHelp": "Singakusiza kanjani namuhla?",
+    "menu": {
+      "foodDrinks": "Ukudla & Iziphuzo",
+      "foodDrinksDesc": "Buka imenyu yethu",
+      "maintenance": "Ukulungisa Okusheshayo",
+      "maintenanceDesc": "Bika inkinga",
+      "amenities": "Izinsiza",
+      "amenitiesDesc": "Amasevisi ethu",
+      "contact": "Xhumana Nathi",
+      "contactDesc": "Khuluma ne-reception",
+      "rateUs": "Siklomele",
+      "rateUsDesc": "Sazise ngolwazi lwakho",
+      "promise": "Isithembiso Sethu",
+      "promiseDesc": "Isibopho sethu kuwe",
+      "lostFound": "Okulahlekile & Okutholiwe",
+      "lostFoundDesc": "Bika noma thola izinto"
+    }
+  },
+  "foodDrinks": {
+    "title": "Ukudla & Iziphuzo",
+    "categories": "Bhrawuza izigaba zemenyu yethu",
+    "viewMenu": "Buka Imenyu",
+    "noMenu": "Imenyu ayitholakali okwamanje",
+    "noItems": "Azikho izinto ezitholakala kulesi sigaba",
+    "items": "izinto",
+    "vegetarian": "Imifino",
+    "vegan": "I-Vegan",
+    "glutenFree": "Akunayi-Gluten",
+    "spicy": "Nobushisi",
+    "special": "Okukhethekile"
+  },
+  "maintenance": {
+    "title": "Ukulungisa Okusheshayo",
+    "subtitle": "Sazise ukuthi yini edinga ukunakwa",
+    "selectIssues": "Khetha izinkinga ozibhekene nazo",
+    "otherDetails": "Imininingwane eyengeziwe",
+    "otherPlaceholder": "Sicela uchaze inkinga...",
+    "submitRequest": "Thumela Isicelo",
+    "success": "Isicelo sithunyelwe ngempumelelo!",
+    "successMessage": "Ithimba lethu lizokulungisa maduze.",
+    "reportAnother": "Bika Enye Inkinga",
+    "categories": {
+      "plumbing": "Amapayipi",
+      "electrical": "Ugesi",
+      "aircon": "I-Air Conditioning",
+      "tv": "I-TV / Ukuzijabulisa",
+      "wifi": "I-WiFi / I-Internet",
+      "cleaning": "Ukuhlanza",
+      "other": "Okunye"
+    }
+  },
+  "amenities": {
+    "title": "Izinsiza",
+    "subtitle": "Thola amasevisi nezinsiza zethu",
+    "hours": "Amahora",
+    "location": "Indawo",
+    "noServices": "Awekho amasevisi atholakalayo okwamanje",
+    "bookingRequired": "Kudingeka Ukubhuka",
+    "complimentary": "Mahhala"
+  },
+  "rateUs": {
+    "title": "Yinikeze Isilinganiso Ukuhlala Kwakho",
+    "subtitle": "Siyawazisa umbono wakho",
+    "howWasStay": "Kwakunjani ukuhlala kwakho?",
+    "comment": "Sitshele okwengeziwe (akuphoqelekile)",
+    "commentPlaceholder": "Sazise ngolwazi lwakho...",
+    "yourName": "Igama Lakho",
+    "namePlaceholder": "Faka igama lakho",
+    "submit": "Thumela Isilinganiso",
+    "thankYou": "Siyabonga!",
+    "thankYouMessage": "Siyawazisa umbono wakho.",
+    "rateAnother": "Thumela Esinye Isilinganiso"
+  },
+  "promise": {
+    "title": "Isithembiso Sethu Sesivakashi",
+    "signature": "- Ithimba Lokuphatha"
+  },
+  "lostFound": {
+    "title": "Okulahlekile & Okutholiwe",
+    "foundItems": "Izinto Ezitholiwe",
+    "reportLost": "Bika Okulahlekile",
+    "foundItemsDescription": "Izinto ezitholwe abasebenzi bethu. Xhumana ne-reception ukuze uzithole.",
+    "reportDescription": "Ulahleke yinto? Gcwalisa ifomu elingezansi sizokusiza ukuyithola.",
+    "noFoundItems": "Azikho izinto okwamanje e-lost and found",
+    "contactNote": "Uma ubona noma yiziphi zalezi zinto, sicela uxhumane ne-reception nge-ID yakho.",
+    "foundOn": "Itholwe ngo",
+    "itemName": "Igama Lento",
+    "itemNamePlaceholder": "isib. Isikhwama esimnyama, i-iPhone charger",
+    "category": "Isigaba",
+    "selectCategory": "Khetha isigaba",
+    "categoryElectronics": "Imishini Kagesi",
+    "categoryJewelry": "Izivunulo",
+    "categoryClothing": "Izingubo",
+    "categoryDocuments": "Amadokhumenti",
+    "categoryBags": "Izikhwama Nezikhwama Zokuhamba",
+    "categoryKeys": "Okhiye",
+    "categoryOther": "Okunye",
+    "description": "Incazelo",
+    "descriptionPlaceholder": "Nikeza noma yimiphi imininingwane engasiza ukuhlonza into...",
+    "color": "Umbala",
+    "colorPlaceholder": "isib. Mnyama, Bomvu",
+    "brand": "Uhlobo",
+    "brandPlaceholder": "isib. Apple, Samsung",
+    "locationLost": "Uyilahlekelwe kuphi?",
+    "locationPlaceholder": "isib. Irestoranti, Endaweni yepuli",
+    "yourName": "Igama Lakho",
+    "namePlaceholder": "Faka igama lakho",
+    "phone": "Inombolo Yocingo",
+    "phonePlaceholder": "+27...",
+    "roomNumber": "Inombolo Yekamelo",
+    "roomPlaceholder": "isib. 205",
+    "submitReport": "Thumela Umbiko",
+    "reportSubmitted": "Umbiko Uthunyelwe!",
+    "reportSubmittedMessage": "Sizokuxhumana uma sithola into efanayo.",
+    "reportAnother": "Bika Enye Into"
+  },
+  "contact": {
+    "title": "Xhumana Ne-Reception",
+    "openWhatsApp": "Vula i-WhatsApp",
+    "call": "Sishayele"
+  },
+  "pwa": {
+    "installTitle": "Faka i-App",
+    "installMessage": "Engeza kwiscreen yakho yasekhaya ukuze ufinyelele kalula",
+    "install": "Faka",
+    "notNow": "Hhayi Manje",
+    "updateTitle": "I-Update Itholakala",
+    "updateMessage": "Inguqulo entsha itholakala",
+    "update": "Buyekeza Manje"
+  },
+  "language": {
+    "title": "Ulimi",
+    "select": "Khetha Ulimi"
+  }
+}

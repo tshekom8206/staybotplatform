@@ -1,0 +1,150 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "error": "发生错误",
+    "submit": "提交",
+    "cancel": "取消",
+    "back": "返回",
+    "close": "关闭",
+    "save": "保存",
+    "seeAll": "查看全部",
+    "roomNumber": "房间号",
+    "enterRoomNumber": "请输入您的房间号"
+  },
+  "home": {
+    "welcome": "欢迎",
+    "howCanWeHelp": "今天我们能为您做什么？",
+    "menu": {
+      "foodDrinks": "餐饮",
+      "foodDrinksDesc": "查看菜单",
+      "maintenance": "快速维修",
+      "maintenanceDesc": "报告问题",
+      "amenities": "设施服务",
+      "amenitiesDesc": "我们的服务",
+      "contact": "联系我们",
+      "contactDesc": "与前台交谈",
+      "rateUs": "评价我们",
+      "rateUsDesc": "分享您的体验",
+      "promise": "我们的承诺",
+      "promiseDesc": "我们对您的承诺",
+      "lostFound": "失物招领",
+      "lostFoundDesc": "报告或查找物品"
+    }
+  },
+  "foodDrinks": {
+    "title": "餐饮",
+    "categories": "浏览我们的菜单分类",
+    "viewMenu": "查看菜单",
+    "noMenu": "菜单暂不可用",
+    "noItems": "此分类暂无项目",
+    "items": "项目",
+    "vegetarian": "素食",
+    "vegan": "纯素",
+    "glutenFree": "无麸质",
+    "spicy": "辣",
+    "special": "特色"
+  },
+  "maintenance": {
+    "title": "快速维修",
+    "subtitle": "告诉我们需要关注的问题",
+    "selectIssues": "选择您遇到的问题",
+    "otherDetails": "其他详情",
+    "otherPlaceholder": "请描述问题...",
+    "submitRequest": "提交请求",
+    "success": "请求提交成功！",
+    "successMessage": "我们的团队会尽快处理。",
+    "reportAnother": "报告其他问题",
+    "categories": {
+      "plumbing": "水管",
+      "electrical": "电气",
+      "aircon": "空调",
+      "tv": "电视/娱乐",
+      "wifi": "WiFi/网络",
+      "cleaning": "清洁",
+      "other": "其他"
+    }
+  },
+  "amenities": {
+    "title": "设施服务",
+    "subtitle": "探索我们的服务和设施",
+    "hours": "营业时间",
+    "location": "位置",
+    "noServices": "暂无可用服务",
+    "bookingRequired": "需要预订",
+    "complimentary": "免费"
+  },
+  "rateUs": {
+    "title": "评价您的入住",
+    "subtitle": "您的反馈对我们很重要",
+    "howWasStay": "您的入住体验如何？",
+    "comment": "告诉我们更多（可选）",
+    "commentPlaceholder": "分享您的体验...",
+    "yourName": "您的姓名",
+    "namePlaceholder": "请输入您的姓名",
+    "submit": "提交评价",
+    "thankYou": "谢谢！",
+    "thankYouMessage": "感谢您的反馈。",
+    "rateAnother": "提交另一个评价"
+  },
+  "promise": {
+    "title": "我们的宾客承诺",
+    "signature": "- 管理团队"
+  },
+  "lostFound": {
+    "title": "失物招领",
+    "foundItems": "找到的物品",
+    "reportLost": "报告遗失",
+    "foundItemsDescription": "我们工作人员找到的物品。请联系前台领取。",
+    "reportDescription": "丢失了东西？填写下面的表格，我们将帮助您找到它。",
+    "noFoundItems": "目前失物招领处暂无物品",
+    "contactNote": "如果您认出其中任何物品，请携带您的身份证件联系前台。",
+    "foundOn": "发现于",
+    "itemName": "物品名称",
+    "itemNamePlaceholder": "例如：黑色钱包、iPhone充电器",
+    "category": "类别",
+    "selectCategory": "选择类别",
+    "categoryElectronics": "电子产品",
+    "categoryJewelry": "珠宝首饰",
+    "categoryClothing": "服装",
+    "categoryDocuments": "文件",
+    "categoryBags": "包和行李",
+    "categoryKeys": "钥匙",
+    "categoryOther": "其他",
+    "description": "描述",
+    "descriptionPlaceholder": "提供任何有助于识别物品的详细信息...",
+    "color": "颜色",
+    "colorPlaceholder": "例如：黑色、红色",
+    "brand": "品牌",
+    "brandPlaceholder": "例如：苹果、三星",
+    "locationLost": "在哪里丢失的？",
+    "locationPlaceholder": "例如：餐厅、泳池区",
+    "yourName": "您的姓名",
+    "namePlaceholder": "请输入您的姓名",
+    "phone": "电话号码",
+    "phonePlaceholder": "+27...",
+    "roomNumber": "房间号",
+    "roomPlaceholder": "例如：205",
+    "submitReport": "提交报告",
+    "reportSubmitted": "报告已提交！",
+    "reportSubmittedMessage": "如果我们找到匹配的物品，将与您联系。",
+    "reportAnother": "报告其他物品"
+  },
+  "contact": {
+    "title": "联系前台",
+    "openWhatsApp": "打开WhatsApp",
+    "call": "致电我们"
+  },
+  "pwa": {
+    "installTitle": "安装应用",
+    "installMessage": "添加到主屏幕以便快速访问",
+    "install": "安装",
+    "notNow": "暂不",
+    "updateTitle": "有可用更新",
+    "updateMessage": "有新版本可用",
+    "update": "立即更新"
+  },
+  "language": {
+    "title": "语言",
+    "select": "选择语言"
+  }
+}
