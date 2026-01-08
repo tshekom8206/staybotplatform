@@ -158,7 +158,9 @@ public class TenantController : ControllerBase
                         city = hotelInfo?.City ?? "",
                         state = hotelInfo?.State ?? "",
                         postalCode = hotelInfo?.PostalCode ?? "",
-                        country = hotelInfo?.Country ?? ""
+                        country = hotelInfo?.Country ?? "",
+                        latitude = hotelInfo?.Latitude,
+                        longitude = hotelInfo?.Longitude
                     },
                     checkInTime = hotelInfo?.CheckInTime ?? "15:00",
                     checkOutTime = hotelInfo?.CheckOutTime ?? "11:00",
@@ -192,6 +194,11 @@ public class TenantController : ControllerBase
                         enableChatbot = hotelInfo?.EnableChatbot ?? true,
                         timezone = tenant.Timezone,
                         currency = hotelInfo?.Currency ?? "USD"
+                    },
+                    wifi = new
+                    {
+                        network = hotelInfo?.WifiNetwork,
+                        password = hotelInfo?.WifiPassword
                     }
                 }
             };
@@ -270,6 +277,10 @@ public class TenantController : ControllerBase
                     hotelInfo.PostalCode = request.Address.PostalCode;
                 if (!string.IsNullOrEmpty(request.Address.Country))
                     hotelInfo.Country = request.Address.Country;
+                if (request.Address.Latitude.HasValue)
+                    hotelInfo.Latitude = request.Address.Latitude.Value;
+                if (request.Address.Longitude.HasValue)
+                    hotelInfo.Longitude = request.Address.Longitude.Value;
             }
 
             if (!string.IsNullOrEmpty(request.CheckInTime))
@@ -336,6 +347,19 @@ public class TenantController : ControllerBase
                     tenant.Timezone = request.Settings.Timezone;
                 if (!string.IsNullOrEmpty(request.Settings.Currency))
                     hotelInfo.Currency = request.Settings.Currency;
+            }
+
+            // Update WiFi credentials if provided
+            if (request.Wifi != null)
+            {
+                hotelInfo.WifiNetwork = request.Wifi.Network ?? "";
+                hotelInfo.WifiPassword = request.Wifi.Password ?? "";
+            }
+
+            // Update valid rooms configuration on Tenant
+            if (request.ValidRooms != null)
+            {
+                tenant.ValidRooms = request.ValidRooms;
             }
 
             hotelInfo.UpdatedAt = DateTime.UtcNow;

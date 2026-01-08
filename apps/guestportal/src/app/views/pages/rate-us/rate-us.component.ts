@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { RoomContextService } from '../../../core/services/room-context.service';
 import { GuestApiService } from '../../../core/services/guest-api.service';
+import { AnalyticsService } from '../../../core/services/analytics.service';
 
 @Component({
   selector: 'app-rate-us',
@@ -37,7 +38,7 @@ import { GuestApiService } from '../../../core/services/guest-api.service';
                   </button>
                 }
               </div>
-              <p class="rating-label mt-2">{{ getRatingLabel() }}</p>
+              <p class="rating-label mt-2" [ngClass]="getRatingClass()">{{ getRatingLabel() }}</p>
             </div>
 
             <!-- Guest Name -->
@@ -94,7 +95,7 @@ import { GuestApiService } from '../../../core/services/guest-api.service';
   styles: [`
     .page-container { padding: 1rem 0; }
 
-    /* Page Header - Clean, floating on background */
+    /* Page Header */
     .page-header {
       padding: 1.5rem 0 1.25rem;
       margin-bottom: 1rem;
@@ -134,58 +135,141 @@ import { GuestApiService } from '../../../core/services/guest-api.service';
       background: white;
       padding: 1.5rem;
       border-radius: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .rating-form > .mb-4.text-center > p {
+      color: #555;
+      font-weight: 500;
+      font-size: 1rem;
+    }
+
+    /* Form Labels */
+    .form-label {
+      display: block;
+      color: #333;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
     }
 
     .star-rating {
       display: flex;
       justify-content: center;
       gap: 0.5rem;
+      padding: 0.5rem 0;
     }
 
     .star-btn {
       background: none;
       border: none;
-      padding: 0.5rem;
+      padding: 0.25rem;
       cursor: pointer;
-      transition: transform 0.2s;
+      transition: transform 0.15s ease;
     }
     .star-btn:hover {
-      transform: scale(1.2);
+      transform: scale(1.15);
     }
     .star-btn i {
       font-size: 2.5rem;
-      color: #ddd;
+      color: #d4d4d4;
+      transition: color 0.15s ease;
     }
     .star-btn.active i {
-      color: #f1c40f;
+      color: #fbbf24;
     }
 
     .rating-label {
-      font-size: 0.9rem;
-      color: #666;
-      min-height: 1.4em;
+      font-size: 0.95rem;
+      font-weight: 600;
+      min-height: 1.5em;
+      color: #888;
+      transition: all 0.2s ease;
+    }
+    .rating-label.poor { color: #ef4444; }
+    .rating-label.fair { color: #f97316; }
+    .rating-label.good { color: #eab308; }
+    .rating-label.very-good { color: #22c55e; }
+    .rating-label.excellent { color: #16a34a; }
+
+    /* Form Controls */
+    .form-control {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+    .form-control:focus {
+      background: white;
+      border-color: #fbbf24;
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15);
+      outline: none;
+    }
+    .form-control::placeholder {
+      color: #9ca3af;
+    }
+
+    /* Submit Button */
+    .btn-primary {
+      background: #1a1a1a;
+      border: none;
+      border-radius: 10px;
+      padding: 0.875rem;
+      font-weight: 600;
+      font-size: 1rem;
+      color: white;
+      transition: all 0.2s ease;
+    }
+    .btn-primary:hover {
+      background: #333;
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled {
+      background: #d1d5db;
+      color: #9ca3af;
+      transform: none;
     }
 
     .success-card {
-      padding: 3rem 1rem;
-      background: #fce4ec;
+      padding: 2.5rem 1.5rem;
+      background: white;
       border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
     .success-icon {
       font-size: 4rem;
-      color: #e74c3c;
+      color: #22c55e;
       margin-bottom: 1rem;
     }
     .success-card h2 {
-      color: #e74c3c;
+      color: #1a1a1a;
       margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+    .success-card p {
+      color: #6b7280;
+    }
+
+    .btn-outline-primary {
+      border: 2px solid #1a1a1a;
+      color: #1a1a1a;
+      background: transparent;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .btn-outline-primary:hover {
+      background: #1a1a1a;
+      color: white;
     }
   `]
 })
 export class RateUsComponent {
   private roomContextService = inject(RoomContextService);
   private apiService = inject(GuestApiService);
+  private analyticsService = inject(AnalyticsService);
 
   rating = 0;
   comment = '';
@@ -203,10 +287,24 @@ export class RateUsComponent {
     return this.ratingLabels[this.rating] || '';
   }
 
+  getRatingClass(): string {
+    const classes: Record<number, string> = {
+      1: 'poor',
+      2: 'fair',
+      3: 'good',
+      4: 'very-good',
+      5: 'excellent'
+    };
+    return classes[this.rating] || '';
+  }
+
   submitRating(): void {
     if (this.rating === 0) return;
 
     this.submitting.set(true);
+
+    // Track rating submission in GA4
+    this.analyticsService.trackRatingSubmitted(this.rating, !!this.comment);
 
     this.apiService.submitRating({
       rating: this.rating,

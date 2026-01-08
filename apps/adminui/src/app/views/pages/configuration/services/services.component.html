@@ -152,7 +152,13 @@
               class="me-2"
             ></i>
             <div>
-              <h6 class="card-title mb-0">{{ service.name }}</h6>
+              <h6 class="card-title mb-0">
+                {{ service.name }}
+                <span *ngIf="service.isFeatured" class="badge bg-warning text-dark ms-1" style="font-size: 0.65rem;">
+                  <i data-feather="star" featherIcon style="width: 10px; height: 10px"></i>
+                  Featured
+                </span>
+              </h6>
               <small class="text-muted">{{
                 getCategoryLabel(service.category)
               }}</small>
@@ -567,6 +573,74 @@
               URL must be less than 200 characters
             </div>
           </div>
+        </div>
+
+        <!-- Guest Portal Featured Section -->
+        <div class="col-12 mt-4">
+          <h6 class="text-primary">
+            <i data-feather="star" featherIcon class="me-1" style="width: 16px; height: 16px"></i>
+            Guest Portal - Featured Service
+          </h6>
+          <small class="text-muted">
+            Featured services appear in the "Enhance Your Stay" carousel on the Guest Portal home page.
+          </small>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              formControlName="isFeatured"
+            />
+            <label class="form-check-label">Feature this service on Guest Portal</label>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Display Order</label>
+          <input
+            type="number"
+            class="form-control"
+            formControlName="displayOrder"
+            min="0"
+            placeholder="0"
+          />
+          <small class="text-muted">Lower numbers appear first in carousel</small>
+        </div>
+
+        <div class="col-12" *ngIf="serviceForm.get('isFeatured')?.value">
+          <label class="form-label">Featured Image URL</label>
+          <input
+            type="url"
+            class="form-control"
+            formControlName="featuredImageUrl"
+            placeholder="https://example.com/featured-image.jpg"
+          />
+          <small class="text-muted">
+            Use a high-quality image (recommended: 400x300px). If empty, the standard Image URL will be used.
+          </small>
+        </div>
+
+        <div class="col-12" *ngIf="serviceForm.get('isFeatured')?.value">
+          <label class="form-label">Time Slots</label>
+          <div class="d-flex flex-wrap gap-2">
+            <div class="form-check" *ngFor="let slot of timeSlotOptions">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                [id]="'slot-' + slot.value"
+                [checked]="serviceForm.get('timeSlots')?.value?.includes(slot.value)"
+                (change)="toggleTimeSlot(slot.value)"
+              />
+              <label class="form-check-label" [for]="'slot-' + slot.value">
+                {{ slot.label }}
+              </label>
+            </div>
+          </div>
+          <small class="text-muted">
+            Optional: Select time slots to show this service at specific times. Leave empty to show always.
+          </small>
         </div>
       </div>
     </div>

@@ -1,8 +1,7 @@
-import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection, isDevMode } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideServiceWorker } from '@angular/service-worker';
 
 // i18n imports
 import { TranslateModule } from '@ngx-translate/core';
@@ -24,10 +23,7 @@ export const appConfig: ApplicationConfig = {
     provideTranslateHttpLoader({
       prefix: './i18n/',
       suffix: '.json'
-    }),
-    provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
     })
+    // Note: Using custom service worker (custom-sw.js) registered in main.ts for push notifications
   ]
 };

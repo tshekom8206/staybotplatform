@@ -96,18 +96,30 @@ public record OutboundMessage
 {
     [JsonPropertyName("messaging_product")]
     public string MessagingProduct { get; init; } = "whatsapp";
-    
+
     [JsonPropertyName("to")]
     public string To { get; init; } = string.Empty;
-    
+
     [JsonPropertyName("type")]
     public string Type { get; init; } = "text";
-    
+
     [JsonPropertyName("text")]
     public OutboundText? Text { get; init; }
-    
+
     [JsonPropertyName("template")]
     public OutboundTemplate? Template { get; init; }
+
+    [JsonPropertyName("image")]
+    public OutboundImage? Image { get; init; }
+}
+
+public record OutboundImage
+{
+    [JsonPropertyName("link")]
+    public string Link { get; init; } = string.Empty;
+
+    [JsonPropertyName("caption")]
+    public string? Caption { get; init; }
 }
 
 public record OutboundText

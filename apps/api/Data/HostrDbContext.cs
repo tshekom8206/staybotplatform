@@ -105,6 +105,10 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
 
     // Upsell Metrics models
     public DbSet<UpsellMetric> UpsellMetrics { get; set; }
+    public DbSet<PortalUpsellMetric> PortalUpsellMetrics { get; set; }
+
+    // Weather-based Upselling
+    public DbSet<WeatherUpsellRule> WeatherUpsellRules { get; set; }
 
     // Phase 3: Conversation Flow Management
     public DbSet<ConversationFlow> ConversationFlows { get; set; }
@@ -134,6 +138,14 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     // Password Reset OTP
     public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
 
+    // Proactive Messaging
+    public DbSet<ScheduledMessage> ScheduledMessages { get; set; }
+    public DbSet<ProactiveMessageSettings> ProactiveMessageSettings { get; set; }
+
+    // Room Preferences
+    public DbSet<RoomPreference> RoomPreferences { get; set; }
+    public DbSet<RoomPreferenceHistory> RoomPreferenceHistory { get; set; }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -161,6 +173,8 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
         ConfigureBusinessRules(builder);
         ConfigureAgentTransfer(builder);
         ConfigurePasswordResetOtp(builder);
+        ConfigureRoomPreferences(builder);
+        ConfigureWeatherUpselling(builder);
         ConfigureIndexes(builder);
 
         // Global query filters for tenant isolation
@@ -542,6 +556,7 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             builder.Entity<GuestBusinessMetrics>().HasQueryFilter(e => e.TenantId == tenantId);
             builder.Entity<ServiceBusinessRule>().HasQueryFilter(e => e.TenantId == tenantId);
             builder.Entity<RequestItemRule>().HasQueryFilter(e => e.TenantId == tenantId);
+            builder.Entity<WeatherUpsellRule>().HasQueryFilter(e => e.TenantId == tenantId);
         }
     }
 
@@ -843,6 +858,65 @@ public class HostrDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.HasIndex(e => new { e.UserId, e.Otp, e.IsUsed });
             entity.HasIndex(e => e.ExpiresAt);
+        });
+    }
+
+    private void ConfigureRoomPreferences(ModelBuilder builder)
+    {
+        builder.Entity<RoomPreference>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.Tenant).WithMany().HasForeignKey(e => e.TenantId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Booking).WithMany().HasForeignKey(e => e.BookingId).OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.AcknowledgedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.AcknowledgedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.Property(e => e.PreferenceValue).HasColumnType("jsonb");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            
+            entity.HasIndex(e => new { e.TenantId, e.RoomNumber });
+            entity.HasIndex(e => e.BookingId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => new { e.TenantId, e.BookingId, e.PreferenceType }).IsUnique();
+        });
+
+        builder.Entity<RoomPreferenceHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.Tenant).WithMany().HasForeignKey(e => e.TenantId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.RoomPreference)
+                .WithMany(rp => rp.History)
+                .HasForeignKey(e => e.RoomPreferenceId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.ChangedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.ChangedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.Property(e => e.OldValue).HasColumnType("jsonb");
+            entity.Property(e => e.NewValue).HasColumnType("jsonb");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            
+            entity.HasIndex(e => new { e.TenantId, e.RoomPreferenceId });
+        });
+    }
+
+    private void ConfigureWeatherUpselling(ModelBuilder builder)
+    {
+        builder.Entity<WeatherUpsellRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.Tenant).WithMany().HasForeignKey(e => e.TenantId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.WeatherCondition).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.ServiceIds).IsRequired();
+            entity.Property(e => e.BannerText).HasMaxLength(200);
+            entity.Property(e => e.BannerIcon).HasMaxLength(50);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            // Index for efficient weather rule lookups
+            entity.HasIndex(e => new { e.TenantId, e.IsActive, e.Priority });
         });
     }
 }

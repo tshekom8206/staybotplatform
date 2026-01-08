@@ -175,9 +175,10 @@
         <div class="d-flex align-items-center justify-content-between mb-3">
           <div class="d-flex align-items-center">
             <div class="agent-avatar me-3">
-              <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
+              <div class="rounded-circle d-flex align-items-center justify-content-center"
+                   [ngClass]="getStateIconBgClass(agent.state)"
                    style="width: 48px; height: 48px;">
-                <i data-feather="user" class="feather-icon text-muted" appFeatherIcon></i>
+                <i [appFeatherIcon]="getStateIcon(agent.state)" class="text-white" style="width: 20px; height: 20px;"></i>
               </div>
             </div>
             <div>
@@ -323,9 +324,10 @@
     <div class="modal-body" *ngIf="selectedAgent">
       <div class="mb-3">
         <div class="d-flex align-items-center mb-3">
-          <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3"
+          <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+               [ngClass]="getStateIconBgClass(selectedAgent.state)"
                style="width: 48px; height: 48px;">
-            <i data-feather="user" class="feather-icon text-muted" appFeatherIcon></i>
+            <i [appFeatherIcon]="getStateIcon(selectedAgent.state)" class="text-white" style="width: 20px; height: 20px;"></i>
           </div>
           <div>
             <h6 class="mb-0">{{ selectedAgent.name }}</h6>

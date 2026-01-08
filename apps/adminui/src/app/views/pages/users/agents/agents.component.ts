@@ -361,4 +361,38 @@ export class AgentsComponent implements OnInit, OnDestroy {
     }
     return '';
   }
+
+  getStateIcon(state: string): string {
+    switch (state) {
+      case 'Available':
+        return 'check-circle';
+      case 'Busy':
+        return 'clock';
+      case 'Away':
+        return 'coffee';
+      case 'DoNotDisturb':
+        return 'bell-off';
+      case 'Offline':
+        return 'power';
+      default:
+        return 'user';
+    }
+  }
+
+  getStateIconBgClass(state: string): string {
+    switch (state) {
+      case 'Available':
+        return 'bg-success';
+      case 'Busy':
+        return 'bg-warning';
+      case 'Away':
+        return 'bg-secondary';
+      case 'DoNotDisturb':
+        return 'bg-danger';
+      case 'Offline':
+        return 'bg-dark';
+      default:
+        return 'bg-secondary';
+    }
+  }
 }

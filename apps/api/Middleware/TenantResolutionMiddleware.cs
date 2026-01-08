@@ -112,7 +112,9 @@ public class TenantResolutionMiddleware
             "/api/auth/verify-otp", // OTP verification
             "/api/auth/reset-password", // Password reset
             "/api/dataseed", // Data seeding endpoint (temporary for demo)
-            "/api/test" // Test endpoints for debugging
+            "/api/test", // Test endpoints for debugging
+            "/api/public", // Public Guest Portal endpoints (handle tenant via slug parameter)
+            "/api/ga4/test" // GA4 diagnostic endpoint
         };
 
         return systemPaths.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase));
@@ -139,7 +141,9 @@ public class TenantResolutionMiddleware
             "/api/tenant/validate-email", // Email validation endpoint
             "/manifest.webmanifest",
             "/api/dataseed", // Data seeding endpoint (temporary for demo)
-            "/api/test" // Test endpoints for debugging
+            "/api/test", // Test endpoints for debugging
+            "/api/public", // Public Guest Portal endpoints (handle tenant via slug parameter)
+            "/api/ga4/test" // GA4 diagnostic endpoint
         };
 
         return !noTenantPaths.Any(p => context.Request.Path.StartsWithSegments(p, StringComparison.OrdinalIgnoreCase));

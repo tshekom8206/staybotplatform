@@ -51,17 +51,20 @@ public class BroadcastService : IBroadcastService
     private readonly IWhatsAppService _whatsAppService;
     private readonly ILogger<BroadcastService> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IPushNotificationService _pushNotificationService;
 
     public BroadcastService(
-        HostrDbContext context, 
-        IWhatsAppService whatsAppService, 
+        HostrDbContext context,
+        IWhatsAppService whatsAppService,
         ILogger<BroadcastService> logger,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        IPushNotificationService pushNotificationService)
     {
         _context = context;
         _whatsAppService = whatsAppService;
         _logger = logger;
         _serviceProvider = serviceProvider;
+        _pushNotificationService = pushNotificationService;
     }
 
     public async Task<(bool Success, string Message, int BroadcastId)> SendEmergencyBroadcastAsync(
@@ -142,7 +145,8 @@ public class BroadcastService : IBroadcastService
             using var scope = _serviceProvider.CreateScope();
             var scopedContext = scope.ServiceProvider.GetRequiredService<HostrDbContext>();
             var scopedWhatsAppService = scope.ServiceProvider.GetRequiredService<IWhatsAppService>();
-            
+            var scopedPushService = scope.ServiceProvider.GetRequiredService<IPushNotificationService>();
+
             var broadcast = await scopedContext.BroadcastMessages
                 .Include(b => b.Recipients)
                 .FirstOrDefaultAsync(b => b.Id == broadcastId);
@@ -151,19 +155,41 @@ public class BroadcastService : IBroadcastService
 
             int successCount = 0;
             int failureCount = 0;
+            int pushSuccessCount = 0;
+
+            // Determine if this is an emergency broadcast
+            var isEmergency = broadcast.MessageType?.ToLower() switch
+            {
+                "emergency" => true,
+                "power_outage" => true,
+                "water_outage" => true,
+                _ => false
+            };
+
+            // Generate title for push notification
+            var pushTitle = broadcast.MessageType?.ToLower() switch
+            {
+                "emergency" => "Emergency Alert",
+                "power_outage" => "Power Outage Update",
+                "water_outage" => "Water Service Update",
+                "internet_down" => "Internet Service Update",
+                "general" => "Hotel Update",
+                _ => "Hotel Notification"
+            };
 
             foreach (var recipient in broadcast.Recipients.Where(r => r.DeliveryStatus == "Pending"))
             {
                 try
                 {
+                    // Send WhatsApp message
                     var success = await scopedWhatsAppService.SendTextMessageAsync(
-                        broadcast.TenantId, 
-                        recipient.PhoneNumber, 
+                        broadcast.TenantId,
+                        recipient.PhoneNumber,
                         broadcast.Content);
 
                     recipient.DeliveryStatus = success ? "Sent" : "Failed";
                     recipient.SentAt = DateTime.UtcNow;
-                    
+
                     if (!success)
                     {
                         recipient.ErrorMessage = "WhatsApp API call failed";
@@ -173,14 +199,32 @@ public class BroadcastService : IBroadcastService
                     {
                         successCount++;
                     }
+
+                    // Also send push notification (non-blocking, don't fail if push fails)
+                    try
+                    {
+                        await scopedPushService.NotifyGuestBroadcast(
+                            broadcast.TenantId,
+                            recipient.PhoneNumber,
+                            pushTitle,
+                            broadcast.Content,
+                            isEmergency ? "high" : "normal",
+                            isEmergency);
+                        pushSuccessCount++;
+                    }
+                    catch (Exception pushEx)
+                    {
+                        _logger.LogWarning(pushEx, "Failed to send push notification to {PhoneNumber} for broadcast {BroadcastId}",
+                            recipient.PhoneNumber, broadcastId);
+                    }
                 }
                 catch (Exception ex)
                 {
                     recipient.DeliveryStatus = "Failed";
                     recipient.ErrorMessage = ex.Message;
                     failureCount++;
-                    
-                    _logger.LogError(ex, "Failed to send broadcast message to {PhoneNumber} for broadcast {BroadcastId}", 
+
+                    _logger.LogError(ex, "Failed to send broadcast message to {PhoneNumber} for broadcast {BroadcastId}",
                         recipient.PhoneNumber, broadcastId);
                 }
 
@@ -196,8 +240,8 @@ public class BroadcastService : IBroadcastService
 
             await scopedContext.SaveChangesAsync();
 
-            _logger.LogInformation("Broadcast {BroadcastId} completed: {SuccessCount} successful, {FailureCount} failed", 
-                broadcastId, successCount, failureCount);
+            _logger.LogInformation("Broadcast {BroadcastId} completed: {SuccessCount} WhatsApp successful, {FailureCount} failed, {PushCount} push notifications sent",
+                broadcastId, successCount, failureCount, pushSuccessCount);
         }
         catch (Exception ex)
         {

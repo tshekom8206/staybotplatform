@@ -150,6 +150,10 @@ export const MENU: MenuItem[] = [
       {
         label: 'Template Manager',
         link: '/configuration/templates'
+      },
+      {
+        label: 'QR Code Generator',
+        link: '/configuration/qr-code'
       }
     ]
   },
@@ -168,6 +172,14 @@ export const MENU: MenuItem[] = [
       {
         label: 'Upselling',
         link: '/business-rules/upselling'
+      },
+      {
+        label: 'Weather Upselling',
+        link: '/business-rules/weather-upselling',
+        badge: {
+          variant: 'info',
+          text: 'NEW'
+        }
       },
       {
         label: 'Audit Log',
@@ -216,6 +228,18 @@ export const MENU: MenuItem[] = [
       {
         label: 'Service Usage',
         link: '/reports/usage'
+      },
+      {
+        label: 'Guest Portal Analytics',
+        link: '/reports/guest-portal'
+      },
+      {
+        label: 'Hotelier Insights',
+        link: '/reports/hotelier-insights',
+        badge: {
+          variant: 'success',
+          text: 'NEW'
+        }
       }
     ]
   },

@@ -56,6 +56,17 @@ public class Service
 
     public int? AdvanceBookingHours { get; set; }
 
+    // Upselling/Featured fields
+    public bool IsFeatured { get; set; } = false;
+
+    [MaxLength(500)]
+    public string? FeaturedImageUrl { get; set; }
+
+    [MaxLength(100)]
+    public string? TimeSlots { get; set; } // 'morning', 'afternoon', 'evening' - comma-separated
+
+    public int DisplayOrder { get; set; } = 0;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

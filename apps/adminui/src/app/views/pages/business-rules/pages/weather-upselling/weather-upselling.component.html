@@ -1,0 +1,269 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+  <div>
+    <h4 class="mb-3 mb-md-0">Weather-Based Upselling</h4>
+    <p class="text-muted mb-0">Configure automatic service promotions based on weather conditions</p>
+  </div>
+  <div class="d-flex align-items-center flex-wrap text-nowrap">
+    <button type="button" class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0" (click)="refresh()">
+      <i class="btn-icon-prepend" data-feather="refresh-cw" appFeatherIcon></i>
+      Refresh
+    </button>
+    <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" [routerLink]="['/business-rules']">
+      <i class="btn-icon-prepend" data-feather="arrow-left" appFeatherIcon></i>
+      Back to Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="text-muted mt-3">Loading weather upselling configuration...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error && !loading" class="alert alert-danger" role="alert">
+  <i data-feather="alert-circle" appFeatherIcon class="me-2"></i>
+  {{ error }}
+</div>
+
+<!-- Content -->
+<div *ngIf="!loading && !error">
+  <!-- Info Card -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h5 class="card-title mb-2">
+            <i class="bi bi-cloud-sun text-primary me-2"></i>
+            How Weather Upselling Works
+          </h5>
+          <p class="text-muted mb-0">
+            Configure rules to automatically show promotional banners on the guest portal based on current weather conditions.
+            When the weather matches a rule (e.g., temperature above 28°C), guests will see your custom banner with recommended services.
+          </p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+          <button class="btn btn-primary btn-icon-text" (click)="openCreateModal()">
+            <i class="btn-icon-prepend" data-feather="plus" appFeatherIcon></i>
+            Create Weather Rule
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rules Table -->
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th style="width: 80px;">Priority</th>
+              <th>Weather Condition</th>
+              <th>Temperature Range</th>
+              <th>Banner Text</th>
+              <th>Services</th>
+              <th>Status</th>
+              <th class="text-center" style="width: 120px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let rule of rules">
+              <td>
+                <span class="badge bg-light text-dark">{{ rule.priority }}</span>
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-{{ rule.bannerIcon || 'cloud' }} text-primary me-2" style="font-size: 1.25rem;"></i>
+                  <span class="fw-medium">{{ getConditionName(rule.weatherCondition) }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="text-muted">{{ getTemperatureRange(rule) }}</span>
+              </td>
+              <td>
+                <span class="text-truncate d-inline-block" style="max-width: 200px;" [ngbTooltip]="rule.bannerText">
+                  {{ rule.bannerText }}
+                </span>
+              </td>
+              <td>
+                <span class="text-truncate d-inline-block" style="max-width: 200px;" [ngbTooltip]="getServiceNames(rule.serviceIds)">
+                  {{ getServiceNames(rule.serviceIds) }}
+                </span>
+              </td>
+              <td>
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    [checked]="rule.isActive"
+                    (change)="toggleRule(rule)"
+                    [id]="'rule-toggle-' + rule.id"
+                  >
+                  <label class="form-check-label" [for]="'rule-toggle-' + rule.id">
+                    <span [class]="rule.isActive ? 'text-success' : 'text-muted'">
+                      {{ rule.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                  </label>
+                </div>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-outline-secondary me-1" [ngbTooltip]="'Edit'" (click)="openEditModal(rule)">
+                  <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" [ngbTooltip]="'Delete'" (click)="deleteRule(rule)">
+                  <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="rules.length === 0" class="text-center text-muted py-5">
+        <i class="bi bi-cloud-sun" style="font-size: 4rem;"></i>
+        <h5 class="mt-3">No Weather Rules Configured</h5>
+        <p class="mb-3">Create your first weather-based upselling rule to start promoting services based on weather conditions.</p>
+        <button class="btn btn-primary" (click)="openCreateModal()">
+          <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i>
+          Create First Rule
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rule Modal -->
+<ng-template #ruleModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <i class="bi bi-cloud-sun text-primary me-2"></i>
+      {{ isEditMode ? 'Edit' : 'Create' }} Weather Upsell Rule
+    </h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="ruleForm">
+      <!-- Weather Condition -->
+      <div class="mb-3">
+        <label class="form-label">Weather Condition <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="weatherCondition" (change)="onConditionChange()">
+          <option value="">Select a weather condition...</option>
+          <option *ngFor="let condition of weatherConditions" [value]="condition.code">
+            {{ condition.name }} - {{ condition.description }}
+          </option>
+        </select>
+        <div *ngIf="ruleForm.get('weatherCondition')?.invalid && ruleForm.get('weatherCondition')?.touched" class="text-danger small mt-1">
+          Weather condition is required
+        </div>
+      </div>
+
+      <!-- Temperature Range -->
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Min Temperature (°C)</label>
+          <input type="number" class="form-control" formControlName="minTemperature" placeholder="e.g., 28">
+          <small class="text-muted">Leave empty for no minimum</small>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Max Temperature (°C)</label>
+          <input type="number" class="form-control" formControlName="maxTemperature" placeholder="e.g., 15">
+          <small class="text-muted">Leave empty for no maximum</small>
+        </div>
+      </div>
+
+      <!-- Banner Text -->
+      <div class="mb-3">
+        <label class="form-label">Banner Text <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="bannerText" placeholder="e.g., Perfect pool weather today! Cool off with our amenities.">
+        <div *ngIf="ruleForm.get('bannerText')?.invalid && ruleForm.get('bannerText')?.touched" class="text-danger small mt-1">
+          <span *ngIf="ruleForm.get('bannerText')?.errors?.['required']">Banner text is required</span>
+          <span *ngIf="ruleForm.get('bannerText')?.errors?.['maxlength']">Banner text must be less than 200 characters</span>
+        </div>
+        <small class="text-muted">{{ ruleForm.get('bannerText')?.value?.length || 0 }}/200 characters</small>
+      </div>
+
+      <!-- Banner Icon -->
+      <div class="mb-3">
+        <label class="form-label">Banner Icon <span class="text-danger">*</span></label>
+        <div class="d-flex flex-wrap gap-2">
+          <button
+            type="button"
+            *ngFor="let icon of iconOptions"
+            class="btn btn-outline-secondary icon-btn"
+            [class.active]="ruleForm.get('bannerIcon')?.value === icon.value"
+            (click)="ruleForm.patchValue({ bannerIcon: icon.value })"
+            [ngbTooltip]="icon.label"
+          >
+            <i class="bi {{ icon.icon }}"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Priority -->
+      <div class="mb-3">
+        <label class="form-label">Priority <span class="text-danger">*</span></label>
+        <input type="number" class="form-control" formControlName="priority" placeholder="0">
+        <small class="text-muted">Higher priority rules are evaluated first (0-100)</small>
+      </div>
+
+      <!-- Services Selection -->
+      <div class="mb-3">
+        <label class="form-label">Services to Promote <span class="text-danger">*</span></label>
+        <p class="text-muted small mb-2">Select the services that will be shown when this weather condition is detected</p>
+
+        <div class="services-grid">
+          <div
+            *ngFor="let service of availableServices"
+            class="service-card"
+            [class.selected]="isServiceSelected(service.id)"
+            (click)="toggleServiceSelection(service.id)"
+          >
+            <div class="service-icon">
+              <i class="bi bi-{{ service.icon || 'star' }}"></i>
+            </div>
+            <div class="service-info">
+              <span class="service-name">{{ service.name }}</span>
+              <span class="service-category">{{ service.category }}</span>
+              <span class="service-price" *ngIf="service.isChargeable">{{ service.price }}</span>
+            </div>
+            <div class="service-check" *ngIf="isServiceSelected(service.id)">
+              <i class="bi bi-check-circle-fill text-success"></i>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="selectedServiceIds.length === 0" class="text-warning small mt-2">
+          <i class="bi bi-exclamation-triangle me-1"></i>
+          Please select at least one service
+        </div>
+        <div *ngIf="selectedServiceIds.length > 0" class="text-success small mt-2">
+          <i class="bi bi-check-circle me-1"></i>
+          {{ selectedServiceIds.length }} service(s) selected
+        </div>
+      </div>
+
+      <!-- Active Status -->
+      <div class="mb-3">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" formControlName="isActive" id="isActiveSwitch">
+          <label class="form-check-label" for="isActiveSwitch">
+            Active (rule will be evaluated for matching)
+          </label>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+    <button type="button" class="btn btn-primary" (click)="saveRule()" [disabled]="ruleForm.invalid || selectedServiceIds.length === 0">
+      <i data-feather="save" appFeatherIcon class="icon-sm me-1"></i>
+      {{ isEditMode ? 'Update' : 'Create' }} Rule
+    </button>
+  </div>
+</ng-template>

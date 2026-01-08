@@ -19,6 +19,10 @@ export const routes: Routes = [
         loadComponent: () => import('./views/pages/maintenance/maintenance.component').then(c => c.MaintenanceComponent)
       },
       {
+        path: 'housekeeping',
+        loadComponent: () => import('./views/pages/housekeeping/housekeeping.component').then(c => c.HousekeepingComponent)
+      },
+      {
         path: 'amenities',
         loadComponent: () => import('./views/pages/amenities/amenities.component').then(c => c.AmenitiesComponent)
       },
@@ -33,6 +37,14 @@ export const routes: Routes = [
       {
         path: 'our-promise',
         loadComponent: () => import('./views/pages/our-promise/our-promise.component').then(c => c.OurPromiseComponent)
+      },
+      {
+        path: 'services',
+        loadComponent: () => import('./views/pages/services/services.component').then(c => c.ServicesComponent)
+      },
+      {
+        path: 'house-rules',
+        loadComponent: () => import('./views/pages/house-rules/house-rules.component').then(c => c.HouseRulesComponent)
       }
     ]
   },

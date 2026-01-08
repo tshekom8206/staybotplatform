@@ -28,7 +28,9 @@
       "promise": "Unser Versprechen",
       "promiseDesc": "Unsere Verpflichtung",
       "lostFound": "Fundbüro",
-      "lostFoundDesc": "Melden oder finden"
+      "lostFoundDesc": "Melden oder finden",
+      "houseRules": "Hausregeln",
+      "houseRulesDesc": "Was Sie während Ihres Aufenthalts wissen sollten"
     }
   },
   "foodDrinks": {
@@ -135,16 +137,122 @@
     "call": "Uns Anrufen"
   },
   "pwa": {
-    "installTitle": "App Installieren",
-    "installMessage": "Zum Startbildschirm hinzufügen",
-    "install": "Installieren",
-    "notNow": "Nicht Jetzt",
-    "updateTitle": "Update Verfügbar",
-    "updateMessage": "Eine neue Version ist verfügbar",
-    "update": "Jetzt Aktualisieren"
+    "install": {
+      "title": "App Installieren",
+      "description": "{{hotelName}} zum Startbildschirm hinzufügen für schnellen Zugriff",
+      "installButton": "Installieren",
+      "notNow": "Nicht Jetzt"
+    },
+    "update": {
+      "title": "Update Verfügbar",
+      "description": "Eine neue Version ist verfügbar",
+      "updateButton": "Jetzt Aktualisieren",
+      "later": "Später"
+    }
   },
   "language": {
     "title": "Sprache",
     "select": "Sprache Wählen"
+  },
+  "services": {
+    "title": "Hotelservices",
+    "subtitle": "Verbessern Sie Ihren Aufenthalt mit unseren Premium-Services",
+    "enhanceYourStay": "Verbessern Sie Ihren Aufenthalt",
+    "requestService": "Diesen Service Anfordern",
+    "sendRequest": "Anfrage Senden",
+    "requestSent": "Anfrage Gesendet!",
+    "requestSentMessage": "Unser Team wird Sie in Kürze kontaktieren."
+  },
+  "roomPrompt": {
+    "message": "Geben Sie Ihre Zimmernummer für persönlichen Service ein",
+    "placeholder": "Zimmer #"
+  },
+  "room": {
+    "edit": "Zimmer Ändern",
+    "update": "Aktualisieren",
+    "label": "Zimmernummer",
+    "invalid": "Ungültige Zimmernummer",
+    "validating": "Überprüfung..."
+  },
+  "houseRules": {
+    "title": "Hausregeln",
+    "subtitle": "Einige Hinweise für einen angenehmen Aufenthalt",
+    "smoking": "Rauchen",
+    "pets": "Haustiere",
+    "children": "Kinder",
+    "cancellation": "Stornierung",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "checkTimes": "Check-in & Check-out Zeiten",
+    "noRules": "Für diese Unterkunft wurden keine Hausregeln festgelegt"
+  },
+  "wifi": {
+    "title": "WLAN-Zugangsdaten",
+    "button": "WLAN",
+    "network": "Netzwerk",
+    "password": "Passwort",
+    "copy": "Passwort kopieren",
+    "copied": "Kopiert!"
+  },
+  "weather": {
+    "title": "Wetter",
+    "today": "Heute",
+    "forecast": "Vorhersage",
+    "feelsLike": "Gefühlt wie",
+    "humidity": "Luftfeuchtigkeit",
+    "unavailable": "Wetter nicht verfügbar"
+  },
+  "currency": {
+    "title": "Währungsrechner",
+    "amount": "Betrag",
+    "convert": "Umrechnen",
+    "lastUpdated": "Zuletzt aktualisiert",
+    "unavailable": "Kurse nicht verfügbar"
+  },
+  "housekeeping": {
+    "title": "Zimmerservice-Präferenzen",
+    "subtitle": "Teilen Sie uns mit, wie Sie Ihr Zimmer gepflegt haben möchten",
+    "temperature": "Temperatur",
+    "airconAfterCleaning": "Klimaanlage nach Reinigung aus lassen",
+    "airconDescription": "Wir lassen die Klimaanlage aus, wenn wir Ihr Zimmer reinigen",
+    "cleaning": "Reinigung",
+    "dailyLinenChange": "Täglicher Wäschewechsel",
+    "linenDescription": "Bettwäsche täglich wechseln",
+    "dailyTowelChange": "Täglicher Handtuchwechsel",
+    "towelDescription": "Handtücher täglich ersetzen",
+    "doNotDisturb": "Nicht Stören",
+    "dndEnabled": "Nicht Stören Aktivieren",
+    "dndDescription": "Keine Zimmerreinigung während der angegebenen Stunden",
+    "dndUntil": "Nicht stören bis",
+    "activePreferences": "Ihre Aktiven Präferenzen",
+    "acknowledged": "Bestätigt",
+    "pending": "Ausstehend",
+    "saved": "Gespeichert",
+    "savedMessage": "Ihre Präferenz wurde gespeichert. Der Zimmerservice wurde benachrichtigt.",
+    "addNote": "Notiz hinzufügen (optional)...",
+    "cleaningTime": "Reinigungszeitplan",
+    "preferredTime": "Bevorzugte Reinigungszeit",
+    "preferredTimeDescription": "Wann möchten Sie, dass der Zimmerservice Ihr Zimmer reinigt?",
+    "morning": "Morgens (8-11 Uhr)",
+    "afternoon": "Nachmittags (14-17 Uhr)",
+    "skipToday": "Heute Überspringen",
+    "beddingComfort": "Bettwäsche & Komfort",
+    "extraPillows": "Zusätzliche Kissen",
+    "extraPillowsDescription": "Zusätzliche Kissen anfordern (max. 4)",
+    "extraBlankets": "Zusätzliche Decken",
+    "extraBlanketsDescription": "Zusätzliche Decken anfordern (max. 3)",
+    "pillowType": "Kissenvorliebe",
+    "pillowTypeDescription": "Wählen Sie Ihren bevorzugten Kissentyp",
+    "pillowSoft": "Weich",
+    "pillowMedium": "Mittel",
+    "pillowFirm": "Fest",
+    "pillowHypoallergenic": "Hypoallergen",
+    "confirmButton": "Bestätigen",
+    "cancelButton": "Abbrechen",
+    "needSomething": "Brauchen Sie Etwas?",
+    "deliverToRoom": "Lieferung auf Ihr Zimmer anfordern",
+    "request": "Anfordern",
+    "requested": "Angefordert",
+    "noItemsAvailable": "Derzeit keine Artikel verfügbar"
   }
 }

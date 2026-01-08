@@ -15,8 +15,21 @@ namespace Hostr.Api.Models
         public DateTime? LastUsedAt { get; set; }
         public bool IsActive { get; set; } = true;
 
+        // Guest-specific fields
+        public string? GuestPhone { get; set; }
+        public string? RoomNumber { get; set; }
+        public int? BookingId { get; set; }
+        public bool IsGuest { get; set; } = false;
+
+        /// <summary>
+        /// True if room was auto-filled from an active booking (verified guest).
+        /// False if guest manually entered room number (walk-in/unverified).
+        /// </summary>
+        public bool IsVerified { get; set; } = false;
+
         // Navigation properties
         public Tenant? Tenant { get; set; }
+        public Booking? Booking { get; set; }
     }
 
     public class PushSubscriptionRequest
@@ -24,6 +37,15 @@ namespace Hostr.Api.Models
         public string Endpoint { get; set; } = string.Empty;
         public PushKeys Keys { get; set; } = new PushKeys();
         public string? DeviceInfo { get; set; }
+    }
+
+    public class GuestPushSubscriptionRequest
+    {
+        public string Endpoint { get; set; } = string.Empty;
+        public PushKeys Keys { get; set; } = new PushKeys();
+        public string? DeviceInfo { get; set; }
+        public string? Phone { get; set; }
+        public string? RoomNumber { get; set; }
     }
 
     public class PushKeys

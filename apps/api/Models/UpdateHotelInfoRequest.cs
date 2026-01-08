@@ -21,6 +21,13 @@ public class UpdateHotelInfoRequest
     public SocialMediaDto? SocialMedia { get; set; }
     public PoliciesDto? Policies { get; set; }
     public SettingsDto? Settings { get; set; }
+    public WifiDto? Wifi { get; set; }
+
+    /// <summary>
+    /// Comma-separated list of valid room numbers for this property.
+    /// Example: "101,102,103,201,202,203"
+    /// </summary>
+    public string? ValidRooms { get; set; }
 }
 
 public class AddressDto
@@ -30,6 +37,8 @@ public class AddressDto
     public string? State { get; set; }
     public string? PostalCode { get; set; }
     public string? Country { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 }
 
 public class SocialMediaDto
@@ -56,4 +65,10 @@ public class SettingsDto
     public bool? EnableChatbot { get; set; }
     public string? Timezone { get; set; }
     public string? Currency { get; set; }
+}
+
+public class WifiDto
+{
+    public string? Network { get; set; }
+    public string? Password { get; set; }
 }

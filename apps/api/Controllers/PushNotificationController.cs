@@ -228,6 +228,108 @@ namespace Hostr.Api.Controllers
         }
 
         /// <summary>
+        /// Guest: Subscribe to push notifications (no auth required)
+        /// </summary>
+        [AllowAnonymous]
+        [HttpPost("guest/subscribe")]
+        public async Task<ActionResult> GuestSubscribe([FromBody] GuestPushSubscriptionRequest request, [FromHeader(Name = "X-Tenant-ID")] int? headerTenantId = null)
+        {
+            var tenantId = headerTenantId ?? HttpContext.Items["TenantId"] as int? ?? 1;
+
+            try
+            {
+                // Check if subscription already exists
+                var existingSubscription = await _context.Set<PushSubscription>()
+                    .FirstOrDefaultAsync(s =>
+                        s.Endpoint == request.Endpoint &&
+                        s.TenantId == tenantId &&
+                        s.IsGuest);
+
+                if (existingSubscription != null)
+                {
+                    // Update existing subscription
+                    existingSubscription.P256dhKey = request.Keys.P256dh;
+                    existingSubscription.AuthKey = request.Keys.Auth;
+                    existingSubscription.DeviceInfo = request.DeviceInfo;
+                    existingSubscription.GuestPhone = request.Phone;
+                    existingSubscription.RoomNumber = request.RoomNumber;
+                    existingSubscription.LastUsedAt = DateTime.UtcNow;
+                    existingSubscription.IsActive = true;
+
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Updated guest push subscription for tenant {TenantId}, phone {Phone}", tenantId, request.Phone);
+
+                    return Ok(new { message = "Guest subscription updated successfully" });
+                }
+
+                // Create new subscription
+                var subscription = new PushSubscription
+                {
+                    TenantId = tenantId,
+                    Endpoint = request.Endpoint,
+                    P256dhKey = request.Keys.P256dh,
+                    AuthKey = request.Keys.Auth,
+                    DeviceInfo = request.DeviceInfo,
+                    GuestPhone = request.Phone,
+                    RoomNumber = request.RoomNumber,
+                    IsGuest = true,
+                    CreatedAt = DateTime.UtcNow,
+                    LastUsedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                _context.Set<PushSubscription>().Add(subscription);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Created guest push subscription for tenant {TenantId}, phone {Phone}", tenantId, request.Phone);
+
+                return Ok(new { message = "Guest subscribed to push notifications successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error subscribing guest to push notifications");
+                return StatusCode(500, new { error = "Failed to subscribe to push notifications" });
+            }
+        }
+
+        /// <summary>
+        /// Guest: Unsubscribe from push notifications (no auth required)
+        /// </summary>
+        [AllowAnonymous]
+        [HttpPost("guest/unsubscribe")]
+        public async Task<ActionResult> GuestUnsubscribe([FromBody] UnsubscribeRequest request, [FromHeader(Name = "X-Tenant-ID")] int? headerTenantId = null)
+        {
+            var tenantId = headerTenantId ?? HttpContext.Items["TenantId"] as int? ?? 1;
+
+            try
+            {
+                var subscription = await _context.Set<PushSubscription>()
+                    .FirstOrDefaultAsync(s =>
+                        s.Endpoint == request.Endpoint &&
+                        s.TenantId == tenantId &&
+                        s.IsGuest);
+
+                if (subscription == null)
+                {
+                    return NotFound(new { error = "Guest subscription not found" });
+                }
+
+                subscription.IsActive = false;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Guest unsubscribed from push notifications for tenant {TenantId}", tenantId);
+
+                return Ok(new { message = "Guest unsubscribed successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error unsubscribing guest from push notifications");
+                return StatusCode(500, new { error = "Failed to unsubscribe" });
+            }
+        }
+
+        /// <summary>
         /// Delete subscription by ID
         /// </summary>
         [HttpDelete("subscriptions/{id}")]

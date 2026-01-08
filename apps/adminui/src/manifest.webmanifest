@@ -1,0 +1,16 @@
+{
+  "name": "StayBot Admin",
+  "short_name": "StayBot",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#321fdb",
+  "icons": [
+    {
+      "src": "assets/img/brand/coreui-signet.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
