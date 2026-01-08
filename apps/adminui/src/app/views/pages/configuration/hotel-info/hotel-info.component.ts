@@ -33,6 +33,8 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
   socialForm: FormGroup;
   policiesForm: FormGroup;
   settingsForm: FormGroup;
+  wifiForm: FormGroup;
+  roomConfigForm: FormGroup;
 
   loading = false;
   saving = false;
@@ -89,7 +91,9 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
       city: ['', [Validators.required, Validators.maxLength(100)]],
       state: ['', [Validators.required, Validators.maxLength(100)]],
       postalCode: ['', [Validators.required, Validators.maxLength(20)]],
-      country: ['', [Validators.required, Validators.maxLength(100)]]
+      country: ['', [Validators.required, Validators.maxLength(100)]],
+      latitude: [null, [Validators.min(-90), Validators.max(90)]],
+      longitude: [null, [Validators.min(-180), Validators.max(180)]]
     });
 
     // Social media form
@@ -116,6 +120,17 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
       enableChatbot: [true],
       timezone: ['Africa/Johannesburg', Validators.required],
       currency: ['ZAR', Validators.required]
+    });
+
+    // WiFi credentials form
+    this.wifiForm = this.fb.group({
+      wifiNetwork: ['', [Validators.maxLength(100)]],
+      wifiPassword: ['', [Validators.maxLength(100)]]
+    });
+
+    // Room configuration form
+    this.roomConfigForm = this.fb.group({
+      validRooms: ['', [Validators.maxLength(5000)]]
     });
   }
 
@@ -233,6 +248,35 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
 
     // Populate settings
     this.settingsForm.patchValue(info.settings);
+
+    // Populate WiFi credentials
+    if (info.wifi) {
+      this.wifiForm.patchValue({
+        wifiNetwork: info.wifi.network || '',
+        wifiPassword: info.wifi.password || ''
+      });
+    }
+
+    // Populate room configuration (from tenant or hotel info)
+    if (info.validRooms) {
+      this.roomConfigForm.patchValue({
+        validRooms: info.validRooms
+      });
+    }
+  }
+
+  /**
+   * Get count of configured rooms from the validRooms field
+   */
+  getRoomCount(): number {
+    const validRooms = this.roomConfigForm.get('validRooms')?.value || '';
+    if (!validRooms.trim()) return 0;
+
+    return validRooms
+      .split(',')
+      .map((r: string) => r.trim())
+      .filter((r: string) => r.length > 0)
+      .length;
   }
 
   onLanguageToggle(languageCode: string): void {
@@ -314,7 +358,9 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
       this.addressForm.valid,
       this.socialForm.valid,
       this.policiesForm.valid,
-      this.settingsForm.valid
+      this.settingsForm.valid,
+      this.wifiForm.valid,
+      this.roomConfigForm.valid
     ].every(valid => valid);
 
     if (!formsValid) {
@@ -333,7 +379,12 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
       address: this.addressForm.value,
       socialMedia: this.socialForm.value,
       policies: this.policiesForm.value,
-      settings: this.settingsForm.value
+      settings: this.settingsForm.value,
+      wifi: {
+        network: this.wifiForm.get('wifiNetwork')?.value || '',
+        password: this.wifiForm.get('wifiPassword')?.value || ''
+      },
+      validRooms: this.roomConfigForm.get('validRooms')?.value || ''
     };
 
     // Call API to update hotel information
@@ -373,7 +424,7 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
   }
 
   private markAllFormsTouched(): void {
-    [this.hotelForm, this.addressForm, this.socialForm, this.policiesForm, this.settingsForm].forEach(form => {
+    [this.hotelForm, this.addressForm, this.socialForm, this.policiesForm, this.settingsForm, this.wifiForm, this.roomConfigForm].forEach(form => {
       Object.keys(form.controls).forEach(field => {
         const control = form.get(field);
         control?.markAsTouched({ onlySelf: true });
@@ -405,7 +456,9 @@ export class HotelInfoComponent implements OnInit, OnDestroy {
       this.addressForm.valid,
       this.socialForm.valid,
       this.policiesForm.valid,
-      this.settingsForm.valid
+      this.settingsForm.valid,
+      this.wifiForm.valid,
+      this.roomConfigForm.valid
     ].every(valid => valid);
   }
 }

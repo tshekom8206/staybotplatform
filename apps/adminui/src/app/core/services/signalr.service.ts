@@ -76,6 +76,7 @@ export class SignalRService {
   private messageReceivedSubject = new Subject<MessageNotification>();
   private conversationStatusChangedSubject = new Subject<ConversationStatusNotification>();
   private bookingUpdatedSubject = new Subject<BookingNotification>();
+  private preferenceCreatedSubject = new Subject<any>();
   private notificationSubject = new Subject<any>();
 
   // Public observables
@@ -88,6 +89,7 @@ export class SignalRService {
   public messageReceived$ = this.messageReceivedSubject.asObservable();
   public conversationStatusChanged$ = this.conversationStatusChangedSubject.asObservable();
   public bookingUpdated$ = this.bookingUpdatedSubject.asObservable();
+  public preferenceCreated$ = this.preferenceCreatedSubject.asObservable();
   public notification$ = this.notificationSubject.asObservable();
 
   constructor(
@@ -275,6 +277,20 @@ export class SignalRService {
     this.hubConnection.on('TaskAssigned', (notification: TaskNotification) => {
       console.log('Task assigned:', notification);
       this.taskAssignedSubject.next(notification);
+    });
+
+    // Housekeeping preference events
+    this.hubConnection.on('PreferenceCreated', (notification: any) => {
+      console.log('🏠 SignalR PreferenceCreated event received:', notification);
+      this.debugService.addLog(`PreferenceCreated event received: ${JSON.stringify(notification)}`);
+      this.preferenceCreatedSubject.next(notification);
+
+      // Play service bell sound for new preferences
+      this.soundService.playServiceBell().then(() => {
+        console.log('✅ Service bell sound played for preference');
+      }).catch(error => {
+        console.error('❌ Failed to play service bell sound:', error);
+      });
     });
 
     // Emergency events

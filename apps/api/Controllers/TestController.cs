@@ -458,6 +458,193 @@ public class TestController : ControllerBase
         }
     }
 
+    [HttpGet("test-push-notification")]
+    public async Task<IActionResult> TestPushNotification([FromQuery] int? userId = null, [FromQuery] int tenantId = 1)
+    {
+        try
+        {
+            var pushService = HttpContext.RequestServices.GetRequiredService<IPushNotificationService>();
+
+            if (userId.HasValue)
+            {
+                // Send to specific user
+                await pushService.NotifyTaskAssigned(
+                    userId.Value,
+                    999,
+                    "Test Push Notification",
+                    "This is a test notification from StayBot. If you see this, push notifications are working!"
+                );
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Test push notification sent to user {userId.Value}",
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                // Send emergency to all staff
+                await pushService.NotifyEmergency(
+                    tenantId,
+                    "Test Notification",
+                    "System",
+                    "This is a test push notification. If you see this, push notifications are working!"
+                );
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Test push notification sent to all staff in tenant {tenantId}",
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending test push notification");
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    [HttpGet("test-guest-push-notification")]
+    public async Task<IActionResult> TestGuestPushNotification([FromQuery] string phone, [FromQuery] int tenantId = 1)
+    {
+        try
+        {
+            var pushService = HttpContext.RequestServices.GetRequiredService<IPushNotificationService>();
+
+            await pushService.NotifyGuestServiceUpdate(
+                tenantId,
+                phone,
+                "Room Service",
+                "Completed",
+                "Your towels have been delivered to your room. Enjoy your stay!"
+            );
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Test push notification sent to guest {phone}",
+                timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending test guest push notification");
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    [HttpGet("test-webpush-direct")]
+    public async Task<IActionResult> TestWebPushDirect([FromQuery] int subscriptionId)
+    {
+        try
+        {
+            var subscription = await _context.PushSubscriptions.FindAsync(subscriptionId);
+            if (subscription == null)
+            {
+                return NotFound(new { error = "Subscription not found" });
+            }
+
+            var vapidSubject = HttpContext.RequestServices.GetRequiredService<IConfiguration>()["WebPush:Subject"];
+            var vapidPublicKey = HttpContext.RequestServices.GetRequiredService<IConfiguration>()["WebPush:PublicKey"];
+            var vapidPrivateKey = HttpContext.RequestServices.GetRequiredService<IConfiguration>()["WebPush:PrivateKey"];
+
+            if (string.IsNullOrEmpty(vapidPublicKey) || string.IsNullOrEmpty(vapidPrivateKey))
+            {
+                return BadRequest(new { error = "VAPID keys not configured", publicKey = vapidPublicKey ?? "null", privateKey = vapidPrivateKey != null ? "set" : "null" });
+            }
+
+            var vapidDetails = new WebPush.VapidDetails(
+                subject: vapidSubject ?? "mailto:info@staybot.co.za",
+                publicKey: vapidPublicKey,
+                privateKey: vapidPrivateKey
+            );
+
+            var webPushSubscription = new WebPush.PushSubscription(
+                endpoint: subscription.Endpoint,
+                p256dh: subscription.P256dhKey,
+                auth: subscription.AuthKey
+            );
+
+            var payload = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                title = "Test Notification",
+                body = "This is a direct WebPush test!",
+                icon = "/icons/icon-192x192.png",
+                tag = "test-direct",
+                data = new { type = "test", timestamp = DateTime.UtcNow }
+            });
+
+            var client = new WebPush.WebPushClient();
+            await client.SendNotificationAsync(webPushSubscription, payload, vapidDetails);
+
+            return Ok(new
+            {
+                success = true,
+                message = "WebPush sent successfully",
+                subscriptionId = subscriptionId,
+                endpoint = subscription.Endpoint.Substring(0, Math.Min(50, subscription.Endpoint.Length)) + "..."
+            });
+        }
+        catch (WebPush.WebPushException ex)
+        {
+            _logger.LogError(ex, "WebPush error");
+            return StatusCode(500, new {
+                error = "WebPush failed",
+                statusCode = (int)ex.StatusCode,
+                message = ex.Message,
+                details = ex.Headers?.ToString()
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in direct WebPush test");
+            return StatusCode(500, new { error = ex.Message, type = ex.GetType().Name });
+        }
+    }
+
+    /// <summary>
+    /// Send a custom push notification to a guest by room number
+    /// </summary>
+    [HttpPost("send-guest-notification")]
+    public async Task<IActionResult> SendGuestNotification([FromBody] SendGuestNotificationRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(request.RoomNumber) && string.IsNullOrEmpty(request.Phone))
+            {
+                return BadRequest(new { error = "Room number or phone is required" });
+            }
+
+            var pushService = HttpContext.RequestServices.GetRequiredService<IPushNotificationService>();
+
+            // Use room number or phone as the identifier
+            var guestIdentifier = request.RoomNumber ?? request.Phone ?? "";
+
+            await pushService.NotifyGuestServiceUpdate(
+                request.TenantId,
+                guestIdentifier,
+                request.Title ?? "Hotel Update",
+                request.Status ?? "Info",
+                request.Message
+            );
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Notification sent to guest in room {request.RoomNumber ?? request.Phone}",
+                timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending guest notification");
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
     [HttpPost("seed-aromatherapy-massage")]
     public async Task<IActionResult> SeedAromatherapyMassage()
     {
@@ -629,5 +816,16 @@ public class TestBroadcastRequest
 public class ResetPasswordRequest
 {
     public string Email { get; set; } = string.Empty;
+    public string Otp { get; set; } = string.Empty;
     public string NewPassword { get; set; } = string.Empty;
+}
+
+public class SendGuestNotificationRequest
+{
+    public int TenantId { get; set; } = 1;
+    public string? RoomNumber { get; set; }
+    public string? Phone { get; set; }
+    public string? Title { get; set; }
+    public string? Status { get; set; }
+    public string? Message { get; set; }
 }

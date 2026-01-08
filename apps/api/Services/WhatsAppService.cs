@@ -19,6 +19,7 @@ public interface IWhatsAppService
     Task<(bool Success, string? Response)> ProcessInboundMessageAsync(WebhookPayload payload);
     Task<bool> SendTextMessageAsync(int tenantId, string toPhone, string message);
     Task<bool> SendTemplateMessageAsync(int tenantId, string toPhone, string templateName, string language = "en");
+    Task<bool> SendImageAsync(int tenantId, string toPhone, string imageUrl, string? caption = null);
 }
 
 public class WhatsAppApiClient : IWhatsAppApiClient
@@ -539,6 +540,90 @@ public class WhatsAppService : IWhatsAppService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending template message to {Phone}", toPhone);
+            return false;
+        }
+    }
+
+    public async Task<bool> SendImageAsync(int tenantId, string toPhone, string imageUrl, string? caption = null)
+    {
+        try
+        {
+            // Get WhatsApp number for tenant
+            var waNumber = await _context.WhatsAppNumbers
+                .FirstOrDefaultAsync(w => w.TenantId == tenantId && w.Status == "Active");
+
+            if (waNumber == null)
+            {
+                _logger.LogError("No active WhatsApp number found for tenant {TenantId}", tenantId);
+                return false;
+            }
+
+            var message = new OutboundMessage
+            {
+                To = toPhone,
+                Type = "image",
+                Image = new OutboundImage
+                {
+                    Link = imageUrl,
+                    Caption = caption
+                }
+            };
+
+            // Send via WhatsApp API
+            var apiUrl = $"https://graph.facebook.com/v18.0/{waNumber.PhoneNumberId}/messages";
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {waNumber.PageAccessToken}");
+
+            var json = System.Text.Json.JsonSerializer.Serialize(message);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await httpClient.PostAsync(apiUrl, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Image sent successfully to {Phone} with caption: {Caption}",
+                    toPhone, caption?.Substring(0, Math.Min(50, caption?.Length ?? 0)));
+
+                // Save outbound message to database
+                using var scope = new TenantScope(_context, tenantId);
+
+                var conversation = await _context.Conversations
+                    .FirstOrDefaultAsync(c => c.WaUserPhone == toPhone);
+
+                if (conversation != null)
+                {
+                    var outboundMessage = new Message
+                    {
+                        TenantId = tenantId,
+                        ConversationId = conversation.Id,
+                        Direction = "Outbound",
+                        MessageType = "image",
+                        Body = caption ?? "[Image]",
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Messages.Add(outboundMessage);
+                    conversation.LastBotReplyAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Saved image message {MessageId} to conversation {ConversationId}",
+                        outboundMessage.Id, conversation.Id);
+                }
+
+                return true;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to send image to {Phone}. Status: {Status}, Error: {Error}",
+                    toPhone, response.StatusCode, errorContent);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending image to {Phone}", toPhone);
             return false;
         }
     }

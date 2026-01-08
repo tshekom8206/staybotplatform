@@ -329,6 +329,24 @@ export class HousekeepingComponent implements OnInit, OnDestroy {
       .subscribe((taskData: any) => {
         this.handleTaskUpdatedUpdate(taskData);
       });
+
+    // Listen for housekeeping preference notifications from guest portal
+    this.signalRService.preferenceCreated$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((preferenceData: any) => {
+        this.handlePreferenceCreated(preferenceData);
+      });
+  }
+
+  private handlePreferenceCreated(preferenceData: any): void {
+    console.log('🏠 Housekeeping preference received:', preferenceData);
+
+    // Only process if it's a housekeeping preference
+    if (preferenceData?.department !== 'Housekeeping') return;
+
+    // Refresh task list to show new preference task
+    // Sound bell already plays via SignalR service
+    this.refreshData();
   }
 
   private handleTaskCreatedUpdate(taskData: any): void {

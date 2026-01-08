@@ -372,6 +372,8 @@ public class TaskController : ControllerBase
         var tenantId = HttpContext.Items["TenantId"] as int? ?? 0;
 
         var task = await _context.StaffTasks
+            .Include(t => t.RequestItem)
+            .Include(t => t.Conversation)
             .FirstOrDefaultAsync(t => t.Id == id && t.TenantId == tenantId);
 
         if (task == null)
@@ -399,6 +401,60 @@ public class TaskController : ControllerBase
                     {
                         _logger.LogError(ex, "Failed to send rating request for task {TaskId}", task.Id);
                         // Don't fail the task update if rating request fails
+                    }
+                }
+
+                // Send push notification to guest when task is completed
+                if (previousStatus != "Completed")
+                {
+                    // Get guest identifier: phone from task/conversation, or fall back to room number
+                    // PushNotificationService.SendToGuest supports lookup by both phone AND room number
+                    var guestIdentifier = task.GuestPhone ?? task.Conversation?.WaUserPhone ?? task.RoomNumber;
+                    if (!string.IsNullOrEmpty(guestIdentifier))
+                    {
+                        try
+                        {
+                            var serviceName = task.RequestItem?.Name ?? task.Title ?? "Your request";
+                            await _pushNotificationService.NotifyGuestServiceUpdate(
+                                tenantId,
+                                guestIdentifier,
+                                serviceName,
+                                "completed",
+                                $"Your {serviceName} request has been completed!"
+                            );
+                            _logger.LogInformation("Push notification sent to guest {Identifier} for completed task {TaskId}", guestIdentifier, task.Id);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to send push notification for task {TaskId}", task.Id);
+                            // Don't fail the task update if push notification fails
+                        }
+                    }
+                }
+            }
+            // Send push notification when task is picked up (In Progress)
+            else if (request.Status == "InProgress" && previousStatus != "InProgress" && previousStatus != "INPROGRESS")
+            {
+                // Get guest identifier: phone from task/conversation, or fall back to room number
+                var guestIdentifier = task.GuestPhone ?? task.Conversation?.WaUserPhone ?? task.RoomNumber;
+                if (!string.IsNullOrEmpty(guestIdentifier))
+                {
+                    try
+                    {
+                        var serviceName = task.RequestItem?.Name ?? task.Title ?? "Your request";
+                        await _pushNotificationService.NotifyGuestServiceUpdate(
+                            tenantId,
+                            guestIdentifier,
+                            serviceName,
+                            "in progress",
+                            $"Good news! Your {serviceName} request is now being handled."
+                        );
+                        _logger.LogInformation("Push notification sent to guest {Identifier} for in-progress task {TaskId}", guestIdentifier, task.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send push notification for task {TaskId}", task.Id);
+                        // Don't fail the task update if push notification fails
                     }
                 }
             }

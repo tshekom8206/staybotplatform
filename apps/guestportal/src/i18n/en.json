@@ -19,6 +19,8 @@
       "foodDrinksDesc": "View our menu",
       "maintenance": "Quick Fix",
       "maintenanceDesc": "Report an issue",
+      "housekeeping": "Housekeeping",
+      "housekeepingDesc": "Set your room preferences",
       "amenities": "Amenities",
       "amenitiesDesc": "Our services",
       "contact": "Contact Us",
@@ -28,7 +30,9 @@
       "promise": "Our Promise",
       "promiseDesc": "Our commitment to you",
       "lostFound": "Lost & Found",
-      "lostFoundDesc": "Report or find items"
+      "lostFoundDesc": "Report or find items",
+      "houseRules": "House Rules",
+      "houseRulesDesc": "What to know during your stay"
     }
   },
   "foodDrinks": {
@@ -95,13 +99,15 @@
   },
   "lostFound": {
     "title": "Lost & Found",
-    "foundItems": "Found Items",
+    "lostReports": "Lost Reports",
     "reportLost": "Report Lost",
-    "foundItemsDescription": "Items found by our staff. Contact front desk to claim.",
+    "lostReportsDescription": "Items reported lost by guests. Found something? Please bring it to the front desk.",
     "reportDescription": "Lost something? Fill out the form below and we'll help find it.",
-    "noFoundItems": "No items currently in lost and found",
-    "contactNote": "If you recognize any of these items, please contact the front desk with your ID.",
-    "foundOn": "Found",
+    "noLostReports": "No items have been reported as lost",
+    "foundSomethingNote": "Found an item? Please bring it to the front desk.",
+    "reportedOn": "Reported",
+    "statusSearching": "Searching",
+    "statusFound": "Found",
     "itemName": "Item Name",
     "itemNamePlaceholder": "e.g., Black wallet, iPhone charger",
     "category": "Category",
@@ -138,16 +144,138 @@
     "call": "Call Us"
   },
   "pwa": {
-    "installTitle": "Install App",
-    "installMessage": "Add to your home screen for quick access",
-    "install": "Install",
-    "notNow": "Not Now",
-    "updateTitle": "Update Available",
-    "updateMessage": "A new version is available",
-    "update": "Update Now"
+    "install": {
+      "title": "Install App",
+      "description": "Add {{hotelName}} to your home screen for quick access",
+      "installButton": "Install",
+      "notNow": "Not Now"
+    },
+    "update": {
+      "title": "Update Available",
+      "description": "A new version is available",
+      "updateButton": "Update Now",
+      "later": "Later"
+    }
   },
   "language": {
     "title": "Language",
     "select": "Select Language"
+  },
+  "services": {
+    "title": "Hotel Services",
+    "subtitle": "Enhance your stay with our premium services",
+    "enhanceYourStay": "Enhance Your Stay",
+    "mostLoved": "Most loved by guests",
+    "chefsPick": "Chef's pick",
+    "requestService": "Request This Service",
+    "preferredTime": "Preferred Time",
+    "asap": "As soon as possible",
+    "thisAfternoon": "This afternoon",
+    "thisEvening": "This evening",
+    "tomorrow": "Tomorrow",
+    "specialRequests": "Special requests (optional)",
+    "sendRequest": "Send Request",
+    "requestSent": "Request Sent!",
+    "requestSentMessage": "Our team will contact you shortly to confirm.",
+    "categories": {
+      "dining": "In-Room Dining",
+      "spa": "Spa & Wellness",
+      "occasions": "Special Occasions",
+      "transport": "Transport",
+      "experiences": "Local Experiences",
+      "checkout": "Checkout Options"
+    }
+  },
+  "roomPrompt": {
+    "message": "Enter your room number for personalized service",
+    "placeholder": "Room #"
+  },
+  "room": {
+    "edit": "Change Room",
+    "update": "Update Room",
+    "label": "Room Number",
+    "invalid": "Invalid room number",
+    "validating": "Validating..."
+  },
+  "houseRules": {
+    "title": "House Rules",
+    "subtitle": "A few things for a comfortable stay",
+    "smoking": "Smoking",
+    "pets": "Pets",
+    "children": "Children",
+    "cancellation": "Cancellation",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "checkTimes": "Check-in & Check-out Times",
+    "noRules": "No house rules have been set for this property"
+  },
+  "wifi": {
+    "title": "WiFi Credentials",
+    "button": "WiFi",
+    "network": "Network",
+    "password": "Password",
+    "copy": "Copy Password",
+    "copied": "Copied!"
+  },
+  "weather": {
+    "title": "Weather",
+    "today": "Today",
+    "forecast": "Forecast",
+    "feelsLike": "Feels like",
+    "humidity": "Humidity",
+    "unavailable": "Weather unavailable"
+  },
+  "currency": {
+    "title": "Currency Converter",
+    "amount": "Amount",
+    "convert": "Convert",
+    "lastUpdated": "Last updated",
+    "unavailable": "Rates unavailable"
+  },
+  "housekeeping": {
+    "title": "Housekeeping Preferences",
+    "subtitle": "Let us know how you'd like your room serviced",
+    "temperature": "Temperature",
+    "airconAfterCleaning": "Keep aircon off after cleaning",
+    "airconDescription": "We'll keep the aircon off when cleaning your room",
+    "cleaning": "Cleaning",
+    "dailyLinenChange": "Daily linen change",
+    "linenDescription": "Change bed linen every day",
+    "dailyTowelChange": "Daily towel change",
+    "towelDescription": "Replace towels every day",
+    "doNotDisturb": "Do Not Disturb",
+    "dndEnabled": "Enable Do Not Disturb",
+    "dndDescription": "Request no housekeeping during specified hours",
+    "dndUntil": "Do not disturb until",
+    "activePreferences": "Your Active Preferences",
+    "acknowledged": "Acknowledged",
+    "pending": "Pending",
+    "saved": "Saved",
+    "savedMessage": "Your preference has been saved. Housekeeping has been notified.",
+    "addNote": "Add a note (optional)...",
+    "cleaningTime": "Cleaning Schedule",
+    "preferredTime": "Preferred cleaning time",
+    "preferredTimeDescription": "When would you like housekeeping to clean your room?",
+    "morning": "Morning (8-11am)",
+    "afternoon": "Afternoon (2-5pm)",
+    "skipToday": "Skip Today",
+    "beddingComfort": "Bedding & Comfort",
+    "extraPillows": "Extra pillows",
+    "extraPillowsDescription": "Request additional pillows (max 4)",
+    "extraBlankets": "Extra blankets",
+    "extraBlanketsDescription": "Request additional blankets (max 3)",
+    "pillowType": "Pillow preference",
+    "pillowTypeDescription": "Choose your preferred pillow type",
+    "pillowSoft": "Soft",
+    "pillowMedium": "Medium",
+    "pillowFirm": "Firm",
+    "pillowHypoallergenic": "Hypoallergenic",
+    "confirmButton": "Confirm",
+    "cancelButton": "Cancel",
+    "needSomething": "Need Something?",
+    "deliverToRoom": "Request delivery to your room",
+    "request": "Request",
+    "requested": "Requested",
+    "noItemsAvailable": "No items available at this time"
   }
 }

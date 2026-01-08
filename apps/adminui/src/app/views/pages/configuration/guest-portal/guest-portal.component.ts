@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon.directive';
+import { AuthService } from '../../../../core/services/auth.service';
 import { environment } from '../../../../../environments/environment';
 
 interface GuestPortalSettings {
@@ -259,8 +260,8 @@ interface GuestPortalSettings {
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0,0,0,0.3);
-      backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.1);
+      backdrop-filter: blur(1px);
     }
 
     .mobile-content {
@@ -317,6 +318,7 @@ interface GuestPortalSettings {
 export class GuestPortalComponent implements OnInit {
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
   form: FormGroup;
   loading = signal(true);
@@ -341,7 +343,7 @@ export class GuestPortalComponent implements OnInit {
 
   loadSettings(): void {
     this.loading.set(true);
-    this.http.get<GuestPortalSettings>(`${environment.apiUrl}/api/tenant/portal-settings`)
+    this.http.get<GuestPortalSettings>(`${environment.apiUrl}/tenant/portal-settings`)
       .subscribe({
         next: (settings) => {
           this.form.patchValue({
@@ -353,7 +355,7 @@ export class GuestPortalComponent implements OnInit {
           this.loading.set(false);
 
           // Build portal URL from tenant slug
-          const tenantSlug = localStorage.getItem('tenantSlug') || 'demo';
+          const tenantSlug = this.authService.currentTenantValue?.slug || 'demo';
           this.portalUrl = `https://${tenantSlug}.staybot.co.za`;
         },
         error: (err) => {
@@ -362,7 +364,7 @@ export class GuestPortalComponent implements OnInit {
           this.loading.set(false);
 
           // Set default portal URL
-          const tenantSlug = localStorage.getItem('tenantSlug') || 'demo';
+          const tenantSlug = this.authService.currentTenantValue?.slug || 'demo';
           this.portalUrl = `https://${tenantSlug}.staybot.co.za`;
         }
       });
@@ -379,7 +381,7 @@ export class GuestPortalComponent implements OnInit {
       guestPortalEnabled: this.form.get('guestPortalEnabled')?.value
     };
 
-    this.http.put(`${environment.apiUrl}/api/tenant/portal-settings`, settings)
+    this.http.put(`${environment.apiUrl}/tenant/portal-settings`, settings)
       .subscribe({
         next: () => {
           this.saving.set(false);

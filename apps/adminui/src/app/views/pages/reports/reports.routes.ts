@@ -25,5 +25,15 @@ export default [
     path: 'usage',
     loadComponent: () => import('./usage/usage.component').then(c => c.UsageComponent),
     title: 'Service Usage Report - Hostr Admin'
+  },
+  {
+    path: 'guest-portal',
+    loadComponent: () => import('./guest-portal-analytics/guest-portal-analytics.component').then(c => c.GuestPortalAnalyticsComponent),
+    title: 'Guest Portal Analytics - Hostr Admin'
+  },
+  {
+    path: 'hotelier-insights',
+    loadComponent: () => import('./hotelier-insights/hotelier-insights.component').then(c => c.HotelierInsightsComponent),
+    title: 'Hotelier Insights - Hostr Admin'
   }
 ] as Routes;

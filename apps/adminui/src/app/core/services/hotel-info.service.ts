@@ -23,6 +23,8 @@ export interface HotelInformation {
     state: string;
     postalCode: string;
     country: string;
+    latitude?: number;
+    longitude?: number;
   };
 
   // Business Details
@@ -64,6 +66,15 @@ export interface HotelInformation {
     timezone: string;
     currency: string;
   };
+
+  // WiFi Credentials
+  wifi?: {
+    network?: string;
+    password?: string;
+  };
+
+  // Room Configuration (from Tenant)
+  validRooms?: string;
 }
 
 export interface UpdateHotelInfoRequest {
@@ -80,6 +91,8 @@ export interface UpdateHotelInfoRequest {
     state?: string;
     postalCode?: string;
     country?: string;
+    latitude?: number;
+    longitude?: number;
   };
   checkInTime?: string;
   checkOutTime?: string;
@@ -109,6 +122,13 @@ export interface UpdateHotelInfoRequest {
     timezone?: string;
     currency?: string;
   };
+  wifi?: {
+    network?: string;
+    password?: string;
+  };
+
+  // Room Configuration
+  validRooms?: string;
 }
 
 @Injectable({

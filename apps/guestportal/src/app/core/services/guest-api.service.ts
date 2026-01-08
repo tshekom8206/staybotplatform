@@ -15,6 +15,9 @@ export interface HotelInfo {
   phone?: string;
   email?: string;
   address?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
   checkInTime?: string;
   checkOutTime?: string;
   socialLinks: {
@@ -67,14 +70,54 @@ export interface ServiceItem {
   name: string;
   description?: string;
   category?: string;
+  icon?: string;
+  imageUrl?: string;
   isChargeable: boolean;
   price: string;
+  priceAmount?: number;
   currency?: string;
   pricingUnit?: string;
   availableHours?: string;
   contactInfo?: string;
   requiresBooking: boolean;
   advanceBookingHours?: number;
+  timeSlots?: string;
+}
+
+export interface FeaturedService {
+  id: number;
+  name: string;
+  description?: string;
+  category?: string;
+  icon?: string;
+  imageUrl?: string;
+  isChargeable: boolean;
+  price?: string;
+  priceAmount?: number;
+  currency?: string;
+  pricingUnit?: string;
+  availableHours?: string;
+  requiresBooking: boolean;
+  advanceBookingHours?: number;
+  timeSlots?: string;
+}
+
+export interface ServiceRequest {
+  serviceId: number;
+  roomNumber: string;
+  preferredTime?: string;
+  specialRequests?: string;
+  guestName?: string;
+  phone?: string;
+  source?: string; // For upsell tracking: weather_warm, weather_hot, featured_carousel, etc.
+}
+
+export interface ServiceRequestResponse {
+  success: boolean;
+  message: string;
+  taskId: number;
+  serviceName: string;
+  estimatedResponse: string;
 }
 
 export interface MaintenanceCategory {
@@ -106,6 +149,18 @@ export interface FoundItem {
   brand?: string;
   locationFound?: string;
   foundDate: string;
+}
+
+export interface LostItemReport {
+  id: number;
+  itemName: string;
+  category: string;
+  description?: string;
+  color?: string;
+  brand?: string;
+  locationLost?: string;
+  reportedDate: string;
+  status: 'searching' | 'found';
 }
 
 export interface LostItemRequest {
@@ -144,11 +199,51 @@ export interface GuestPromise {
   content: string;
 }
 
+export interface HouseRules {
+  smoking?: string;
+  pets?: string;
+  children?: string;
+  cancellation?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+}
+
+export interface WifiCredentials {
+  network?: string;
+  password?: string;
+}
+
 export interface SupportedLanguage {
   code: string;
   name: string;
   nativeName: string;
   flag: string;
+}
+
+export interface RequestItem {
+  id: number;
+  name: string;
+  category: string;
+  description?: string;
+  requiresQuantity: boolean;
+  defaultQuantityLimit: number;
+  estimatedTime?: number;
+  icon: string;
+}
+
+export interface ItemRequest {
+  requestItemId: number;
+  roomNumber?: string;
+  quantity?: number;
+  notes?: string;
+}
+
+export interface ItemRequestResponse {
+  success: boolean;
+  message: string;
+  taskId: number;
+  itemName: string;
+  estimatedTime: number;
 }
 
 @Injectable({
@@ -188,6 +283,26 @@ export class GuestApiService {
           title: 'Our Guest Promise',
           content: '{"promises": ["Your comfort is our priority", "24/7 concierge at your fingertips", "Personalized service, every stay", "We listen, we act, we care"]}'
         });
+      })
+    );
+  }
+
+  // House Rules
+  getHouseRules(): Observable<HouseRules> {
+    return this.http.get<HouseRules>(`${this.apiUrl}/house-rules`).pipe(
+      catchError(error => {
+        console.error('Error fetching house rules:', error);
+        return of({});
+      })
+    );
+  }
+
+  // WiFi Credentials
+  getWifiCredentials(): Observable<WifiCredentials> {
+    return this.http.get<WifiCredentials>(`${this.apiUrl}/wifi`).pipe(
+      catchError(error => {
+        console.error('Error fetching WiFi credentials:', error);
+        return of({});
       })
     );
   }
@@ -248,6 +363,16 @@ export class GuestApiService {
   }
 
   // Lost & Found
+  getLostReports(category?: string): Observable<{ items: LostItemReport[] }> {
+    const options = category ? { params: { category } } : {};
+    return this.http.get<{ items: LostItemReport[] }>(`${this.apiUrl}/lost-reports`, options).pipe(
+      catchError(error => {
+        console.error('Error fetching lost reports:', error);
+        return of({ items: [] as LostItemReport[] });
+      })
+    );
+  }
+
   getFoundItems(category?: string): Observable<{ items: FoundItem[] }> {
     const options = category ? { params: { category } } : {};
     return this.http.get<{ items: FoundItem[] }>(`${this.apiUrl}/lost-found`, options).pipe(
@@ -295,6 +420,72 @@ export class GuestApiService {
           { code: 'zu', name: 'Zulu', nativeName: 'isiZulu', flag: 'ZA' }
         ];
         return of({ languages: defaultLanguages });
+      })
+    );
+  }
+
+  // Featured Services (Upselling)
+  getFeaturedServices(): Observable<{ services: FeaturedService[] }> {
+    return this.http.get<{ services: FeaturedService[] }>(`${this.apiUrl}/services/featured`).pipe(
+      catchError(error => {
+        console.error('Error fetching featured services:', error);
+        return of({ services: [] as FeaturedService[] });
+      })
+    );
+  }
+
+  // Contextual Services (Time-based recommendations)
+  getContextualServices(timeSlot?: string): Observable<{ timeSlot: string; services: FeaturedService[] }> {
+    const options = timeSlot ? { params: { timeSlot } } : {};
+    return this.http.get<{ timeSlot: string; services: FeaturedService[] }>(`${this.apiUrl}/services/contextual`, options).pipe(
+      catchError(error => {
+        console.error('Error fetching contextual services:', error);
+        return of({ timeSlot: 'unknown', services: [] as FeaturedService[] });
+      })
+    );
+  }
+
+  // Submit Service Request
+  submitServiceRequest(request: ServiceRequest): Observable<ServiceRequestResponse> {
+    return this.http.post<ServiceRequestResponse>(`${this.apiUrl}/services/request`, request).pipe(
+      catchError(error => {
+        console.error('Error submitting service request:', error);
+        return of({
+          success: false,
+          message: 'Failed to submit request. Please try again.',
+          taskId: 0,
+          serviceName: '',
+          estimatedResponse: ''
+        });
+      })
+    );
+  }
+
+  // Request Items (Housekeeping)
+  getRequestItems(category?: string, department?: string): Observable<{ items: RequestItem[] }> {
+    const params: Record<string, string> = {};
+    if (category) params['category'] = category;
+    if (department) params['department'] = department;
+    const options = Object.keys(params).length > 0 ? { params } : {};
+    return this.http.get<{ items: RequestItem[] }>(`${this.apiUrl}/request-items`, options).pipe(
+      catchError(error => {
+        console.error('Error fetching request items:', error);
+        return of({ items: [] as RequestItem[] });
+      })
+    );
+  }
+
+  submitItemRequest(request: ItemRequest): Observable<ItemRequestResponse> {
+    return this.http.post<ItemRequestResponse>(`${this.apiUrl}/item-request`, request).pipe(
+      catchError(error => {
+        console.error('Error submitting item request:', error);
+        return of({
+          success: false,
+          message: 'Failed to submit request. Please try again.',
+          taskId: 0,
+          itemName: '',
+          estimatedTime: 0
+        });
       })
     );
   }

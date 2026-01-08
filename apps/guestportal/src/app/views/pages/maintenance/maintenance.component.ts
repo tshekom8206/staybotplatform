@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { RoomContextService } from '../../../core/services/room-context.service';
 import { GuestApiService } from '../../../core/services/guest-api.service';
+import { AnalyticsService } from '../../../core/services/analytics.service';
 
 interface MaintenanceIssue {
   id: string;
@@ -138,6 +139,16 @@ interface MaintenanceIssue {
       text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
     }
 
+    /* Form Labels - Visible on blurred background */
+    .form-label {
+      display: block;
+      color: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+
     .issues-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -154,13 +165,36 @@ interface MaintenanceIssue {
       background: white;
       cursor: pointer;
       transition: all 0.2s;
+      position: relative;
     }
     .issue-card:hover {
-      border-color: #1a1a1a;
+      border-color: #888;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
     .issue-card.selected {
-      border-color: #1a1a1a;
-      background: #f5f5f5;
+      border-color: #27ae60;
+      border-width: 3px;
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      transform: scale(1.02);
+      box-shadow: 0 4px 16px rgba(39, 174, 96, 0.3);
+    }
+    .issue-card.selected::after {
+      content: '\\F272';
+      font-family: 'bootstrap-icons';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 24px;
+      height: 24px;
+      background: #27ae60;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
     .issue-card i {
       width: 44px;
@@ -173,19 +207,58 @@ interface MaintenanceIssue {
       justify-content: center;
       font-size: 1.2rem;
       margin-bottom: 0.5rem;
+      transition: all 0.2s;
     }
     .issue-card.selected i {
-      background: #1a1a1a;
+      background: #27ae60;
     }
     .issue-card span {
       font-size: 0.875rem;
       color: #333;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .issue-card.selected span {
+      color: #1b5e20;
+      font-weight: 600;
+    }
+
+    /* Form Controls */
+    .form-control {
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid transparent;
+      border-radius: 12px;
+    }
+    .form-control:focus {
+      border-color: #27ae60;
+      box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
+    }
+
+    /* Submit Button */
+    .btn-primary {
+      background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+      border: none;
+      border-radius: 12px;
+      padding: 0.875rem;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
+    }
+    .btn-primary:disabled {
+      background: #ccc;
+      transform: none;
+      box-shadow: none;
     }
 
     .success-card {
       padding: 3rem 1rem;
-      background: #e8f5e9;
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
       border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
     .success-icon {
       font-size: 4rem;
@@ -209,12 +282,14 @@ interface MaintenanceIssue {
 export class MaintenanceComponent {
   private roomContextService = inject(RoomContextService);
   private apiService = inject(GuestApiService);
+  private analyticsService = inject(AnalyticsService);
 
   roomNumber = this.roomContextService.getRoomNumber() || '';
   additionalDetails = '';
   submitted = signal(false);
   submitting = signal(false);
   estimatedResponse = signal('');
+  private formStartTracked = false;
 
   issues: MaintenanceIssue[] = [
     { id: 'plumbing', labelKey: 'maintenance.categories.plumbing', icon: 'droplet', selected: false },
@@ -231,7 +306,21 @@ export class MaintenanceComponent {
   }
 
   toggleIssue(issue: MaintenanceIssue): void {
-    issue.selected = !issue.selected;
+    this.trackFormStart();
+    // Deselect all other issues first (single selection only)
+    this.issues.forEach(i => i.selected = false);
+    // Select the clicked issue
+    issue.selected = true;
+  }
+
+  private trackFormStart(): void {
+    if (!this.formStartTracked) {
+      this.formStartTracked = true;
+      this.analyticsService.trackEvent('form_start', {
+        form_name: 'maintenance_request',
+        page_location: '/maintenance'
+      });
+    }
   }
 
   submitRequest(): void {
@@ -245,6 +334,9 @@ export class MaintenanceComponent {
     this.submitting.set(true);
 
     const selectedIssues = this.issues.filter(i => i.selected).map(i => i.id);
+
+    // Track maintenance request in GA4
+    this.analyticsService.trackMaintenanceRequest(selectedIssues, this.roomNumber);
 
     this.apiService.submitMaintenanceRequest({
       roomNumber: this.roomNumber,

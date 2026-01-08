@@ -1,0 +1,144 @@
+<div class="page-content">
+  <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+      <h4 class="mb-3 mb-md-0">QR Code Generator</h4>
+      <p class="text-muted mb-0">Generate a QR code for guests to access your hotel services</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- QR Code Preview -->
+    <div class="col-lg-6 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i data-feather="smartphone" appFeatherIcon class="me-2"></i>
+            QR Code Preview
+          </h6>
+        </div>
+        <div class="card-body text-center">
+          <div class="qr-preview-container">
+            <!-- Preview Card - Always in DOM, hidden until generated -->
+            <div class="qr-card" [class.d-none]="!generated">
+              <div class="qr-header">
+                <h2>{{ headerText }}</h2>
+                <p>{{ subText }}</p>
+              </div>
+              <div class="qr-code-wrapper">
+                <canvas #qrCanvas></canvas>
+              </div>
+              <div class="qr-footer">
+                <p class="hotel-name">{{ tenantName }}</p>
+                <p class="url">{{ qrCodeUrl }}</p>
+              </div>
+            </div>
+
+            <!-- Placeholder -->
+            <div class="qr-placeholder" [class.d-none]="generated">
+              <i data-feather="maximize" appFeatherIcon></i>
+              <p>Click "Generate QR Code" to create your QR code</p>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-lg mt-4" (click)="generateQRCode()" [disabled]="loading">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+            <i data-feather="refresh-cw" appFeatherIcon class="me-2" *ngIf="!loading"></i>
+            {{ generated ? 'Regenerate' : 'Generate' }} QR Code
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings & Download -->
+    <div class="col-lg-6 mb-4">
+      <!-- Settings -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i data-feather="settings" appFeatherIcon class="me-2"></i>
+            Customization
+          </h6>
+        </div>
+        <div class="card-body">
+          <!-- URL -->
+          <div class="mb-3">
+            <label class="form-label">Guest Portal URL</label>
+            <div class="input-group">
+              <input type="text" class="form-control" [value]="qrCodeUrl" readonly>
+              <button class="btn btn-outline-secondary" type="button" (click)="copyUrl()">
+                <i data-feather="copy" appFeatherIcon></i>
+              </button>
+            </div>
+            <small class="text-muted">This is the URL guests will be directed to when scanning</small>
+          </div>
+
+          <!-- Header Text -->
+          <div class="mb-3">
+            <label class="form-label">Header Text</label>
+            <input type="text" class="form-control" [(ngModel)]="headerText" maxlength="30">
+          </div>
+
+          <!-- Sub Text -->
+          <div class="mb-3">
+            <label class="form-label">Subtitle</label>
+            <input type="text" class="form-control" [(ngModel)]="subText" maxlength="50">
+          </div>
+
+          <!-- Show Logo -->
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="showLogo" [(ngModel)]="showLogo">
+              <label class="form-check-label" for="showLogo">
+                Show hotel logo in QR code center
+              </label>
+            </div>
+            <small class="text-muted" *ngIf="!logoUrl">
+              <i data-feather="alert-circle" appFeatherIcon class="me-1" style="width: 14px; height: 14px;"></i>
+              No logo configured. Go to Portal Settings to upload one.
+            </small>
+          </div>
+
+          <!-- QR Size -->
+          <div class="mb-3">
+            <label class="form-label">Preview Size: {{ qrSize }}px</label>
+            <input type="range" class="form-range" [(ngModel)]="qrSize" min="200" max="400" step="50">
+          </div>
+        </div>
+      </div>
+
+      <!-- Download Options -->
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i data-feather="download" appFeatherIcon class="me-2"></i>
+            Download
+          </h6>
+        </div>
+        <div class="card-body">
+          <p class="text-muted mb-3">Download your QR code for printing on table tents, room cards, or promotional materials.</p>
+
+          <div class="d-grid gap-2">
+            <button class="btn btn-outline-primary" (click)="downloadQRCode('png')" [disabled]="!generated">
+              <i data-feather="image" appFeatherIcon class="me-2"></i>
+              Download as PNG (High Resolution)
+            </button>
+          </div>
+
+          <div class="mt-4">
+            <h6>Placement Ideas:</h6>
+            <ul class="text-muted small mb-0">
+              <li>Room bedside table cards</li>
+              <li>Restaurant table tents</li>
+              <li>Reception desk signage</li>
+              <li>Elevator posters</li>
+              <li>Welcome folder inserts</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden canvas for high-res download -->
+  <canvas #downloadCanvas style="display: none;"></canvas>
+</div>

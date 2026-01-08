@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Hostr.Api.Data;
+using Hostr.Api.Hubs;
 using Hostr.Api.Models;
+using Hostr.Api.Services;
 using System.ComponentModel.DataAnnotations;
 
 namespace Hostr.Api.Controllers;
@@ -16,13 +19,19 @@ public class PublicGuestController : ControllerBase
 {
     private readonly HostrDbContext _context;
     private readonly ILogger<PublicGuestController> _logger;
+    private readonly IHubContext<StaffTaskHub> _staffTaskHub;
+    private readonly IRoomValidationService _roomValidationService;
 
     public PublicGuestController(
         HostrDbContext context,
-        ILogger<PublicGuestController> logger)
+        ILogger<PublicGuestController> logger,
+        IHubContext<StaffTaskHub> staffTaskHub,
+        IRoomValidationService roomValidationService)
     {
         _context = context;
         _logger = logger;
+        _staffTaskHub = staffTaskHub;
+        _roomValidationService = roomValidationService;
     }
 
     private async Task<Tenant?> GetTenantBySlugAsync(string slug)
@@ -32,6 +41,71 @@ public class PublicGuestController : ControllerBase
     }
 
     #region Hotel Information
+
+    /// <summary>
+    /// Get PWA manifest with tenant branding
+    /// </summary>
+    [HttpGet("manifest.webmanifest")]
+    [Produces("application/manifest+json")]
+    public async Task<IActionResult> GetManifest(string slug)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            // Get hotel info for logo
+            var hotelInfo = await _context.HotelInfos
+                .Where(h => h.TenantId == tenant.Id)
+                .Select(h => new { h.LogoUrl })
+                .FirstOrDefaultAsync();
+
+            var logoUrl = tenant.LogoUrl ?? hotelInfo?.LogoUrl ?? "/favicon.ico";
+            var themePrimary = tenant.ThemePrimary ?? "#1976d2";
+            var shortName = tenant.Name.Length > 12 ? tenant.Name.Substring(0, 12) : tenant.Name;
+
+            // Build the start URL based on tenant subdomain
+            var startUrl = $"https://{slug}.staybot.co.za/";
+
+            var manifest = new
+            {
+                name = tenant.Name,
+                short_name = shortName,
+                description = $"Guest services for {tenant.Name}",
+                start_url = startUrl,
+                scope = "/",
+                display = "standalone",
+                orientation = "portrait-primary",
+                theme_color = themePrimary,
+                background_color = "#FFFFFF",
+                categories = new[] { "travel", "hospitality", "lifestyle" },
+                icons = new[]
+                {
+                    new { src = logoUrl, sizes = "72x72", type = "image/png", purpose = "any" },
+                    new { src = logoUrl, sizes = "96x96", type = "image/png", purpose = "any" },
+                    new { src = logoUrl, sizes = "128x128", type = "image/png", purpose = "any" },
+                    new { src = logoUrl, sizes = "144x144", type = "image/png", purpose = "any" },
+                    new { src = logoUrl, sizes = "152x152", type = "image/png", purpose = "any" },
+                    new { src = logoUrl, sizes = "192x192", type = "image/png", purpose = "any maskable" },
+                    new { src = logoUrl, sizes = "384x384", type = "image/png", purpose = "any" },
+                    new { src = logoUrl, sizes = "512x512", type = "image/png", purpose = "any maskable" }
+                },
+                screenshots = new object[] { },
+                related_applications = new object[] { },
+                prefer_related_applications = false
+            };
+
+            return Ok(manifest);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting manifest for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error generating manifest" });
+        }
+    }
 
     /// <summary>
     /// Get hotel info for branding and display
@@ -60,6 +134,8 @@ public class PublicGuestController : ControllerBase
                     h.City,
                     h.State,
                     h.Country,
+                    h.Latitude,
+                    h.Longitude,
                     h.CheckInTime,
                     h.CheckOutTime,
                     h.FacebookUrl,
@@ -88,6 +164,9 @@ public class PublicGuestController : ControllerBase
                 whatsappNumber = tenant.WhatsAppNumber ?? tenant.Phone ?? hotelInfo?.Phone,
                 email = hotelInfo?.Email,
                 address = address,
+                city = hotelInfo?.City,
+                latitude = hotelInfo?.Latitude,
+                longitude = hotelInfo?.Longitude,
                 checkInTime = hotelInfo?.CheckInTime,
                 checkOutTime = hotelInfo?.CheckOutTime,
                 socialLinks = new
@@ -145,6 +224,88 @@ public class PublicGuestController : ControllerBase
         {
             _logger.LogError(ex, "Error getting guest promise for slug {Slug}", slug);
             return StatusCode(500, new { error = "Error retrieving guest promise" });
+        }
+    }
+
+    /// <summary>
+    /// Get WiFi credentials for the hotel
+    /// </summary>
+    [HttpGet("wifi")]
+    public async Task<IActionResult> GetWifiCredentials(string slug)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            // Get WiFi credentials from HotelInfo
+            var hotelInfo = await _context.HotelInfos
+                .Where(h => h.TenantId == tenant.Id)
+                .Select(h => new { h.WifiNetwork, h.WifiPassword })
+                .FirstOrDefaultAsync();
+
+            return Ok(new
+            {
+                network = hotelInfo?.WifiNetwork,
+                password = hotelInfo?.WifiPassword
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting WiFi credentials for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error retrieving WiFi credentials" });
+        }
+    }
+
+    /// <summary>
+    /// Get house rules (policies) for the hotel
+    /// </summary>
+    [HttpGet("house-rules")]
+    public async Task<IActionResult> GetHouseRules(string slug)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            var hotelInfo = await _context.HotelInfos
+                .Where(h => h.TenantId == tenant.Id)
+                .Select(h => new
+                {
+                    smoking = h.SmokingPolicy,
+                    pets = h.PetPolicy,
+                    children = h.ChildPolicy,
+                    cancellation = h.CancellationPolicy,
+                    checkInTime = h.CheckInTime,
+                    checkOutTime = h.CheckOutTime
+                })
+                .FirstOrDefaultAsync();
+
+            if (hotelInfo == null)
+            {
+                return Ok(new
+                {
+                    smoking = (string?)null,
+                    pets = (string?)null,
+                    children = (string?)null,
+                    cancellation = (string?)null,
+                    checkInTime = (string?)null,
+                    checkOutTime = (string?)null
+                });
+            }
+
+            return Ok(hotelInfo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting house rules for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error retrieving house rules" });
         }
     }
 
@@ -373,6 +534,368 @@ public class PublicGuestController : ControllerBase
         };
     }
 
+    /// <summary>
+    /// Get featured services for "Enhance Your Stay" carousel
+    /// </summary>
+    [HttpGet("services/featured")]
+    public async Task<IActionResult> GetFeaturedServices(string slug)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            var services = await _context.Services
+                .Where(s => s.TenantId == tenant.Id && s.IsAvailable && s.IsFeatured)
+                .OrderBy(s => s.DisplayOrder)
+                .ThenBy(s => s.Priority)
+                .Take(6) // Max 6 featured items for carousel
+                .Select(s => new
+                {
+                    s.Id,
+                    s.Name,
+                    s.Description,
+                    s.Category,
+                    s.Icon,
+                    imageUrl = s.FeaturedImageUrl ?? s.ImageUrl,
+                    s.IsChargeable,
+                    price = s.IsChargeable ? $"{s.Currency} {s.Price:F2}" : null,
+                    priceAmount = s.Price,
+                    s.Currency,
+                    s.PricingUnit,
+                    s.AvailableHours,
+                    requiresBooking = s.RequiresAdvanceBooking,
+                    advanceBookingHours = s.AdvanceBookingHours,
+                    s.TimeSlots
+                })
+                .ToListAsync();
+
+            return Ok(new { services });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting featured services for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error retrieving featured services" });
+        }
+    }
+
+    /// <summary>
+    /// Get contextual service recommendations based on time of day
+    /// </summary>
+    [HttpGet("services/contextual")]
+    public async Task<IActionResult> GetContextualServices(string slug, [FromQuery] string? timeSlot = null)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            // Determine time slot based on current hour if not provided
+            if (string.IsNullOrEmpty(timeSlot))
+            {
+                var hour = DateTime.Now.Hour;
+                timeSlot = hour switch
+                {
+                    >= 6 and < 10 => "morning",
+                    >= 10 and < 14 => "midday",
+                    >= 14 and < 18 => "afternoon",
+                    >= 18 and < 22 => "evening",
+                    _ => "night"
+                };
+            }
+
+            var query = _context.Services
+                .Where(s => s.TenantId == tenant.Id && s.IsAvailable && s.IsChargeable);
+
+            // Filter by time slot if service has TimeSlots configured
+            var services = await query
+                .Where(s => s.TimeSlots == null || s.TimeSlots.Contains(timeSlot))
+                .OrderBy(s => s.DisplayOrder)
+                .ThenBy(s => s.Priority)
+                .Take(4)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.Name,
+                    s.Description,
+                    s.Category,
+                    s.Icon,
+                    imageUrl = s.FeaturedImageUrl ?? s.ImageUrl,
+                    price = $"{s.Currency} {s.Price:F2}",
+                    priceAmount = s.Price,
+                    s.Currency,
+                    s.PricingUnit,
+                    s.AvailableHours,
+                    s.TimeSlots
+                })
+                .ToListAsync();
+
+            return Ok(new { timeSlot, services });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting contextual services for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error retrieving contextual services" });
+        }
+    }
+
+    /// <summary>
+    /// Get weather-based service upsells based on current weather conditions
+    /// </summary>
+    [HttpGet("weather-upsells")]
+    public async Task<IActionResult> GetWeatherUpsells(
+        string slug,
+        [FromQuery] int temperature,
+        [FromQuery] int weatherCode)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            // Find matching weather upsell rules
+            var matchingRules = await _context.WeatherUpsellRules
+                .Where(r => r.TenantId == tenant.Id && r.IsActive)
+                .OrderByDescending(r => r.Priority)
+                .ToListAsync();
+
+            // Filter rules that match the current conditions
+            var applicableRule = matchingRules.FirstOrDefault(r =>
+            {
+                // Check temperature range
+                if (r.MinTemperature.HasValue && temperature < r.MinTemperature.Value)
+                    return false;
+                if (r.MaxTemperature.HasValue && temperature > r.MaxTemperature.Value)
+                    return false;
+
+                // Check weather codes if specified
+                if (!string.IsNullOrEmpty(r.WeatherCodes))
+                {
+                    try
+                    {
+                        var codes = System.Text.Json.JsonSerializer.Deserialize<int[]>(r.WeatherCodes);
+                        if (codes != null && codes.Length > 0 && !codes.Contains(weatherCode))
+                            return false;
+                    }
+                    catch
+                    {
+                        // If weather codes parsing fails, don't filter by it
+                    }
+                }
+
+                return true;
+            });
+
+            if (applicableRule == null)
+            {
+                return Ok(new
+                {
+                    bannerText = (string?)null,
+                    bannerIcon = (string?)null,
+                    services = Array.Empty<object>()
+                });
+            }
+
+            // Parse service IDs from the rule
+            var serviceIds = new List<int>();
+            try
+            {
+                serviceIds = System.Text.Json.JsonSerializer.Deserialize<List<int>>(applicableRule.ServiceIds) ?? new List<int>();
+            }
+            catch
+            {
+                _logger.LogWarning("Failed to parse ServiceIds for WeatherUpsellRule {RuleId}", applicableRule.Id);
+            }
+
+            // Get the services
+            var services = await _context.Services
+                .Where(s => s.TenantId == tenant.Id && s.IsAvailable && serviceIds.Contains(s.Id))
+                .OrderBy(s => s.DisplayOrder)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.Name,
+                    s.Description,
+                    s.Category,
+                    s.Icon,
+                    imageUrl = s.FeaturedImageUrl ?? s.ImageUrl,
+                    s.IsChargeable,
+                    price = s.IsChargeable ? $"{s.Currency} {s.Price:F2}" : null,
+                    priceAmount = s.Price,
+                    s.Currency,
+                    s.PricingUnit,
+                    s.AvailableHours,
+                    requiresBooking = s.RequiresAdvanceBooking,
+                    advanceBookingHours = s.AdvanceBookingHours
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                bannerText = applicableRule.BannerText,
+                bannerIcon = applicableRule.BannerIcon,
+                weatherCondition = applicableRule.WeatherCondition,
+                services
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting weather upsells for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error retrieving weather-based recommendations" });
+        }
+    }
+
+    /// <summary>
+    /// Submit a service request from guest portal
+    /// </summary>
+    [HttpPost("services/request")]
+    public async Task<IActionResult> SubmitServiceRequest(string slug, [FromBody] GuestServiceRequest request)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            if (request.ServiceId <= 0)
+            {
+                return BadRequest(new { error = "Service ID is required" });
+            }
+
+            if (string.IsNullOrEmpty(request.RoomNumber))
+            {
+                return BadRequest(new { error = "Room number is required" });
+            }
+
+            // Get the service details
+            var service = await _context.Services
+                .Where(s => s.Id == request.ServiceId && s.TenantId == tenant.Id && s.IsAvailable)
+                .FirstOrDefaultAsync();
+
+            if (service == null)
+            {
+                return NotFound(new { error = "Service not found" });
+            }
+
+            // Determine the appropriate department (valid: Housekeeping, Maintenance, FrontDesk, Concierge, FoodService, General)
+            var department = service.Category?.ToLower() switch
+            {
+                "spa" or "wellness" => "Concierge",
+                "restaurant" or "dining" or "room service" or "food" => "FoodService",
+                "transport" or "shuttle" => "Concierge",
+                "housekeeping" or "laundry" => "Housekeeping",
+                "maintenance" => "Maintenance",
+                _ => "Concierge"
+            };
+
+            // Create staff task for the service request
+            var task = new StaffTask
+            {
+                TenantId = tenant.Id,
+                Title = $"Service Request: {service.Name} - Room {request.RoomNumber}",
+                Description = BuildServiceRequestDescription(service, request),
+                TaskType = "concierge", // Valid: deliver_item, collect_item, maintenance, frontdesk, concierge, general
+                Department = department,
+                Priority = "Normal",
+                Status = "Open",
+                RoomNumber = request.RoomNumber,
+                Notes = $"Submitted via Guest Portal at {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.StaffTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            // Track upsell conversion if source is provided (indicates upsell feature usage)
+            if (!string.IsNullOrEmpty(request.Source))
+            {
+                var upsellMetric = new PortalUpsellMetric
+                {
+                    TenantId = tenant.Id,
+                    ServiceId = service.Id,
+                    ServiceName = service.Name,
+                    ServicePrice = service.Price ?? 0,
+                    ServiceCategory = service.Category,
+                    Source = request.Source,
+                    RoomNumber = request.RoomNumber,
+                    EventType = "conversion",
+                    Revenue = service.IsChargeable ? (service.Price ?? 0) : 0,
+                    StaffTaskId = task.Id,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.PortalUpsellMetrics.Add(upsellMetric);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Portal upsell tracked: Service {ServiceName} from source {Source} in Room {RoomNumber}",
+                    service.Name, request.Source, request.RoomNumber);
+            }
+
+            _logger.LogInformation(
+                "Service request created: Task {TaskId} for {ServiceName} in Room {RoomNumber} at Tenant {TenantId}",
+                task.Id, service.Name, request.RoomNumber, tenant.Id);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Your service request has been submitted. Our team will contact you shortly to confirm.",
+                taskId = task.Id,
+                serviceName = service.Name,
+                estimatedResponse = service.RequiresAdvanceBooking ? "We will contact you to confirm availability" : "Within 30 minutes"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting service request for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error submitting service request" });
+        }
+    }
+
+    private static string BuildServiceRequestDescription(Service service, GuestServiceRequest request)
+    {
+        var lines = new List<string>
+        {
+            $"Service: {service.Name}",
+            $"Category: {service.Category}"
+        };
+
+        if (service.IsChargeable && service.Price.HasValue)
+        {
+            lines.Add($"Price: {service.Currency} {service.Price:F2}{(string.IsNullOrEmpty(service.PricingUnit) ? "" : $" ({service.PricingUnit})")}");
+        }
+
+        lines.Add($"Preferred Time: {request.PreferredTime ?? "As soon as possible"}");
+
+        if (!string.IsNullOrEmpty(request.SpecialRequests))
+        {
+            lines.Add($"Special Requests: {request.SpecialRequests}");
+        }
+
+        if (!string.IsNullOrEmpty(request.GuestName))
+        {
+            lines.Add($"Guest Name: {request.GuestName}");
+        }
+
+        if (!string.IsNullOrEmpty(request.Phone))
+        {
+            lines.Add($"Contact Phone: {request.Phone}");
+        }
+
+        return string.Join("\n", lines);
+    }
+
     #endregion
 
     #region Maintenance Requests
@@ -503,6 +1026,54 @@ public class PublicGuestController : ControllerBase
     #endregion
 
     #region Lost & Found
+
+    /// <summary>
+    /// Get list of lost item reports from other guests
+    /// </summary>
+    [HttpGet("lost-reports")]
+    public async Task<IActionResult> GetLostReports(string slug, [FromQuery] string? category = null)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            var query = _context.LostItems
+                .Where(l => l.TenantId == tenant.Id);
+
+            if (!string.IsNullOrEmpty(category))
+            {
+                query = query.Where(l => l.Category == category);
+            }
+
+            var items = await query
+                .OrderByDescending(l => l.ReportedAt)
+                .Select(l => new
+                {
+                    l.Id,
+                    l.ItemName,
+                    category = l.Category ?? "Other",
+                    description = l.Description != null ? (l.Description.Length > 100 ? l.Description.Substring(0, 100) + "..." : l.Description) : null,
+                    l.Color,
+                    l.Brand,
+                    l.LocationLost,
+                    reportedDate = l.ReportedAt.ToString("dd MMM yyyy"),
+                    status = l.Status == "Matched" || l.Status == "Found" || l.Status == "Claimed" || l.Status == "Returned" ? "found" : "searching"
+                })
+                .Take(50)
+                .ToListAsync();
+
+            return Ok(new { items });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting lost reports for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error retrieving lost reports" });
+        }
+    }
 
     /// <summary>
     /// Get list of found items that guests can inquire about
@@ -637,8 +1208,8 @@ public class PublicGuestController : ControllerBase
                 TenantId = tenant.Id,
                 Score = request.Rating,
                 Comment = $"{(request.GuestName != null ? $"Guest: {request.GuestName}\n" : "")}{(request.RoomNumber != null ? $"Room: {request.RoomNumber}\n" : "")}{request.Comment ?? ""}",
-                GuestPhone = request.Phone ?? "guest-portal",
-                Source = "GuestPortal",
+                GuestPhone = request.Phone ?? "+27000000000", // Use placeholder phone if not provided
+                Source = "manual", // Valid: checkout, manual, whatsapp
                 Status = "received",
                 ReceivedAt = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow
@@ -661,6 +1232,337 @@ public class PublicGuestController : ControllerBase
         {
             _logger.LogError(ex, "Error submitting rating for slug {Slug}", slug);
             return StatusCode(500, new { error = "Error submitting rating" });
+        }
+    }
+
+    #endregion
+
+    #region Housekeeping Preferences
+
+    /// <summary>
+    /// Get housekeeping preferences for a room
+    /// </summary>
+    [HttpGet("housekeeping-preferences")]
+    public async Task<IActionResult> GetHousekeepingPreferences(string slug, [FromQuery] string? roomNumber = null)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            // Return empty list for now - in the future we could query actual preferences
+            // For now, preferences are stored as staff tasks
+            return Ok(new List<object>());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting housekeeping preferences for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error retrieving preferences" });
+        }
+    }
+
+    /// <summary>
+    /// Submit housekeeping preferences from guest portal
+    /// </summary>
+    [HttpPost("housekeeping-preferences")]
+    public async Task<IActionResult> SubmitHousekeepingPreference(string slug, [FromBody] GuestHousekeepingPreferenceRequest request)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            if (string.IsNullOrEmpty(request.RoomNumber))
+            {
+                return BadRequest(new { error = "Room number is required" });
+            }
+
+            if (string.IsNullOrEmpty(request.PreferenceType))
+            {
+                return BadRequest(new { error = "Preference type is required" });
+            }
+
+            // Build description based on preference type
+            var description = BuildPreferenceDescription(request);
+            var title = GetPreferenceTitle(request.PreferenceType, request.RoomNumber);
+
+            // Create staff task for housekeeping team
+            var task = new StaffTask
+            {
+                TenantId = tenant.Id,
+                Title = title,
+                Description = description,
+                TaskType = "general",
+                Department = "Housekeeping",
+                Priority = "Normal",
+                Status = "Open",
+                RoomNumber = request.RoomNumber,
+                Notes = $"Guest preference submitted via Guest Portal at {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.StaffTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            // Send SignalR notification to housekeeping staff
+            await _staffTaskHub.Clients.Group($"Tenant_{tenant.Id}")
+                .SendAsync("PreferenceCreated", new
+                {
+                    taskId = task.Id,
+                    roomNumber = request.RoomNumber,
+                    preferenceType = request.PreferenceType,
+                    title = title,
+                    description = description,
+                    department = "Housekeeping",
+                    createdAt = task.CreatedAt
+                });
+
+            _logger.LogInformation(
+                "Housekeeping preference created: Task {TaskId} for Room {RoomNumber} at Tenant {TenantId}",
+                task.Id, request.RoomNumber, tenant.Id);
+
+            return Ok(new
+            {
+                id = task.Id,
+                preferenceType = request.PreferenceType,
+                preferenceValue = request.PreferenceValue,
+                status = "Active",
+                createdAt = DateTime.UtcNow,
+                updatedAt = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting housekeeping preference for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error submitting preference" });
+        }
+    }
+
+    private static string GetPreferenceTitle(string preferenceType, string roomNumber)
+    {
+        return preferenceType switch
+        {
+            "aircon_after_cleaning" => $"Room {roomNumber}: Aircon Preference Set",
+            "linen_change_frequency" => $"Room {roomNumber}: Linen Change Preference",
+            "towel_change_frequency" => $"Room {roomNumber}: Towel Change Preference",
+            "dnd_schedule" => $"Room {roomNumber}: Do Not Disturb Request",
+            _ => $"Room {roomNumber}: Housekeeping Preference"
+        };
+    }
+
+    private static string BuildPreferenceDescription(GuestHousekeepingPreferenceRequest request)
+    {
+        var lines = new List<string> { $"Room: {request.RoomNumber}" };
+
+        switch (request.PreferenceType)
+        {
+            case "aircon_after_cleaning":
+                var airconEnabled = request.PreferenceValue?.TryGetProperty("enabled", out var enabled) == true && enabled.GetBoolean();
+                lines.Add($"Preference: Keep aircon {(airconEnabled ? "ON" : "OFF")} after cleaning");
+                break;
+
+            case "linen_change_frequency":
+                var dailyLinen = request.PreferenceValue?.TryGetProperty("daily", out var linenDaily) == true && linenDaily.GetBoolean();
+                lines.Add($"Preference: Linen change {(dailyLinen ? "daily" : "every 2-3 days")}");
+                break;
+
+            case "towel_change_frequency":
+                var dailyTowel = request.PreferenceValue?.TryGetProperty("daily", out var towelDaily) == true && towelDaily.GetBoolean();
+                lines.Add($"Preference: Towel change {(dailyTowel ? "daily" : "every 2-3 days")}");
+                break;
+
+            case "dnd_schedule":
+                var until = request.PreferenceValue?.TryGetProperty("until", out var untilTime) == true ? untilTime.GetString() : "14:00";
+                lines.Add($"Do Not Disturb until: {until}");
+                break;
+
+            default:
+                lines.Add($"Preference Type: {request.PreferenceType}");
+                break;
+        }
+
+        if (!string.IsNullOrEmpty(request.Notes))
+        {
+            lines.Add($"Notes: {request.Notes}");
+        }
+
+        return string.Join("\n", lines);
+    }
+
+    #endregion
+
+    #region Request Items
+
+    /// <summary>
+    /// Get available request items from the database
+    /// </summary>
+    [HttpGet("request-items")]
+    public async Task<IActionResult> GetAvailableRequestItems(string slug, [FromQuery] string? category = null, [FromQuery] string? department = null)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            var query = _context.RequestItems
+                .Where(r => r.TenantId == tenant.Id && r.IsAvailable);
+
+            // Filter by category if specified (e.g., "RoomAmenities", "Housekeeping")
+            if (!string.IsNullOrEmpty(category))
+            {
+                query = query.Where(r => r.Category == category);
+            }
+
+            // Filter by department if specified (e.g., "Housekeeping")
+            if (!string.IsNullOrEmpty(department))
+            {
+                query = query.Where(r => r.Department == department);
+            }
+
+            var items = await query
+                .OrderBy(r => r.DisplayOrder)
+                .ThenBy(r => r.Name)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Name,
+                    r.Category,
+                    r.Description,
+                    r.RequiresQuantity,
+                    r.DefaultQuantityLimit,
+                    r.EstimatedTime,
+                    icon = GetRequestItemIcon(r.Name)
+                })
+                .ToListAsync();
+
+            return Ok(new { items });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting request items for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error retrieving request items" });
+        }
+    }
+
+    private static string GetRequestItemIcon(string itemName)
+    {
+        var name = itemName.ToLower();
+        return name switch
+        {
+            var n when n.Contains("iron") => "bi-lightning",
+            var n when n.Contains("hair dryer") || n.Contains("dryer") => "bi-wind",
+            var n when n.Contains("hanger") => "bi-handbag",
+            var n when n.Contains("bathrobe") || n.Contains("robe") => "bi-person-standing",
+            var n when n.Contains("slipper") => "bi-box",
+            var n when n.Contains("towel") => "bi-droplet",
+            var n when n.Contains("blanket") => "bi-cloud",
+            var n when n.Contains("pillow") => "bi-moon",
+            var n when n.Contains("laundry") => "bi-basket",
+            var n when n.Contains("coffee") || n.Contains("tea") => "bi-cup-hot",
+            var n when n.Contains("ice") => "bi-snow",
+            var n when n.Contains("mini bar") => "bi-cup-straw",
+            _ => "bi-box-seam"
+        };
+    }
+
+    /// <summary>
+    /// Submit an item request from guest portal (creates a StaffTask)
+    /// </summary>
+    [HttpPost("item-request")]
+    public async Task<IActionResult> SubmitItemRequest(string slug, [FromBody] GuestItemRequestDto request)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            if (request.RequestItemId <= 0)
+            {
+                return BadRequest(new { error = "Request item ID is required" });
+            }
+
+            // Get the RequestItem details
+            var requestItem = await _context.RequestItems
+                .FirstOrDefaultAsync(r => r.Id == request.RequestItemId && r.TenantId == tenant.Id);
+
+            if (requestItem == null || !requestItem.IsAvailable)
+            {
+                return BadRequest(new { error = "Item not available" });
+            }
+
+            // Validate quantity if required
+            var quantity = request.Quantity > 0 ? request.Quantity : 1;
+            if (requestItem.RequiresQuantity && quantity > requestItem.DefaultQuantityLimit)
+            {
+                quantity = requestItem.DefaultQuantityLimit;
+            }
+
+            // Create StaffTask for the item request
+            var task = new StaffTask
+            {
+                TenantId = tenant.Id,
+                RequestItemId = requestItem.Id,
+                Title = $"{requestItem.Name} - Room {request.RoomNumber}",
+                Description = string.IsNullOrEmpty(request.Notes)
+                    ? $"Guest requested: {requestItem.Name}{(quantity > 1 ? $" (Qty: {quantity})" : "")}"
+                    : $"Guest requested: {requestItem.Name}{(quantity > 1 ? $" (Qty: {quantity})" : "")}\n\nNotes: {request.Notes}",
+                TaskType = "deliver_item",
+                Department = requestItem.Department ?? "Housekeeping",
+                RoomNumber = request.RoomNumber,
+                Quantity = quantity,
+                Priority = requestItem.IsUrgent ? "High" : "Normal",
+                Status = "Open",
+                Notes = $"Submitted via Guest Portal at {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.StaffTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            // Send SignalR notification to staff
+            await _staffTaskHub.Clients.Group($"Tenant_{tenant.Id}")
+                .SendAsync("TaskCreated", new
+                {
+                    taskId = task.Id,
+                    title = task.Title,
+                    roomNumber = task.RoomNumber,
+                    department = task.Department,
+                    itemName = requestItem.Name,
+                    quantity = quantity,
+                    createdAt = task.CreatedAt
+                });
+
+            _logger.LogInformation(
+                "Item request created: Task {TaskId} for {ItemName} in Room {RoomNumber} at Tenant {TenantId}",
+                task.Id, requestItem.Name, request.RoomNumber, tenant.Id);
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Your request for {requestItem.Name} has been sent to housekeeping",
+                taskId = task.Id,
+                itemName = requestItem.Name,
+                estimatedTime = requestItem.EstimatedTime ?? 15
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting item request for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error submitting item request" });
         }
     }
 
@@ -739,9 +1641,240 @@ public class PublicGuestController : ControllerBase
     }
 
     #endregion
+
+    #region Push Notifications
+
+    /// <summary>
+    /// Subscribe guest to push notifications
+    /// </summary>
+    [HttpPost("push/subscribe")]
+    public async Task<IActionResult> SubscribeToPush(string slug, [FromBody] GuestPushSubscribeRequest request)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            // Validate and resolve room number
+            var validation = await _roomValidationService.ValidateAndResolveRoom(
+                tenant.Id,
+                request.Phone,
+                request.RoomNumber);
+
+            if (!validation.IsValid)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    error = validation.ErrorMessage,
+                    requiresRoomNumber = string.IsNullOrWhiteSpace(request.RoomNumber)
+                });
+            }
+
+            // Check if subscription already exists
+            var existingSubscription = await _context.PushSubscriptions
+                .FirstOrDefaultAsync(s =>
+                    s.Endpoint == request.Endpoint &&
+                    s.TenantId == tenant.Id &&
+                    s.IsGuest);
+
+            if (existingSubscription != null)
+            {
+                // Update existing subscription
+                existingSubscription.P256dhKey = request.Keys?.P256dh ?? string.Empty;
+                existingSubscription.AuthKey = request.Keys?.Auth ?? string.Empty;
+                existingSubscription.DeviceInfo = request.DeviceInfo;
+                existingSubscription.GuestPhone = request.Phone;
+                existingSubscription.RoomNumber = validation.RoomNumber;
+                existingSubscription.BookingId = validation.BookingId;
+                existingSubscription.IsVerified = validation.IsVerified;
+                existingSubscription.LastUsedAt = DateTime.UtcNow;
+                existingSubscription.IsActive = true;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Updated guest push subscription for tenant {TenantId}, room {RoomNumber}, verified: {IsVerified}",
+                    tenant.Id, validation.RoomNumber, validation.IsVerified);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Subscription updated successfully",
+                    roomNumber = validation.RoomNumber,
+                    isVerified = validation.IsVerified,
+                    guestName = validation.GuestName
+                });
+            }
+
+            // Create new subscription
+            var subscription = new PushSubscription
+            {
+                TenantId = tenant.Id,
+                Endpoint = request.Endpoint,
+                P256dhKey = request.Keys?.P256dh ?? string.Empty,
+                AuthKey = request.Keys?.Auth ?? string.Empty,
+                DeviceInfo = request.DeviceInfo,
+                GuestPhone = request.Phone,
+                RoomNumber = validation.RoomNumber,
+                BookingId = validation.BookingId,
+                IsVerified = validation.IsVerified,
+                IsGuest = true,
+                CreatedAt = DateTime.UtcNow,
+                LastUsedAt = DateTime.UtcNow,
+                IsActive = true
+            };
+
+            _context.PushSubscriptions.Add(subscription);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Created guest push subscription for tenant {TenantId}, room {RoomNumber}, verified: {IsVerified}",
+                tenant.Id, validation.RoomNumber, validation.IsVerified);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Subscribed to notifications successfully",
+                roomNumber = validation.RoomNumber,
+                isVerified = validation.IsVerified,
+                guestName = validation.GuestName
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error subscribing guest to push notifications for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Failed to subscribe to notifications" });
+        }
+    }
+
+    /// <summary>
+    /// Unsubscribe guest from push notifications
+    /// </summary>
+    [HttpPost("push/unsubscribe")]
+    public async Task<IActionResult> UnsubscribeFromPush(string slug, [FromBody] GuestPushUnsubscribeRequest request)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            var subscription = await _context.PushSubscriptions
+                .FirstOrDefaultAsync(s =>
+                    s.Endpoint == request.Endpoint &&
+                    s.TenantId == tenant.Id &&
+                    s.IsGuest);
+
+            if (subscription == null)
+            {
+                return NotFound(new { error = "Subscription not found" });
+            }
+
+            subscription.IsActive = false;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Guest unsubscribed from push notifications for tenant {TenantId}", tenant.Id);
+
+            return Ok(new { success = true, message = "Unsubscribed successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error unsubscribing guest from push notifications for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Failed to unsubscribe" });
+        }
+    }
+
+    /// <summary>
+    /// Validate a room number for this property
+    /// </summary>
+    [HttpGet("rooms/validate/{roomNumber}")]
+    public async Task<IActionResult> ValidateRoom(string slug, string roomNumber)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            var isValid = await _roomValidationService.IsValidRoom(tenant.Id, roomNumber);
+            var validRooms = await _roomValidationService.GetValidRooms(tenant.Id);
+
+            // If no valid rooms configured, accept any room
+            if (!validRooms.Any())
+            {
+                return Ok(new {
+                    valid = true,
+                    roomNumber = roomNumber.Trim(),
+                    message = "Room accepted"
+                });
+            }
+
+            if (isValid)
+            {
+                return Ok(new {
+                    valid = true,
+                    roomNumber = roomNumber.Trim(),
+                    message = "Valid room number"
+                });
+            }
+
+            return Ok(new {
+                valid = false,
+                error = $"Room {roomNumber} is not a valid room at this property"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating room {Room} for slug {Slug}", roomNumber, slug);
+            return StatusCode(500, new { error = "Failed to validate room" });
+        }
+    }
+
+    #endregion
 }
 
 #region Request DTOs
+
+public class GuestPushSubscribeRequest
+{
+    [Required]
+    public string Endpoint { get; set; } = string.Empty;
+
+    public GuestPushKeys? Keys { get; set; }
+
+    public string? DeviceInfo { get; set; }
+
+    /// <summary>
+    /// Phone number for booking lookup (optional - can use room number instead).
+    /// </summary>
+    public string? Phone { get; set; }
+
+    /// <summary>
+    /// Room number is optional - will be auto-filled from booking if found.
+    /// Required if no booking found for the phone number.
+    /// </summary>
+    public string? RoomNumber { get; set; }
+}
+
+public class GuestPushKeys
+{
+    public string P256dh { get; set; } = string.Empty;
+    public string Auth { get; set; } = string.Empty;
+}
+
+public class GuestPushUnsubscribeRequest
+{
+    [Required]
+    public string Endpoint { get; set; } = string.Empty;
+}
 
 public class GuestMaintenanceRequest
 {
@@ -799,6 +1932,61 @@ public class GuestRatingRequest
 
     [MaxLength(20)]
     public string? Phone { get; set; }
+}
+
+public class GuestServiceRequest
+{
+    [Required]
+    public int ServiceId { get; set; }
+
+    [Required, MaxLength(20)]
+    public string RoomNumber { get; set; } = string.Empty;
+
+    [MaxLength(50)]
+    public string? PreferredTime { get; set; } // "asap", "this_afternoon", "this_evening", "tomorrow"
+
+    [MaxLength(500)]
+    public string? SpecialRequests { get; set; }
+
+    [MaxLength(100)]
+    public string? GuestName { get; set; }
+
+    [MaxLength(20)]
+    public string? Phone { get; set; }
+
+    /// <summary>
+    /// Source of the request for upsell tracking: weather_hot, weather_warm, weather_cold, weather_rainy, featured_carousel, service_menu
+    /// </summary>
+    [MaxLength(100)]
+    public string? Source { get; set; }
+}
+
+public class GuestHousekeepingPreferenceRequest
+{
+    [Required, MaxLength(20)]
+    public string RoomNumber { get; set; } = string.Empty;
+
+    [Required, MaxLength(50)]
+    public string PreferenceType { get; set; } = string.Empty; // aircon_after_cleaning, linen_change_frequency, towel_change_frequency, dnd_schedule
+
+    public System.Text.Json.JsonElement? PreferenceValue { get; set; }
+
+    [MaxLength(500)]
+    public string? Notes { get; set; }
+}
+
+public class GuestItemRequestDto
+{
+    [Required]
+    public int RequestItemId { get; set; }
+
+    [MaxLength(20)]
+    public string? RoomNumber { get; set; }
+
+    public int Quantity { get; set; } = 1;
+
+    [MaxLength(500)]
+    public string? Notes { get; set; }
 }
 
 #endregion

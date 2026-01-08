@@ -21,7 +21,12 @@ import {
   UpdateRequestItemRuleRequest,
   CreateUpsellItemRequest,
   UpdateUpsellItemRequest,
-  RuleTemplate
+  RuleTemplate,
+  WeatherUpsellRule,
+  WeatherConditionInfo,
+  ServiceForUpsell,
+  CreateWeatherUpsellRuleRequest,
+  UpdateWeatherUpsellRuleRequest
 } from '../models/business-rules.models';
 
 @Injectable({
@@ -351,6 +356,93 @@ export class BusinessRulesService {
         catchError(error => {
           console.error('Error loading rule templates:', error);
           return of([]);
+        })
+      );
+  }
+
+  // Weather Upselling APIs
+  getWeatherUpsellRules(tenantId: number): Observable<WeatherUpsellRule[]> {
+    return this.http.get<WeatherUpsellRule[]>(`${this.baseUrl}/admin/weather-upsells/${tenantId}`)
+      .pipe(
+        map(rules => rules.map(r => ({
+          ...r,
+          createdAt: new Date(r.createdAt),
+          updatedAt: new Date(r.updatedAt)
+        }))),
+        catchError(error => {
+          console.error('Error loading weather upsell rules:', error);
+          return of([]);
+        })
+      );
+  }
+
+  getWeatherConditions(): Observable<WeatherConditionInfo[]> {
+    return this.http.get<WeatherConditionInfo[]>(`${this.baseUrl}/admin/weather-upsells/conditions`)
+      .pipe(
+        catchError(error => {
+          console.error('Error loading weather conditions:', error);
+          return of([]);
+        })
+      );
+  }
+
+  getAvailableServicesForWeatherUpsell(tenantId: number): Observable<ServiceForUpsell[]> {
+    return this.http.get<{ services: ServiceForUpsell[] }>(`${this.baseUrl}/admin/weather-upsells/${tenantId}/available-services`)
+      .pipe(
+        map(response => response.services),
+        catchError(error => {
+          console.error('Error loading available services:', error);
+          return of([]);
+        })
+      );
+  }
+
+  createWeatherUpsellRule(tenantId: number, request: CreateWeatherUpsellRuleRequest): Observable<WeatherUpsellRule> {
+    return this.http.post<WeatherUpsellRule>(`${this.baseUrl}/admin/weather-upsells/${tenantId}`, request)
+      .pipe(
+        map(rule => ({
+          ...rule,
+          createdAt: new Date(rule.createdAt),
+          updatedAt: new Date(rule.updatedAt)
+        })),
+        catchError(error => {
+          console.error('Error creating weather upsell rule:', error);
+          throw error;
+        })
+      );
+  }
+
+  updateWeatherUpsellRule(tenantId: number, ruleId: number, request: UpdateWeatherUpsellRuleRequest): Observable<WeatherUpsellRule> {
+    return this.http.put<WeatherUpsellRule>(`${this.baseUrl}/admin/weather-upsells/${tenantId}/${ruleId}`, request)
+      .pipe(
+        map(rule => ({
+          ...rule,
+          createdAt: new Date(rule.createdAt),
+          updatedAt: new Date(rule.updatedAt)
+        })),
+        catchError(error => {
+          console.error('Error updating weather upsell rule:', error);
+          throw error;
+        })
+      );
+  }
+
+  deleteWeatherUpsellRule(tenantId: number, ruleId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/admin/weather-upsells/${tenantId}/${ruleId}`)
+      .pipe(
+        catchError(error => {
+          console.error('Error deleting weather upsell rule:', error);
+          throw error;
+        })
+      );
+  }
+
+  toggleWeatherUpsellRule(tenantId: number, ruleId: number, isActive: boolean): Observable<void> {
+    return this.http.patch<void>(`${this.baseUrl}/admin/weather-upsells/${tenantId}/${ruleId}/toggle`, { isActive })
+      .pipe(
+        catchError(error => {
+          console.error('Error toggling weather upsell rule:', error);
+          throw error;
         })
       );
   }

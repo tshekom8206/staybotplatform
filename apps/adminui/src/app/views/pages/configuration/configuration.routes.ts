@@ -35,5 +35,10 @@ export default [
     path: 'templates',
     loadComponent: () => import('./template-manager/template-manager.component').then(c => c.TemplateManagerComponent),
     title: 'Template Manager - Hostr Admin'
+  },
+  {
+    path: 'qr-code',
+    loadComponent: () => import('./qr-code/qr-code.component').then(c => c.QrCodeComponent),
+    title: 'QR Code Generator - Hostr Admin'
   }
 ] as Routes;

@@ -28,7 +28,9 @@
       "promise": "Ons Belofte",
       "promiseDesc": "Ons verbintenis aan jou",
       "lostFound": "Verlore & Gevind",
-      "lostFoundDesc": "Rapporteer of vind items"
+      "lostFoundDesc": "Rapporteer of vind items",
+      "houseRules": "Huisreëls",
+      "houseRulesDesc": "Wat om te weet tydens jou verblyf"
     }
   },
   "foodDrinks": {
@@ -135,16 +137,122 @@
     "call": "Bel Ons"
   },
   "pwa": {
-    "installTitle": "Installeer App",
-    "installMessage": "Voeg by jou tuisskerm vir vinnige toegang",
-    "install": "Installeer",
-    "notNow": "Nie Nou Nie",
-    "updateTitle": "Opdatering Beskikbaar",
-    "updateMessage": "'n Nuwe weergawe is beskikbaar",
-    "update": "Dateer Nou Op"
+    "install": {
+      "title": "Installeer App",
+      "description": "Voeg {{hotelName}} by jou tuisskerm vir vinnige toegang",
+      "installButton": "Installeer",
+      "notNow": "Nie Nou Nie"
+    },
+    "update": {
+      "title": "Opdatering Beskikbaar",
+      "description": "'n Nuwe weergawe is beskikbaar",
+      "updateButton": "Dateer Nou Op",
+      "later": "Later"
+    }
   },
   "language": {
     "title": "Taal",
     "select": "Kies Taal"
+  },
+  "services": {
+    "title": "Hoteldienste",
+    "subtitle": "Verbeter jou verblyf met ons premiumdienste",
+    "enhanceYourStay": "Verbeter Jou Verblyf",
+    "requestService": "Versoek Hierdie Diens",
+    "sendRequest": "Stuur Versoek",
+    "requestSent": "Versoek Gestuur!",
+    "requestSentMessage": "Ons span sal jou binnekort kontak om te bevestig."
+  },
+  "roomPrompt": {
+    "message": "Voer jou kamernommer in vir persoonlike diens",
+    "placeholder": "Kamer #"
+  },
+  "room": {
+    "edit": "Verander Kamer",
+    "update": "Dateer Kamer Op",
+    "label": "Kamernommer",
+    "invalid": "Ongeldige kamernommer",
+    "validating": "Besig om te valideer..."
+  },
+  "houseRules": {
+    "title": "Huisreëls",
+    "subtitle": "'n Paar dinge vir 'n gemaklike verblyf",
+    "smoking": "Rook",
+    "pets": "Troeteldiere",
+    "children": "Kinders",
+    "cancellation": "Kansellasie",
+    "checkIn": "Inklok",
+    "checkOut": "Uitklok",
+    "checkTimes": "Inklok & Uitklok Tye",
+    "noRules": "Geen huisreëls is vir hierdie eiendom gestel nie"
+  },
+  "wifi": {
+    "title": "WiFi-inligting",
+    "button": "WiFi",
+    "network": "Netwerk",
+    "password": "Wagwoord",
+    "copy": "Kopieer Wagwoord",
+    "copied": "Gekopieer!"
+  },
+  "weather": {
+    "title": "Weer",
+    "today": "Vandag",
+    "forecast": "Voorspelling",
+    "feelsLike": "Voel soos",
+    "humidity": "Humiditeit",
+    "unavailable": "Weer onbeskikbaar"
+  },
+  "currency": {
+    "title": "Geldomsetter",
+    "amount": "Bedrag",
+    "convert": "Omsit",
+    "lastUpdated": "Laas opgedateer",
+    "unavailable": "Tariewe onbeskikbaar"
+  },
+  "housekeeping": {
+    "title": "Huishouding Voorkeure",
+    "subtitle": "Laat ons weet hoe jy jou kamer bedien wil hê",
+    "temperature": "Temperatuur",
+    "airconAfterCleaning": "Hou lugversorger af na skoonmaak",
+    "airconDescription": "Ons sal die lugversorger af hou wanneer ons jou kamer skoonmaak",
+    "cleaning": "Skoonmaak",
+    "dailyLinenChange": "Daaglikse linnegoed vervanging",
+    "linenDescription": "Verander bedlinne elke dag",
+    "dailyTowelChange": "Daaglikse handdoek vervanging",
+    "towelDescription": "Vervang handdoeke elke dag",
+    "doNotDisturb": "Moenie Steur Nie",
+    "dndEnabled": "Aktiveer Moenie Steur Nie",
+    "dndDescription": "Versoek geen huishouding gedurende gespesifiseerde ure nie",
+    "dndUntil": "Moenie steur tot nie",
+    "activePreferences": "Jou Aktiewe Voorkeure",
+    "acknowledged": "Erken",
+    "pending": "Hangende",
+    "saved": "Gestoor",
+    "savedMessage": "Jou voorkeur is gestoor. Huishouding is in kennis gestel.",
+    "addNote": "Voeg 'n nota by (opsioneel)...",
+    "cleaningTime": "Skoonmaak Skedule",
+    "preferredTime": "Voorkeur skoonmaaktyd",
+    "preferredTimeDescription": "Wanneer wil jy hê huishouding moet jou kamer skoonmaak?",
+    "morning": "Oggend (8-11vm)",
+    "afternoon": "Middag (2-5nm)",
+    "skipToday": "Slaan Vandag Oor",
+    "beddingComfort": "Beddegoed & Gemak",
+    "extraPillows": "Ekstra kussings",
+    "extraPillowsDescription": "Versoek bykomende kussings (maks 4)",
+    "extraBlankets": "Ekstra komberse",
+    "extraBlanketsDescription": "Versoek bykomende komberse (maks 3)",
+    "pillowType": "Kussing voorkeur",
+    "pillowTypeDescription": "Kies jou voorkeur kussingtipe",
+    "pillowSoft": "Sag",
+    "pillowMedium": "Medium",
+    "pillowFirm": "Ferm",
+    "pillowHypoallergenic": "Hipoallergeen",
+    "confirmButton": "Bevestig",
+    "cancelButton": "Kanselleer",
+    "needSomething": "Benodig Iets?",
+    "deliverToRoom": "Versoek aflewering na jou kamer",
+    "request": "Versoek",
+    "requested": "Versoek",
+    "noItemsAvailable": "Geen items tans beskikbaar nie"
   }
 }

@@ -3,12 +3,16 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../header/header.component';
 import { FooterComponent } from '../footer/footer.component';
+import { RoomPromptBannerComponent } from '../../../shared/components/room-prompt-banner/room-prompt-banner.component';
+import { PwaInstallPromptComponent } from '../../../shared/components/pwa-install-prompt/pwa-install-prompt.component';
+import { PwaUpdateNotificationComponent } from '../../../shared/components/pwa-update-notification/pwa-update-notification.component';
+import { NotificationPromptComponent } from '../../../shared/components/notification-prompt/notification-prompt.component';
 import { TenantService, TenantInfo } from '../../../core/services/tenant.service';
 
 @Component({
   selector: 'app-base',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, HeaderComponent, FooterComponent],
+  imports: [CommonModule, RouterOutlet, HeaderComponent, FooterComponent, RoomPromptBannerComponent, PwaInstallPromptComponent, PwaUpdateNotificationComponent, NotificationPromptComponent],
   template: `
     <div class="app-wrapper" [class.has-background]="tenant?.backgroundImageUrl">
       <!-- Blurry Background Image -->
@@ -41,10 +45,14 @@ import { TenantService, TenantInfo } from '../../../core/services/tenant.service
         </div>
       } @else {
         <app-header />
+        <app-room-prompt-banner />
+        <app-pwa-update-notification />
         <main class="main-content">
           <router-outlet />
         </main>
         <app-footer />
+        <app-notification-prompt />
+        <app-pwa-install-prompt />
       }
     </div>
   `,
@@ -74,14 +82,13 @@ import { TenantService, TenantInfo } from '../../../core/services/tenant.service
 
     .background-image {
       position: absolute;
-      top: -20px;
-      left: -20px;
-      right: -20px;
-      bottom: -20px;
+      top: -5px;
+      left: -5px;
+      right: -5px;
+      bottom: -5px;
       background-size: cover;
       background-position: center;
-      filter: blur(8px);
-      transform: scale(1.1);
+      filter: blur(1.5px);
     }
 
     .background-overlay {
@@ -90,12 +97,7 @@ import { TenantService, TenantInfo } from '../../../core/services/tenant.service
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(
-        135deg,
-        rgba(0, 0, 0, 0.4) 0%,
-        rgba(0, 0, 0, 0.2) 50%,
-        rgba(139, 90, 43, 0.3) 100%
-      );
+      background: rgba(0, 0, 0, 0.1);
     }
 
     .main-content {

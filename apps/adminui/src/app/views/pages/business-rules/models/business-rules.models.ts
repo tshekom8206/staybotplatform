@@ -280,3 +280,67 @@ export interface RuleTemplate {
   usageCount: number;
   createdAt: Date;
 }
+
+// Weather Upselling models
+export interface WeatherUpsellRule {
+  id: number;
+  tenantId: number;
+  weatherCondition: string;  // hot, warm, mild, cold, rainy, stormy, cloudy
+  minTemperature?: number;
+  maxTemperature?: number;
+  weatherCodes?: string;      // JSON array of WMO weather codes
+  serviceIds: string;         // JSON array of service IDs
+  bannerText?: string;
+  bannerIcon?: string;
+  priority: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface WeatherConditionInfo {
+  code: string;
+  name: string;
+  description: string;
+  defaultMinTemp?: number;
+  defaultMaxTemp?: number;
+  defaultIcon: string;
+  wmoCodes?: number[];
+}
+
+export interface ServiceForUpsell {
+  id: number;
+  name: string;
+  description?: string;
+  category?: string;
+  icon?: string;
+  imageUrl?: string;
+  isChargeable: boolean;
+  price: string;
+  priceAmount?: number;
+  currency?: string;
+}
+
+export interface CreateWeatherUpsellRuleRequest {
+  weatherCondition: string;
+  minTemperature?: number;
+  maxTemperature?: number;
+  weatherCodes?: string;
+  serviceIds: string;
+  bannerText?: string;
+  bannerIcon?: string;
+  priority: number;
+  isActive: boolean;
+}
+
+export interface UpdateWeatherUpsellRuleRequest {
+  weatherCondition: string;
+  minTemperature?: number;
+  maxTemperature?: number;
+  weatherCodes?: string;
+  serviceIds: string;
+  bannerText?: string;
+  bannerIcon?: string;
+  priority: number;
+  isActive: boolean;
+}

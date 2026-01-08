@@ -28,6 +28,11 @@ export const BusinessRulesRoutes: Routes = [
     title: 'Upselling Management - Hostr Admin'
   },
   {
+    path: 'weather-upselling',
+    loadComponent: () => import('./pages/weather-upselling/weather-upselling.component').then(c => c.WeatherUpsellingComponent),
+    title: 'Weather-Based Upselling - Hostr Admin'
+  },
+  {
     path: 'audit-log',
     loadComponent: () => import('./pages/audit-log/audit-log.component').then(c => c.AuditLogComponent),
     title: 'Audit Log - Hostr Admin'

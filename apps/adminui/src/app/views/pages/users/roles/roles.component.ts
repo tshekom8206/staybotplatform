@@ -222,6 +222,40 @@ export class RolesComponent implements OnInit, OnDestroy {
     return this.rolesService.getRoleIcon(roleName);
   }
 
+  getRoleIconForCard(roleName: string): string {
+    switch (roleName.toLowerCase()) {
+      case 'owner':
+        return 'award';
+      case 'superadmin':
+        return 'shield';
+      case 'admin':
+        return 'settings';
+      case 'manager':
+        return 'briefcase';
+      case 'agent':
+        return 'headphones';
+      default:
+        return 'shield';
+    }
+  }
+
+  getRoleIconBgClass(roleName: string): string {
+    switch (roleName.toLowerCase()) {
+      case 'owner':
+        return 'bg-warning';
+      case 'superadmin':
+        return 'bg-danger';
+      case 'admin':
+        return 'bg-primary';
+      case 'manager':
+        return 'bg-info';
+      case 'agent':
+        return 'bg-success';
+      default:
+        return 'bg-secondary';
+    }
+  }
+
   getPermissionCategoryIcon(category: string): string {
     return this.rolesService.getPermissionCategoryIcon(category);
   }

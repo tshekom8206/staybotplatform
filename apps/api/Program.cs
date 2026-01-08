@@ -113,6 +113,7 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ILostAndFoundService, LostAndFoundService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
+builder.Services.AddScoped<IRoomValidationService, RoomValidationService>();
 builder.Services.AddScoped<ITenantOnboardingService, TenantOnboardingService>();
 builder.Services.AddScoped<IActionProcessingService, ActionProcessingService>();
 builder.Services.AddScoped<ITenantDepartmentService, TenantDepartmentService>();
@@ -157,6 +158,10 @@ builder.Services.AddScoped<IHumanResponsePatternService, HumanResponsePatternSer
 // Message Processing Enhancement Services
 builder.Services.AddScoped<IMessageNormalizationService, MessageNormalizationService>();
 builder.Services.AddScoped<ISmartContextManagerService, SmartContextManagerService>();
+
+// Google Analytics 4 Data Service
+builder.Services.AddScoped<IGA4DataService, GA4DataService>();
+builder.Services.AddScoped<IHotelierReportsService, HotelierReportsService>();
 builder.Services.AddScoped<IResponseValidationService, ResponseValidationService>();
 builder.Services.AddScoped<IConfigurationBasedResponseService, ConfigurationBasedResponseService>();
 builder.Services.AddScoped<IDataSourcePriorityService, DataSourcePriorityService>();
@@ -171,9 +176,6 @@ builder.Services.AddScoped<IAgentAvailabilityService, AgentAvailabilityService>(
 builder.Services.AddScoped<ITenantCacheService, TenantCacheService>();
 builder.Services.AddScoped<IResponseTemplateService, ResponseTemplateService>();
 
-// FAQ and Knowledge Base Services
-builder.Services.AddScoped<IFAQService, FAQService>();
-
 // Audit Service
 builder.Services.AddScoped<IAuditService, AuditService>();
 
@@ -184,6 +186,9 @@ builder.Services.AddScoped<IUpsellRecommendationService, UpsellRecommendationSer
 // builder.Services.AddScoped<ISemanticSearchService, SemanticSearchService>();
 // builder.Services.AddScoped<IRagService, RagService>();
 builder.Services.AddHttpClient<IWhatsAppApiClient, WhatsAppApiClient>();
+
+// Proactive Messaging Service
+builder.Services.AddScoped<IProactiveMessageService, ProactiveMessageService>();
 
 // Background Jobs - Quartz configuration with survey processing and guest metrics
 builder.Services.AddQuartz(configure =>
@@ -210,6 +215,15 @@ builder.Services.AddQuartz(configure =>
             .ForJob(bookingStatusJobKey)
             .WithIdentity("BookingStatusUpdateJob-trigger")
             .WithCronSchedule("0 0 * * * ?") // Every hour
+        );
+
+    // Proactive messaging job - runs every 5 minutes
+    var proactiveMessageJobKey = new JobKey("ProactiveMessageJob");
+    configure.AddJob<ProactiveMessageJob>(proactiveMessageJobKey)
+        .AddTrigger(opts => opts
+            .ForJob(proactiveMessageJobKey)
+            .WithIdentity("ProactiveMessageJob-trigger")
+            .WithCronSchedule("0 */5 * * * ?") // Every 5 minutes
         );
 });
 builder.Services.AddQuartzHostedService();
@@ -263,15 +277,19 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:3000",
-                "http://localhost:4200",
-                "http://localhost:4201",  // Angular admin UI
-                "https://localhost:3000",
-                "https://localhost:4200",
-                "https://localhost:4201",
-                "http://127.0.0.1:5500",  // For HTML test client
-                "http://localhost:5500")
+        policy.SetIsOriginAllowed(origin =>
+              {
+                  // Allow localhost for development
+                  if (origin.Contains("localhost") || origin.Contains("127.0.0.1"))
+                      return true;
+                  // Allow all *.staybot.co.za subdomains (guest portal)
+                  if (origin.EndsWith(".staybot.co.za"))
+                      return true;
+                  // Allow Azure default domains
+                  if (origin.Contains("azurewebsites.net"))
+                      return true;
+                  return false;
+              })
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials(); // Required for SignalR

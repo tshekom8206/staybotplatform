@@ -55,6 +55,11 @@ public class ServicesController : ControllerBase
                 s.ImageUrl,
                 s.RequiresAdvanceBooking,
                 s.AdvanceBookingHours,
+                // Featured/Upselling fields
+                s.IsFeatured,
+                s.FeaturedImageUrl,
+                s.TimeSlots,
+                s.DisplayOrder,
                 s.CreatedAt,
                 s.UpdatedAt
             })
@@ -97,6 +102,11 @@ public class ServicesController : ControllerBase
                 s.ImageUrl,
                 s.RequiresAdvanceBooking,
                 s.AdvanceBookingHours,
+                // Featured/Upselling fields
+                s.IsFeatured,
+                s.FeaturedImageUrl,
+                s.TimeSlots,
+                s.DisplayOrder,
                 s.CreatedAt,
                 s.UpdatedAt
             })
@@ -142,6 +152,11 @@ public class ServicesController : ControllerBase
             ImageUrl = request.ImageUrl,
             RequiresAdvanceBooking = request.RequiresAdvanceBooking,
             AdvanceBookingHours = request.AdvanceBookingHours,
+            // Featured/Upselling fields
+            IsFeatured = request.IsFeatured,
+            FeaturedImageUrl = request.FeaturedImageUrl,
+            TimeSlots = request.TimeSlots,
+            DisplayOrder = request.DisplayOrder,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -189,6 +204,11 @@ public class ServicesController : ControllerBase
         service.ImageUrl = request.ImageUrl;
         service.RequiresAdvanceBooking = request.RequiresAdvanceBooking;
         service.AdvanceBookingHours = request.AdvanceBookingHours;
+        // Featured/Upselling fields
+        service.IsFeatured = request.IsFeatured;
+        service.FeaturedImageUrl = request.FeaturedImageUrl;
+        service.TimeSlots = request.TimeSlots;
+        service.DisplayOrder = request.DisplayOrder;
         service.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -272,6 +292,11 @@ public class CreateServiceRequest
     public string? ImageUrl { get; set; }
     public bool RequiresAdvanceBooking { get; set; } = false;
     public int? AdvanceBookingHours { get; set; }
+    // Featured/Upselling fields
+    public bool IsFeatured { get; set; } = false;
+    public string? FeaturedImageUrl { get; set; }
+    public string? TimeSlots { get; set; }
+    public int DisplayOrder { get; set; } = 0;
 }
 
 public class UpdateServiceRequest
@@ -293,4 +318,9 @@ public class UpdateServiceRequest
     public string? ImageUrl { get; set; }
     public bool RequiresAdvanceBooking { get; set; } = false;
     public int? AdvanceBookingHours { get; set; }
+    // Featured/Upselling fields
+    public bool IsFeatured { get; set; } = false;
+    public string? FeaturedImageUrl { get; set; }
+    public string? TimeSlots { get; set; }
+    public int DisplayOrder { get; set; } = 0;
 }

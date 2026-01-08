@@ -1,12 +1,5 @@
-import { Injectable, ApplicationRef } from '@angular/core';
-import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
-import { filter, map, first, concat, interval } from 'rxjs';
+import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-
-interface VersionInfo {
-  current: { hash: string; appData?: object | null };
-  available: { hash: string; appData?: object | null };
-}
 
 export interface PWAInstallPrompt {
   prompt(): Promise<void>;
@@ -24,12 +17,8 @@ export class PwaService {
   public installPromptAvailable$ = this._installPromptAvailable$.asObservable();
   public updateAvailable$ = this._updateAvailable$.asObservable();
 
-  constructor(
-    private swUpdate: SwUpdate,
-    private appRef: ApplicationRef
-  ) {
+  constructor() {
     this.initPWA();
-    this.checkForUpdates();
   }
 
   /**
@@ -61,7 +50,7 @@ export class PwaService {
    * Check if PWA features are supported
    */
   isPWASupported(): boolean {
-    return 'serviceWorker' in navigator && 'BeforeInstallPromptEvent' in window;
+    return 'serviceWorker' in navigator;
   }
 
   /**
@@ -102,67 +91,6 @@ export class PwaService {
   }
 
   /**
-   * Check for app updates periodically
-   */
-  private checkForUpdates(): void {
-    if (!this.swUpdate.isEnabled) {
-      console.log('Service Worker updates not enabled');
-      return;
-    }
-
-    // Check for updates when app becomes stable
-    const appIsStable$ = this.appRef.isStable.pipe(
-      first(isStable => isStable === true)
-    );
-
-    // Check every 6 hours
-    const everySixHours$ = interval(6 * 60 * 60 * 1000);
-    const everySixHoursOnceAppIsStable$ = concat(appIsStable$, everySixHours$);
-
-    everySixHoursOnceAppIsStable$.subscribe(() => {
-      this.swUpdate.checkForUpdate().then(updateFound => {
-        if (updateFound) {
-          console.log('Update check found new version');
-        }
-      }).catch(err => {
-        console.error('Error checking for updates:', err);
-      });
-    });
-
-    // Listen for version updates
-    this.swUpdate.versionUpdates
-      .pipe(
-        filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'),
-        map((evt: VersionReadyEvent) => ({
-          current: evt.currentVersion,
-          available: evt.latestVersion
-        }))
-      )
-      .subscribe((update: VersionInfo) => {
-        console.log('New version available:', update.available);
-        this._updateAvailable$.next(true);
-      });
-  }
-
-  /**
-   * Activate the latest app version
-   */
-  async activateUpdate(): Promise<void> {
-    if (!this.swUpdate.isEnabled) {
-      return;
-    }
-
-    try {
-      await this.swUpdate.activateUpdate();
-      this._updateAvailable$.next(false);
-      // Reload the page to apply updates
-      document.location.reload();
-    } catch (error) {
-      console.error('Error activating update:', error);
-    }
-  }
-
-  /**
    * Get installation status
    */
   getInstallStatus(): {
@@ -178,7 +106,7 @@ export class PwaService {
   }
 
   /**
-   * Clear update notification
+   * Dismiss update notification
    */
   dismissUpdateNotification(): void {
     this._updateAvailable$.next(false);

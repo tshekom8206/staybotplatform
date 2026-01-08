@@ -409,4 +409,38 @@ export class StaffComponent implements OnInit, OnDestroy {
     const role = this.availableRoles.find(r => r.value === roleValue);
     return role?.description || '';
   }
+
+  getRoleIcon(role: string): string {
+    switch (role.toLowerCase()) {
+      case 'owner':
+        return 'award';
+      case 'superadmin':
+        return 'shield';
+      case 'admin':
+        return 'settings';
+      case 'manager':
+        return 'briefcase';
+      case 'agent':
+        return 'headphones';
+      default:
+        return 'user';
+    }
+  }
+
+  getRoleIconBgClass(role: string): string {
+    switch (role.toLowerCase()) {
+      case 'owner':
+        return 'bg-warning';
+      case 'superadmin':
+        return 'bg-danger';
+      case 'admin':
+        return 'bg-primary';
+      case 'manager':
+        return 'bg-info';
+      case 'agent':
+        return 'bg-success';
+      default:
+        return 'bg-secondary';
+    }
+  }
 }

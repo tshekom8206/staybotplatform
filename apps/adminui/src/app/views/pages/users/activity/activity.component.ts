@@ -286,6 +286,34 @@ export class ActivityComponent implements OnInit, OnDestroy {
     return this.userActivityService.getActivityColor(action);
   }
 
+  getActionIcon(action: string): string {
+    const actionLower = action.toLowerCase();
+    if (actionLower.includes('create') || actionLower.includes('add')) return 'plus-circle';
+    if (actionLower.includes('update') || actionLower.includes('edit')) return 'edit';
+    if (actionLower.includes('delete') || actionLower.includes('remove')) return 'trash-2';
+    if (actionLower.includes('login') || actionLower.includes('auth')) return 'log-in';
+    if (actionLower.includes('logout')) return 'log-out';
+    if (actionLower.includes('view') || actionLower.includes('read')) return 'eye';
+    if (actionLower.includes('assign')) return 'user-plus';
+    if (actionLower.includes('complete') || actionLower.includes('resolve')) return 'check-circle';
+    if (actionLower.includes('send') || actionLower.includes('message')) return 'send';
+    return 'activity';
+  }
+
+  getActionIconBgClass(action: string): string {
+    const actionLower = action.toLowerCase();
+    if (actionLower.includes('create') || actionLower.includes('add')) return 'bg-success';
+    if (actionLower.includes('update') || actionLower.includes('edit')) return 'bg-info';
+    if (actionLower.includes('delete') || actionLower.includes('remove')) return 'bg-danger';
+    if (actionLower.includes('login') || actionLower.includes('auth')) return 'bg-primary';
+    if (actionLower.includes('logout')) return 'bg-secondary';
+    if (actionLower.includes('view') || actionLower.includes('read')) return 'bg-light';
+    if (actionLower.includes('assign')) return 'bg-warning';
+    if (actionLower.includes('complete') || actionLower.includes('resolve')) return 'bg-success';
+    if (actionLower.includes('send') || actionLower.includes('message')) return 'bg-info';
+    return 'bg-secondary';
+  }
+
   getActivityDescription(activity: UserActivity): string {
     return this.userActivityService.getActivityDescription(activity);
   }

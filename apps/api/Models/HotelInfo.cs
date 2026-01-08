@@ -46,6 +46,11 @@ public class HotelInfo
     [MaxLength(100)]
     public string? Country { get; set; }
 
+    // Geolocation for weather and maps
+    public double? Latitude { get; set; }
+
+    public double? Longitude { get; set; }
+
     // Business Details
     [MaxLength(5)]
     public string? CheckInTime { get; set; } // Format: HH:MM
@@ -107,6 +112,13 @@ public class HotelInfo
 
     [MaxLength(50)]
     public string? Currency { get; set; } = "ZAR";
+
+    // WiFi Credentials for Guest Portal
+    [MaxLength(100)]
+    public string? WifiNetwork { get; set; }
+
+    [MaxLength(100)]
+    public string? WifiPassword { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

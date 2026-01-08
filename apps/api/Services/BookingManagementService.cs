@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Hostr.Api.Data;
 using Hostr.Api.Models;
 
@@ -9,15 +10,18 @@ public class BookingManagementService : IBookingManagementService
     private readonly HostrDbContext _context;
     private readonly ILogger<BookingManagementService> _logger;
     private readonly IWhatsAppService _whatsAppService;
+    private readonly IServiceProvider _serviceProvider;
 
     public BookingManagementService(
         HostrDbContext context,
         ILogger<BookingManagementService> logger,
-        IWhatsAppService whatsAppService)
+        IWhatsAppService whatsAppService,
+        IServiceProvider serviceProvider)
     {
         _context = context;
         _logger = logger;
         _whatsAppService = whatsAppService;
+        _serviceProvider = serviceProvider;
     }
 
     public async Task<(List<Booking> bookings, int totalCount)> GetBookingsAsync(
@@ -142,6 +146,20 @@ public class BookingManagementService : IBookingManagementService
         // Send welcome WhatsApp message with amenities and upselling
         await SendWelcomeMessageAsync(tenantId, booking);
 
+        // Schedule proactive messages (check-in day, mid-stay, pre-checkout, post-stay)
+        try
+        {
+            var proactiveService = _serviceProvider.GetService<IProactiveMessageService>();
+            if (proactiveService != null)
+            {
+                await proactiveService.ScheduleMessagesForBookingAsync(tenantId, booking);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to schedule proactive messages for booking {BookingId}", booking.Id);
+        }
+
         return booking;
     }
 
@@ -254,6 +272,20 @@ public class BookingManagementService : IBookingManagementService
 
         booking.Status = "Cancelled";
         await _context.SaveChangesAsync();
+
+        // Cancel any pending scheduled messages for this booking
+        try
+        {
+            var proactiveService = _serviceProvider.GetService<IProactiveMessageService>();
+            if (proactiveService != null)
+            {
+                await proactiveService.CancelMessagesForBookingAsync(bookingId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to cancel proactive messages for booking {BookingId}", bookingId);
+        }
 
         _logger.LogInformation("Cancelled booking {BookingId} for guest {GuestName}", bookingId, booking.GuestName);
 

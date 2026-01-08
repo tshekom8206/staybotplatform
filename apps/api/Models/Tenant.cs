@@ -44,6 +44,13 @@ public class Tenant
 
     public bool GuestPortalEnabled { get; set; } = true;
 
+    /// <summary>
+    /// Comma-separated list of valid room numbers for this property.
+    /// Example: "101,102,103,201,202,203,301,302,303"
+    /// Used for validating guest push notification subscriptions.
+    /// </summary>
+    public string? ValidRooms { get; set; }
+
     // Navigation properties
     public virtual ICollection<UserTenant> UserTenants { get; set; } = new List<UserTenant>();
     public virtual ICollection<WhatsAppNumber> WhatsAppNumbers { get; set; } = new List<WhatsAppNumber>();

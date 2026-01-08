@@ -362,6 +362,51 @@
               </div>
             </div>
 
+            <!-- GPS Coordinates -->
+            <div class="row">
+              <div class="col-12">
+                <label class="form-label">
+                  <i data-feather="navigation" featherIcon class="me-1"></i>
+                  GPS Coordinates (for Weather Display)
+                </label>
+                <small class="text-muted d-block mb-2">
+                  Enter coordinates from Google Maps to enable weather display on the guest portal.
+                </small>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="latitude" class="form-label">Latitude</label>
+                  <input type="number"
+                         step="0.000001"
+                         class="form-control"
+                         id="latitude"
+                         formControlName="latitude"
+                         placeholder="-33.9249"
+                         [class.is-invalid]="addressForm.get('latitude')?.invalid && addressForm.get('latitude')?.touched">
+                  <div class="invalid-feedback"
+                       *ngIf="addressForm.get('latitude')?.invalid && addressForm.get('latitude')?.touched">
+                    Latitude must be between -90 and 90
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="longitude" class="form-label">Longitude</label>
+                  <input type="number"
+                         step="0.000001"
+                         class="form-control"
+                         id="longitude"
+                         formControlName="longitude"
+                         placeholder="18.4241"
+                         [class.is-invalid]="addressForm.get('longitude')?.invalid && addressForm.get('longitude')?.touched">
+                  <div class="invalid-feedback"
+                       *ngIf="addressForm.get('longitude')?.invalid && addressForm.get('longitude')?.touched">
+                    Longitude must be between -180 and 180
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </form>
         </div>
       </div>
@@ -593,8 +638,108 @@
       </div>
     </div>
 
+    <!-- WiFi Credentials -->
+    <div class="col-lg-6 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i data-feather="wifi" featherIcon class="me-2"></i>
+            Guest WiFi Credentials
+          </h6>
+        </div>
+        <div class="card-body">
+          <p class="text-muted mb-3">
+            <small>Configure the WiFi credentials displayed to guests on the Guest Portal landing page.</small>
+          </p>
+          <form [formGroup]="wifiForm">
+
+            <!-- WiFi Network Name -->
+            <div class="mb-3">
+              <label for="wifiNetwork" class="form-label">Network Name (SSID)</label>
+              <input type="text"
+                     class="form-control"
+                     id="wifiNetwork"
+                     formControlName="wifiNetwork"
+                     placeholder="e.g., Hotel_Guest_WiFi"
+                     [class.is-invalid]="wifiForm.get('wifiNetwork')?.invalid && wifiForm.get('wifiNetwork')?.touched">
+              <div class="invalid-feedback"
+                   *ngIf="wifiForm.get('wifiNetwork')?.invalid && wifiForm.get('wifiNetwork')?.touched">
+                <div *ngIf="wifiForm.get('wifiNetwork')?.errors?.['maxlength']">Network name must be less than 100 characters</div>
+              </div>
+            </div>
+
+            <!-- WiFi Password -->
+            <div class="mb-3">
+              <label for="wifiPassword" class="form-label">Password</label>
+              <input type="text"
+                     class="form-control"
+                     id="wifiPassword"
+                     formControlName="wifiPassword"
+                     placeholder="Enter WiFi password"
+                     [class.is-invalid]="wifiForm.get('wifiPassword')?.invalid && wifiForm.get('wifiPassword')?.touched">
+              <div class="invalid-feedback"
+                   *ngIf="wifiForm.get('wifiPassword')?.invalid && wifiForm.get('wifiPassword')?.touched">
+                <div *ngIf="wifiForm.get('wifiPassword')?.errors?.['maxlength']">Password must be less than 100 characters</div>
+              </div>
+              <small class="text-muted">Leave empty if the network is open (no password required)</small>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Room Configuration -->
+    <div class="col-lg-6 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i data-feather="home" featherIcon class="me-2"></i>
+            Room Configuration
+          </h6>
+        </div>
+        <div class="card-body">
+          <p class="text-muted mb-3">
+            <small>
+              Configure valid room numbers for your property. This list is used to validate
+              guest push notification subscriptions and ensure data quality.
+            </small>
+          </p>
+          <form [formGroup]="roomConfigForm">
+
+            <!-- Valid Rooms -->
+            <div class="mb-3">
+              <label for="validRooms" class="form-label">Valid Room Numbers</label>
+              <textarea class="form-control"
+                        id="validRooms"
+                        formControlName="validRooms"
+                        rows="4"
+                        placeholder="Enter room numbers separated by commas, e.g.: 101, 102, 103, 201, 202, 203, 301A, 301B"
+                        [class.is-invalid]="roomConfigForm.get('validRooms')?.invalid && roomConfigForm.get('validRooms')?.touched"></textarea>
+              <div class="invalid-feedback"
+                   *ngIf="roomConfigForm.get('validRooms')?.invalid && roomConfigForm.get('validRooms')?.touched">
+                <div *ngIf="roomConfigForm.get('validRooms')?.errors?.['maxlength']">Room list is too long (max 5000 characters)</div>
+              </div>
+              <small class="text-muted">
+                Supports both numeric (101, 102) and alphanumeric (301A, 301B) room numbers.
+                <br>
+                <em>Note: If left empty, any room number will be accepted (not recommended).</em>
+              </small>
+            </div>
+
+            <!-- Room Count Display -->
+            <div class="alert alert-info py-2" *ngIf="roomConfigForm.get('validRooms')?.value">
+              <i data-feather="info" featherIcon class="me-1"></i>
+              <strong>{{ getRoomCount() }}</strong> rooms configured
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- System Settings -->
-    <div class="col-lg-12 mb-4">
+    <div class="col-lg-6 mb-4">
       <div class="card">
         <div class="card-header">
           <h6 class="card-title mb-0">

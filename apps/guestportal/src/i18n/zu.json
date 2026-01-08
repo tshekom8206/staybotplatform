@@ -28,7 +28,9 @@
       "promise": "Isithembiso Sethu",
       "promiseDesc": "Isibopho sethu kuwe",
       "lostFound": "Okulahlekile & Okutholiwe",
-      "lostFoundDesc": "Bika noma thola izinto"
+      "lostFoundDesc": "Bika noma thola izinto",
+      "houseRules": "Imithetho Yendlu",
+      "houseRulesDesc": "Okufanele ukwazi ngesikhathi uhlala"
     }
   },
   "foodDrinks": {
@@ -135,16 +137,122 @@
     "call": "Sishayele"
   },
   "pwa": {
-    "installTitle": "Faka i-App",
-    "installMessage": "Engeza kwiscreen yakho yasekhaya ukuze ufinyelele kalula",
-    "install": "Faka",
-    "notNow": "Hhayi Manje",
-    "updateTitle": "I-Update Itholakala",
-    "updateMessage": "Inguqulo entsha itholakala",
-    "update": "Buyekeza Manje"
+    "install": {
+      "title": "Faka i-App",
+      "description": "Engeza {{hotelName}} kwiscreen yakho yasekhaya ukuze ufinyelele kalula",
+      "installButton": "Faka",
+      "notNow": "Hhayi Manje"
+    },
+    "update": {
+      "title": "I-Update Itholakala",
+      "description": "Inguqulo entsha itholakala",
+      "updateButton": "Buyekeza Manje",
+      "later": "Kamuva"
+    }
   },
   "language": {
     "title": "Ulimi",
     "select": "Khetha Ulimi"
+  },
+  "services": {
+    "title": "Amasevisi Ehotela",
+    "subtitle": "Thuthukisa ukuhlala kwakho ngamasevisi ethu aphezulu",
+    "enhanceYourStay": "Thuthukisa Ukuhlala Kwakho",
+    "requestService": "Cela Le Sevisi",
+    "sendRequest": "Thumela Isicelo",
+    "requestSent": "Isicelo Sithunyelwe!",
+    "requestSentMessage": "Ithimba lethu lizokuxhumana maduze ukuqinisekisa."
+  },
+  "roomPrompt": {
+    "message": "Faka inombolo yekamelo lakho ukuze uthole usizo olwehlukile",
+    "placeholder": "Ikamelo #"
+  },
+  "room": {
+    "edit": "Shintsha Ikamelo",
+    "update": "Buyekeza Ikamelo",
+    "label": "Inombolo Yekamelo",
+    "invalid": "Inombolo yekamelo engavumelekile",
+    "validating": "Iyahlola..."
+  },
+  "houseRules": {
+    "title": "Imithetho Yendlu",
+    "subtitle": "Izinto ezimbalwa zokuhlala kahle",
+    "smoking": "Ukubhema",
+    "pets": "Izilwane Zasekhaya",
+    "children": "Izingane",
+    "cancellation": "Ukukhansela",
+    "checkIn": "Ukungena",
+    "checkOut": "Ukuphuma",
+    "checkTimes": "Izikhathi Zokungena Nokuphuma",
+    "noRules": "Ayikho imithetho yendlu ebekiwe kule ndawo"
+  },
+  "wifi": {
+    "title": "Imininingwane ye-WiFi",
+    "button": "WiFi",
+    "network": "Inethiwekhi",
+    "password": "Iphasiwedi",
+    "copy": "Kopisha Iphasiwedi",
+    "copied": "Ikopishiwe!"
+  },
+  "weather": {
+    "title": "Isimo Sezulu",
+    "today": "Namuhla",
+    "forecast": "Isibikezelo",
+    "feelsLike": "Kuzwakala njenge",
+    "humidity": "Umswakama",
+    "unavailable": "Isimo sezulu asitholakali"
+  },
+  "currency": {
+    "title": "Isiguquli Semali",
+    "amount": "Inani",
+    "convert": "Guqula",
+    "lastUpdated": "Okugcina ukubuyekezwa",
+    "unavailable": "Amazinga awatholakali"
+  },
+  "housekeeping": {
+    "title": "Izinketho Zokunakekelwa Kwendlu",
+    "subtitle": "Sazise ukuthi ufuna ikamelo lakho lisetshenziswe kanjani",
+    "temperature": "Izinga Lokushisa",
+    "airconAfterCleaning": "Gcina i-aircon ivaliwe ngemva kokuhlanza",
+    "airconDescription": "Sizogcina i-aircon ivaliwe lapho sihlanza ikamelo lakho",
+    "cleaning": "Ukuhlanza",
+    "dailyLinenChange": "Ukushintsha izindwangu nsuku zonke",
+    "linenDescription": "Shintsha izindwangu zombhede nsuku zonke",
+    "dailyTowelChange": "Ukushintsha amathawula nsuku zonke",
+    "towelDescription": "Buyisela amathawula nsuku zonke",
+    "doNotDisturb": "Ungaphazamisi",
+    "dndEnabled": "Vula Ungaphazamisi",
+    "dndDescription": "Cela ukuthi angabi khona ukuhlanza ngesikhathi esithile",
+    "dndUntil": "Ungaphazamisi kuze kube",
+    "activePreferences": "Izinketho Zakho Ezisebenzayo",
+    "acknowledged": "Kwamukelwe",
+    "pending": "Kulindile",
+    "saved": "Kugcinwe",
+    "savedMessage": "Inketho yakho igciniwe. Abahlanza indlu bazisiwe.",
+    "addNote": "Engeza inothi (kungadingekile)...",
+    "cleaningTime": "Isheduli Yokuhlanza",
+    "preferredTime": "Isikhathi sokuhlanza esithandwayo",
+    "preferredTimeDescription": "Ufuna ukuhlanzwa kwendlu yakho nini?",
+    "morning": "Ekuseni (8-11am)",
+    "afternoon": "Emini (2-5pm)",
+    "skipToday": "Yeqa Namuhla",
+    "beddingComfort": "Izindwangu Zokwenama",
+    "extraPillows": "Imiqamelo eyengeziwe",
+    "extraPillowsDescription": "Cela imiqamelo eyengeziwe (okungenani 4)",
+    "extraBlankets": "Izingubo zokufudumala ezingeziwe",
+    "extraBlanketsDescription": "Cela izingubo zokufudumala ezingeziwe (okungenani 3)",
+    "pillowType": "Uhlobo lomqamelo",
+    "pillowTypeDescription": "Khetha uhlobo lomqamelo olufunayo",
+    "pillowSoft": "Thambile",
+    "pillowMedium": "Phakathi",
+    "pillowFirm": "Qinile",
+    "pillowHypoallergenic": "Akubi namazinyo",
+    "confirmButton": "Qinisekisa",
+    "cancelButton": "Khansela",
+    "needSomething": "Udinga Okuthile?",
+    "deliverToRoom": "Cela ukulethelwa ekamelweni lakho",
+    "request": "Cela",
+    "requested": "Kucelwe",
+    "noItemsAvailable": "Azikho izinto ezitholakalayo okwamanje"
   }
 }

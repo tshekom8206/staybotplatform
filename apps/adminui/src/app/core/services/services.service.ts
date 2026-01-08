@@ -23,6 +23,11 @@ export interface HotelService {
   imageUrl?: string;
   requiresAdvanceBooking: boolean;
   advanceBookingHours?: number;
+  // Upselling/Featured fields
+  isFeatured: boolean;
+  featuredImageUrl?: string;
+  timeSlots?: string;
+  displayOrder: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,6 +62,11 @@ export interface CreateServiceRequest {
   imageUrl?: string;
   requiresAdvanceBooking: boolean;
   advanceBookingHours?: number;
+  // Upselling/Featured fields
+  isFeatured?: boolean;
+  featuredImageUrl?: string;
+  timeSlots?: string;
+  displayOrder?: number;
 }
 
 export interface UpdateServiceRequest {
@@ -77,6 +87,11 @@ export interface UpdateServiceRequest {
   imageUrl?: string;
   requiresAdvanceBooking: boolean;
   advanceBookingHours?: number;
+  // Upselling/Featured fields
+  isFeatured?: boolean;
+  featuredImageUrl?: string;
+  timeSlots?: string;
+  displayOrder?: number;
 }
 
 @Injectable({

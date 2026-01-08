@@ -73,6 +73,14 @@ export class ServicesComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  // Time slot options for featured services
+  timeSlotOptions = [
+    { value: 'morning', label: 'Morning (6am - 10am)' },
+    { value: 'midday', label: 'Midday (10am - 2pm)' },
+    { value: 'afternoon', label: 'Afternoon (2pm - 6pm)' },
+    { value: 'evening', label: 'Evening (6pm - 10pm)' }
+  ];
+
   private initializeForm(): void {
     this.serviceForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
@@ -91,7 +99,12 @@ export class ServicesComponent implements OnInit, OnDestroy {
       specialInstructions: ['', [Validators.maxLength(1000)]],
       imageUrl: ['', [Validators.maxLength(200)]],
       requiresAdvanceBooking: [false],
-      advanceBookingHours: [null]
+      advanceBookingHours: [null],
+      // Upselling/Featured fields
+      isFeatured: [false],
+      featuredImageUrl: ['', [Validators.maxLength(500)]],
+      timeSlots: [''],
+      displayOrder: [0, [Validators.min(0)]]
     });
 
     // Watch chargeable changes
@@ -207,7 +220,9 @@ export class ServicesComponent implements OnInit, OnDestroy {
       isChargeable: false,
       currency: 'USD',
       priority: 0,
-      requiresAdvanceBooking: false
+      requiresAdvanceBooking: false,
+      isFeatured: false,
+      displayOrder: 0
     });
     this.modalService.open(this.serviceModal, { size: 'lg', backdrop: 'static' });
   }
@@ -232,7 +247,12 @@ export class ServicesComponent implements OnInit, OnDestroy {
       specialInstructions: service.specialInstructions,
       imageUrl: service.imageUrl,
       requiresAdvanceBooking: service.requiresAdvanceBooking,
-      advanceBookingHours: service.advanceBookingHours
+      advanceBookingHours: service.advanceBookingHours,
+      // Upselling/Featured fields
+      isFeatured: service.isFeatured,
+      featuredImageUrl: service.featuredImageUrl,
+      timeSlots: service.timeSlots,
+      displayOrder: service.displayOrder
     });
     this.modalService.open(this.serviceModal, { size: 'lg', backdrop: 'static' });
   }
@@ -264,7 +284,12 @@ export class ServicesComponent implements OnInit, OnDestroy {
       specialInstructions: formValue.specialInstructions,
       imageUrl: formValue.imageUrl,
       requiresAdvanceBooking: formValue.requiresAdvanceBooking,
-      advanceBookingHours: formValue.requiresAdvanceBooking ? formValue.advanceBookingHours : null
+      advanceBookingHours: formValue.requiresAdvanceBooking ? formValue.advanceBookingHours : null,
+      // Upselling/Featured fields
+      isFeatured: formValue.isFeatured,
+      featuredImageUrl: formValue.isFeatured ? formValue.featuredImageUrl : null,
+      timeSlots: formValue.isFeatured ? formValue.timeSlots : null,
+      displayOrder: formValue.displayOrder || 0
     };
 
     const operation = this.isEditMode
@@ -351,5 +376,19 @@ export class ServicesComponent implements OnInit, OnDestroy {
 
   get uniqueCategories(): string[] {
     return [...new Set(this.services.map(s => s.category))];
+  }
+
+  toggleTimeSlot(slot: string): void {
+    const currentValue = this.serviceForm.get('timeSlots')?.value || '';
+    const slots = currentValue ? currentValue.split(',').filter((s: string) => s.trim()) : [];
+
+    const index = slots.indexOf(slot);
+    if (index === -1) {
+      slots.push(slot);
+    } else {
+      slots.splice(index, 1);
+    }
+
+    this.serviceForm.get('timeSlots')?.setValue(slots.join(','));
   }
 }

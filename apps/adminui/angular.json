@@ -37,6 +37,13 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              "src/web.config",
+              "src/manifest.webmanifest",
+              {
+                "glob": "custom-sw.js",
+                "input": "src",
+                "output": "/"
               }
             ],
             "styles": [
