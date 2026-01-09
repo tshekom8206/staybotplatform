@@ -8,15 +8,18 @@ public class ProactiveMessageService : IProactiveMessageService
 {
     private readonly HostrDbContext _context;
     private readonly IWhatsAppService _whatsAppService;
+    private readonly ISmsService _smsService;
     private readonly ILogger<ProactiveMessageService> _logger;
 
     public ProactiveMessageService(
         HostrDbContext context,
         IWhatsAppService whatsAppService,
+        ISmsService smsService,
         ILogger<ProactiveMessageService> logger)
     {
         _context = context;
         _whatsAppService = whatsAppService;
+        _smsService = smsService;
         _logger = logger;
     }
 
@@ -238,17 +241,17 @@ public class ProactiveMessageService : IProactiveMessageService
                         continue;
                     }
 
-                    // Send the message
+                    // Send the message via SMS (for proactive Guest Journey messages)
                     bool sent;
                     if (!string.IsNullOrEmpty(message.MediaUrl))
                     {
-                        sent = await _whatsAppService.SendImageAsync(
-                            message.TenantId, message.Phone, message.MediaUrl, message.Content);
+                        // SMS doesn't support images - send text only
+                        _logger.LogWarning("Media messages not supported via SMS, sending text only for message {MessageId}", message.Id);
+                        sent = await _smsService.SendMessageAsync(message.Phone, message.Content);
                     }
                     else
                     {
-                        sent = await _whatsAppService.SendTextMessageAsync(
-                            message.TenantId, message.Phone, message.Content);
+                        sent = await _smsService.SendMessageAsync(message.Phone, message.Content);
                     }
 
                     if (sent)
@@ -261,7 +264,7 @@ public class ProactiveMessageService : IProactiveMessageService
                     else
                     {
                         message.RetryCount++;
-                        message.ErrorMessage = "WhatsApp send failed";
+                        message.ErrorMessage = "SMS send failed";
 
                         if (message.RetryCount >= 3)
                         {

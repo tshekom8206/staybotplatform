@@ -101,6 +101,7 @@ builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
+builder.Services.AddHttpClient<ISmsService, SmsService>(); // ClickaTell SMS for Guest Journey proactive messages
 builder.Services.AddScoped<IMessageRoutingService, MessageRoutingService>();
 builder.Services.AddScoped<IOpenAIService, OpenAIService>();
 builder.Services.AddScoped<IPlanGuardService, PlanGuardService>();

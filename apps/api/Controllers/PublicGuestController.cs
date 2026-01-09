@@ -22,19 +22,22 @@ public class PublicGuestController : ControllerBase
     private readonly IHubContext<StaffTaskHub> _staffTaskHub;
     private readonly IRoomValidationService _roomValidationService;
     private readonly IProactiveMessageService _proactiveMessageService;
+    private readonly ISmsService _smsService;
 
     public PublicGuestController(
         HostrDbContext context,
         ILogger<PublicGuestController> logger,
         IHubContext<StaffTaskHub> staffTaskHub,
         IRoomValidationService roomValidationService,
-        IProactiveMessageService proactiveMessageService)
+        IProactiveMessageService proactiveMessageService,
+        ISmsService smsService)
     {
         _context = context;
         _logger = logger;
         _staffTaskHub = staffTaskHub;
         _roomValidationService = roomValidationService;
         _proactiveMessageService = proactiveMessageService;
+        _smsService = smsService;
     }
 
     private async Task<Tenant?> GetTenantBySlugAsync(string slug)
@@ -2234,6 +2237,42 @@ public class PublicGuestController : ControllerBase
         {
             _logger.LogError(ex, "Error simulating check-in for booking {BookingId}", bookingId);
             return StatusCode(500, new { error = "Failed to simulate check-in", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Test endpoint: Send a test SMS via ClickaTell (for development/testing)
+    /// </summary>
+    [HttpPost("test/sms-message")]
+    public async Task<IActionResult> TestSmsMessage(
+        string slug,
+        [FromQuery] string phone,
+        [FromQuery] string message)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            _logger.LogInformation("Sending test SMS to {Phone} for tenant {TenantId}", phone, tenant.Id);
+
+            var sent = await _smsService.SendMessageAsync(phone, message);
+
+            return Ok(new
+            {
+                success = sent,
+                phone,
+                message,
+                timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending test SMS to {Phone}", phone);
+            return StatusCode(500, new { error = "Failed to send SMS", details = ex.Message });
         }
     }
 
