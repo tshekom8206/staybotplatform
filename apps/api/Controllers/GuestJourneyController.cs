@@ -334,6 +334,46 @@ public class GuestJourneyController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Manually trigger processing of due scheduled messages (for testing)
+    /// </summary>
+    [HttpPost("process-messages")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ProcessMessages()
+    {
+        try
+        {
+            await _proactiveMessageService.ProcessDueMessagesAsync();
+
+            // Get recently sent messages
+            var recentMessages = await _context.ScheduledMessages
+                .Where(m => m.SentAt.HasValue && m.SentAt.Value > DateTime.UtcNow.AddMinutes(-5))
+                .OrderByDescending(m => m.SentAt)
+                .Select(m => new
+                {
+                    m.Id,
+                    MessageType = m.MessageType.ToString(),
+                    m.Phone,
+                    m.ScheduledFor,
+                    m.SentAt,
+                    Status = m.Status.ToString(),
+                    m.Content
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                message = "Processed due messages",
+                sentCount = recentMessages.Count,
+                sentMessages = recentMessages
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to process messages", error = ex.Message });
+        }
+    }
+
     #region Default Templates
 
     private static string GetDefaultPreArrivalTemplate()
