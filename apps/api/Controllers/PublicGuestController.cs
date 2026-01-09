@@ -2237,6 +2237,57 @@ public class PublicGuestController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Test endpoint: Manually trigger processing of due scheduled messages (for development/testing)
+    /// </summary>
+    [HttpPost("test/process-messages")]
+    public async Task<IActionResult> TestProcessMessages(string slug)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            _logger.LogInformation("Manually triggering message processing for tenant {TenantId}", tenant.Id);
+
+            // Process all due messages
+            await _proactiveMessageService.ProcessDueMessagesAsync();
+
+            // Get recently sent messages for this tenant
+            var recentMessages = await _context.ScheduledMessages
+                .Where(m => m.TenantId == tenant.Id &&
+                           m.SentAt.HasValue &&
+                           m.SentAt.Value > DateTime.UtcNow.AddMinutes(-5))
+                .OrderByDescending(m => m.SentAt)
+                .Select(m => new
+                {
+                    m.Id,
+                    MessageType = m.MessageType.ToString(),
+                    m.Phone,
+                    m.ScheduledFor,
+                    m.SentAt,
+                    Status = m.Status.ToString(),
+                    m.Content
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                message = "Processed due messages",
+                sentCount = recentMessages.Count,
+                sentMessages = recentMessages
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing messages");
+            return StatusCode(500, new { error = "Failed to process messages", details = ex.Message });
+        }
+    }
+
     #endregion
 }
 
