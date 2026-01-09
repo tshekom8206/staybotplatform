@@ -246,6 +246,60 @@ export interface ItemRequestResponse {
   estimatedTime: number;
 }
 
+// Guest Journey - Prepare Page
+export interface PrepareItem {
+  id: number;
+  type: 'item' | 'service';
+  name: string;
+  description?: string;
+  category?: string;
+  price?: number;
+  isChargeable: boolean;
+  icon?: string;
+  imageUrl?: string;
+  currency?: string;
+  pricingUnit?: string;
+  requiresBooking?: boolean;
+  estimatedTime?: number;
+}
+
+export interface PrepareItemsResponse {
+  items: PrepareItem[];
+  services: PrepareItem[];
+}
+
+// Guest Journey - Feedback Page
+export interface FeedbackCategory {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+}
+
+export interface QuickFeedbackRequest {
+  rating: number;
+  comment?: string;
+  roomNumber?: string;
+  issueCategory?: string;
+}
+
+export interface QuickFeedbackResponse {
+  success: boolean;
+  message: string;
+}
+
+// Guest Journey - Booking Info (for pre-arrival)
+export interface BookingInfo {
+  id: number;
+  guestFirstName: string;
+  guestName: string;
+  roomNumber?: string;
+  checkinDate: string;
+  checkoutDate: string;
+  status: string;
+  hasCheckedIn: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -486,6 +540,49 @@ export class GuestApiService {
           itemName: '',
           estimatedTime: 0
         });
+      })
+    );
+  }
+
+  // Guest Journey - Prepare Page (Pre-Arrival Upsells)
+  getPrepareItems(): Observable<PrepareItemsResponse> {
+    return this.http.get<PrepareItemsResponse>(`${this.apiUrl}/prepare-items`).pipe(
+      catchError(error => {
+        console.error('Error fetching prepare items:', error);
+        return of({ items: [], services: [] });
+      })
+    );
+  }
+
+  // Guest Journey - Feedback Categories
+  getFeedbackCategories(): Observable<{ categories: FeedbackCategory[] }> {
+    return this.http.get<{ categories: FeedbackCategory[] }>(`${this.apiUrl}/feedback-categories`).pipe(
+      catchError(error => {
+        console.error('Error fetching feedback categories:', error);
+        return of({ categories: [] });
+      })
+    );
+  }
+
+  // Guest Journey - Submit Quick Feedback (Welcome Settled)
+  submitQuickFeedback(request: QuickFeedbackRequest): Observable<QuickFeedbackResponse> {
+    return this.http.post<QuickFeedbackResponse>(`${this.apiUrl}/feedback`, request).pipe(
+      catchError(error => {
+        console.error('Error submitting feedback:', error);
+        return of({
+          success: false,
+          message: 'Failed to submit feedback. Please try again.'
+        });
+      })
+    );
+  }
+
+  // Guest Journey - Get Booking Info (for pre-arrival prepare page)
+  getBookingInfo(bookingId: number): Observable<BookingInfo | null> {
+    return this.http.get<BookingInfo>(`${this.apiUrl}/booking/${bookingId}`).pipe(
+      catchError(error => {
+        console.error('Error fetching booking info:', error);
+        return of(null);
       })
     );
   }

@@ -40,5 +40,10 @@ export default [
     path: 'qr-code',
     loadComponent: () => import('./qr-code/qr-code.component').then(c => c.QrCodeComponent),
     title: 'QR Code Generator - Hostr Admin'
+  },
+  {
+    path: 'guest-journey',
+    loadComponent: () => import('./guest-journey/guest-journey.component').then(c => c.GuestJourneyComponent),
+    title: 'Guest Journey Automation - Hostr Admin'
   }
 ] as Routes;

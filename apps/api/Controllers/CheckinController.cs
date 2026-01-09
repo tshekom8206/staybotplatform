@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Hostr.Api.Data;
 using Hostr.Api.Models;
+using Hostr.Api.Services;
 
 namespace Hostr.Api.Controllers;
 
@@ -10,10 +11,12 @@ namespace Hostr.Api.Controllers;
 public class CheckinController : ControllerBase
 {
     private readonly HostrDbContext _context;
+    private readonly IProactiveMessageService _proactiveMessageService;
 
-    public CheckinController(HostrDbContext context)
+    public CheckinController(HostrDbContext context, IProactiveMessageService proactiveMessageService)
     {
         _context = context;
+        _proactiveMessageService = proactiveMessageService;
     }
 
     /// <summary>
@@ -122,16 +125,24 @@ public class CheckinController : ControllerBase
                 return BadRequest("Invalid status");
             }
 
+            var wasNotCheckedIn = booking.Status != "CheckedIn";
             booking.Status = bookingStatus;
 
-            // If marking as completed (checked in), record the actual time
-            if (request.Status == "completed")
+            // If marking as completed (checked in), record the actual time and schedule welcome message
+            if (request.Status == "completed" && wasNotCheckedIn)
             {
-                // Could add an ActualCheckinTime field to Booking model
-                // For now, we'll use the status change as the indicator
-            }
+                // Record actual check-in time
+                booking.CheckInDate = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+
+                // Schedule Welcome Settled message (3 hours after check-in by default)
+                await _proactiveMessageService.ScheduleWelcomeSettledAsync(booking);
+            }
+            else
+            {
+                await _context.SaveChangesAsync();
+            }
 
             return Ok(new { message = "Check-in status updated successfully" });
         }

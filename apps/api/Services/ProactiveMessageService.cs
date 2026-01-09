@@ -44,6 +44,30 @@ public class ProactiveMessageService : IProactiveMessageService
             var isRepeatGuest = booking.IsRepeatGuest || await IsRepeatGuestAsync(booking.Phone, booking.Id);
             var previousBooking = isRepeatGuest ? await GetPreviousBookingAsync(booking.Phone, booking.Id) : null;
 
+            // Build portal URL for templates (subdomain pattern: {slug}.staybot.co.za)
+            var portalUrl = $"https://{tenant?.Slug}.staybot.co.za";
+
+            // 0. Pre-Arrival message (X days before check-in)
+            if (settings.PreArrivalEnabled)
+            {
+                var preArrivalDate = booking.CheckinDate.AddDays(-settings.PreArrivalDaysBefore);
+                var preArrivalDateTime = preArrivalDate.ToDateTime(TimeOnly.FromTimeSpan(settings.PreArrivalTime));
+
+                // Only schedule if we have enough days before check-in
+                if (preArrivalDateTime > now)
+                {
+                    var content = BuildMessageFromTemplate(
+                        settings.PreArrivalTemplate ?? GetDefaultPreArrivalTemplate(),
+                        booking, tenant!, portalUrl);
+                    await CreateScheduledMessageAsync(tenantId, booking, ScheduledMessageType.PreArrival,
+                        preArrivalDateTime, content, null);
+                }
+                else
+                {
+                    _logger.LogInformation("Skipping PreArrival message - scheduled time {Time} already passed (booking made too close to check-in)", preArrivalDateTime);
+                }
+            }
+
             // 1. Check-in day message (9 AM on check-in day)
             if (settings.CheckinDayEnabled)
             {
@@ -151,6 +175,40 @@ public class ProactiveMessageService : IProactiveMessageService
         await ScheduleMessagesForBookingAsync(tenantId, booking);
     }
 
+    public async Task ScheduleWelcomeSettledAsync(Booking booking)
+    {
+        try
+        {
+            var settings = await GetOrCreateSettingsAsync(booking.TenantId);
+            if (!settings.WelcomeSettledEnabled)
+            {
+                _logger.LogInformation("WelcomeSettled message disabled for tenant {TenantId}", booking.TenantId);
+                return;
+            }
+
+            var tenant = await _context.Tenants.FindAsync(booking.TenantId);
+            var portalUrl = $"https://{tenant?.Slug}.staybot.co.za";
+
+            // Schedule for X hours after now (actual check-in time)
+            var scheduledFor = DateTime.UtcNow.AddHours(settings.WelcomeSettledHoursAfter);
+
+            var content = BuildMessageFromTemplate(
+                settings.WelcomeSettledTemplate ?? GetDefaultWelcomeSettledTemplate(),
+                booking, tenant!, portalUrl);
+
+            await CreateScheduledMessageAsync(booking.TenantId, booking,
+                ScheduledMessageType.WelcomeSettled, scheduledFor, content, null);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Scheduled WelcomeSettled message for booking {BookingId} at {ScheduledFor}",
+                booking.Id, scheduledFor);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error scheduling WelcomeSettled message for booking {BookingId}", booking.Id);
+        }
+    }
+
     public async Task ProcessDueMessagesAsync()
     {
         try
@@ -256,14 +314,32 @@ public class ProactiveMessageService : IProactiveMessageService
     {
         var settings = await GetOrCreateSettingsAsync(tenantId);
 
+        // Enable/disable flags
         settings.CheckinDayEnabled = newSettings.CheckinDayEnabled;
         settings.MidStayEnabled = newSettings.MidStayEnabled;
         settings.PreCheckoutEnabled = newSettings.PreCheckoutEnabled;
         settings.PostStayEnabled = newSettings.PostStayEnabled;
+        settings.PreArrivalEnabled = newSettings.PreArrivalEnabled;
+        settings.WelcomeSettledEnabled = newSettings.WelcomeSettledEnabled;
+
+        // Timing settings
         settings.CheckinDayTime = newSettings.CheckinDayTime;
         settings.MidStayTime = newSettings.MidStayTime;
         settings.PreCheckoutTime = newSettings.PreCheckoutTime;
         settings.PostStayTime = newSettings.PostStayTime;
+        settings.PreArrivalTime = newSettings.PreArrivalTime;
+        settings.PreArrivalDaysBefore = newSettings.PreArrivalDaysBefore;
+        settings.WelcomeSettledHoursAfter = newSettings.WelcomeSettledHoursAfter;
+
+        // Message templates
+        settings.PreArrivalTemplate = newSettings.PreArrivalTemplate;
+        settings.CheckinDayTemplate = newSettings.CheckinDayTemplate;
+        settings.MidStayTemplate = newSettings.MidStayTemplate;
+        settings.PreCheckoutTemplate = newSettings.PreCheckoutTemplate;
+        settings.PostStayTemplate = newSettings.PostStayTemplate;
+        settings.WelcomeSettledTemplate = newSettings.WelcomeSettledTemplate;
+
+        // Media settings
         settings.WelcomeImageUrl = newSettings.WelcomeImageUrl;
         settings.IncludePhotoInWelcome = newSettings.IncludePhotoInWelcome;
         settings.Timezone = newSettings.Timezone;
@@ -274,6 +350,65 @@ public class ProactiveMessageService : IProactiveMessageService
     }
 
     #region Private Helper Methods
+
+    /// <summary>
+    /// Build message content from a template with placeholder replacement
+    /// </summary>
+    private string BuildMessageFromTemplate(string template, Booking booking, Tenant tenant, string portalUrl)
+    {
+        if (string.IsNullOrEmpty(template)) return string.Empty;
+
+        var nights = (booking.CheckoutDate.ToDateTime(TimeOnly.MinValue) -
+                     booking.CheckinDate.ToDateTime(TimeOnly.MinValue)).Days;
+
+        // For PrepareLink: Use booking ID (for pre-arrival when no room assigned yet)
+        // For FeedbackLink: Use room number (sent after check-in when room is known)
+        var prepareLink = $"{portalUrl}/prepare?booking={booking.Id}";
+        var feedbackLink = !string.IsNullOrEmpty(booking.RoomNumber)
+            ? $"{portalUrl}/feedback?room={booking.RoomNumber}"
+            : $"{portalUrl}/feedback?booking={booking.Id}";
+
+        return template
+            .Replace("{GuestFirstName}", booking.GuestName.Split(' ')[0])
+            .Replace("{GuestName}", booking.GuestName)
+            .Replace("{HotelName}", tenant?.Name ?? "Hotel")
+            .Replace("{CheckInDate}", booking.CheckinDate.ToString("dddd, MMMM d"))
+            .Replace("{CheckOutDate}", booking.CheckoutDate.ToString("dddd, MMMM d"))
+            .Replace("{RoomNumber}", booking.RoomNumber ?? "your room")
+            .Replace("{PrepareLink}", prepareLink)
+            .Replace("{FeedbackLink}", feedbackLink)
+            .Replace("{Nights}", nights.ToString());
+    }
+
+    /// <summary>
+    /// Default template for Pre-Arrival message (seeded when not customized)
+    /// </summary>
+    private static string GetDefaultPreArrivalTemplate()
+    {
+        return @"Hi {GuestFirstName}!
+
+Your stay at {HotelName} is coming up on {CheckInDate}. We're excited to welcome you!
+
+Prepare for your arrival:
+{PrepareLink}
+
+Safe travels!";
+    }
+
+    /// <summary>
+    /// Default template for Welcome Settled message (seeded when not customized)
+    /// </summary>
+    private static string GetDefaultWelcomeSettledTemplate()
+    {
+        return @"Hi {GuestFirstName}!
+
+Hope you're settling in well! How's room {RoomNumber}?
+
+Let us know how we're doing:
+{FeedbackLink}
+
+We're here for anything you need!";
+    }
 
     private async Task CreateScheduledMessageAsync(
         int tenantId,
