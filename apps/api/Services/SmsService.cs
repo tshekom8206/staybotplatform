@@ -39,12 +39,10 @@ public class SmsService : ISmsService
 
             _logger.LogInformation("Sending SMS to {Phone}, length={Length}", toPhone, messageText.Length);
 
-            var requestBody = new
-            {
-                content = messageText,
-                to = new[] { toPhone },
-                from = from
-            };
+            // Build request body - only include "from" if it's configured
+            var requestBody = string.IsNullOrEmpty(from)
+                ? new { content = messageText, to = new[] { toPhone } }
+                : (object)new { content = messageText, to = new[] { toPhone }, from = from };
 
             var json = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
