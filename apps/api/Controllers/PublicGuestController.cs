@@ -21,17 +21,20 @@ public class PublicGuestController : ControllerBase
     private readonly ILogger<PublicGuestController> _logger;
     private readonly IHubContext<StaffTaskHub> _staffTaskHub;
     private readonly IRoomValidationService _roomValidationService;
+    private readonly IProactiveMessageService _proactiveMessageService;
 
     public PublicGuestController(
         HostrDbContext context,
         ILogger<PublicGuestController> logger,
         IHubContext<StaffTaskHub> staffTaskHub,
-        IRoomValidationService roomValidationService)
+        IRoomValidationService roomValidationService,
+        IProactiveMessageService proactiveMessageService)
     {
         _context = context;
         _logger = logger;
         _staffTaskHub = staffTaskHub;
         _roomValidationService = roomValidationService;
+        _proactiveMessageService = proactiveMessageService;
     }
 
     private async Task<Tenant?> GetTenantBySlugAsync(string slug)
@@ -1203,19 +1206,21 @@ public class PublicGuestController : ControllerBase
                 return BadRequest(new { error = "Rating must be between 1 and 5" });
             }
 
-            var rating = new Rating
+            // Store in GuestRatings table for analytics reports
+            var guestRating = new GuestRating
             {
                 TenantId = tenant.Id,
-                Score = request.Rating,
-                Comment = $"{(request.GuestName != null ? $"Guest: {request.GuestName}\n" : "")}{(request.RoomNumber != null ? $"Room: {request.RoomNumber}\n" : "")}{request.Comment ?? ""}",
-                GuestPhone = request.Phone ?? "+27000000000", // Use placeholder phone if not provided
-                Source = "manual", // Valid: checkout, manual, whatsapp
-                Status = "received",
-                ReceivedAt = DateTime.UtcNow,
+                Rating = request.Rating,
+                Comment = request.Comment,
+                GuestName = request.GuestName,
+                GuestPhone = request.Phone,
+                RoomNumber = request.RoomNumber,
+                RatingType = "Stay",
+                CollectionMethod = "Manual", // Guest Portal submission
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Ratings.Add(rating);
+            _context.GuestRatings.Add(guestRating);
             await _context.SaveChangesAsync();
 
             _logger.LogInformation(
@@ -1568,6 +1573,272 @@ public class PublicGuestController : ControllerBase
 
     #endregion
 
+    #region Guest Journey - Pre-Arrival & Feedback
+
+    /// <summary>
+    /// Get booking info for pre-arrival prepare page
+    /// Used when guest clicks prepare link in WhatsApp message
+    /// </summary>
+    [HttpGet("booking/{bookingId:int}")]
+    public async Task<IActionResult> GetBookingInfo(string slug, int bookingId)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            var bookingData = await _context.Bookings
+                .Where(b => b.Id == bookingId && b.TenantId == tenant.Id)
+                .Select(b => new
+                {
+                    b.Id,
+                    b.GuestName,
+                    b.RoomNumber,
+                    b.CheckinDate,
+                    b.CheckoutDate,
+                    b.Status
+                })
+                .FirstOrDefaultAsync();
+
+            if (bookingData == null)
+            {
+                return NotFound(new { error = "Booking not found" });
+            }
+
+            // Compute first name in memory (not in SQL)
+            var guestFirstName = bookingData.GuestName.Contains(' ')
+                ? bookingData.GuestName.Split(' ')[0]
+                : bookingData.GuestName;
+
+            return Ok(new
+            {
+                bookingData.Id,
+                guestFirstName,
+                bookingData.GuestName,
+                bookingData.RoomNumber,
+                bookingData.CheckinDate,
+                bookingData.CheckoutDate,
+                bookingData.Status,
+                hasCheckedIn = bookingData.Status == "CheckedIn" || bookingData.Status == "InHouse"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting booking {BookingId} for slug {Slug}", bookingId, slug);
+            return StatusCode(500, new { error = "Error retrieving booking information" });
+        }
+    }
+
+    /// <summary>
+    /// Get available items and services for pre-arrival upsells (prepare page)
+    /// This combines RequestItems and Services marked for pre-arrival
+    /// </summary>
+    [HttpGet("prepare-items")]
+    public async Task<IActionResult> GetPrepareItems(string slug)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            // Get RequestItems that are available for pre-arrival (Category = "PreArrival" or "Upsell")
+            var requestItems = await _context.RequestItems
+                .Where(r => r.TenantId == tenant.Id && r.IsAvailable &&
+                           (r.Category == "PreArrival" || r.Category == "Upsell" || r.Category == "RoomAmenities"))
+                .OrderBy(r => r.DisplayOrder)
+                .ThenBy(r => r.Name)
+                .Select(r => new
+                {
+                    id = r.Id,
+                    type = "item",
+                    name = r.Name,
+                    description = r.Description,
+                    category = r.Category,
+                    price = (decimal?)null, // Most request items are free
+                    isChargeable = false,
+                    icon = GetRequestItemIcon(r.Name),
+                    estimatedTime = r.EstimatedTime ?? 15
+                })
+                .ToListAsync();
+
+            // Get Services available for pre-arrival (chargeable services that can be pre-booked)
+            var services = await _context.Services
+                .Where(s => s.TenantId == tenant.Id && s.IsAvailable && s.IsChargeable)
+                .OrderBy(s => s.DisplayOrder)
+                .ThenBy(s => s.Name)
+                .Select(s => new
+                {
+                    id = s.Id,
+                    type = "service",
+                    name = s.Name,
+                    description = s.Description,
+                    category = s.Category,
+                    price = s.Price,
+                    isChargeable = s.IsChargeable,
+                    icon = s.Icon ?? GetServiceCategoryIcon(s.Category ?? ""),
+                    imageUrl = s.FeaturedImageUrl ?? s.ImageUrl,
+                    currency = s.Currency,
+                    pricingUnit = s.PricingUnit,
+                    requiresBooking = s.RequiresAdvanceBooking
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                items = requestItems,
+                services = services
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting prepare items for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error retrieving prepare items" });
+        }
+    }
+
+    /// <summary>
+    /// Get feedback categories for the feedback page (used in Welcome Settled journey)
+    /// </summary>
+    [HttpGet("feedback-categories")]
+    public async Task<IActionResult> GetFeedbackCategories(string slug)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            // Get departments from database for issue categories
+            // Fall back to default categories if none configured
+            var defaultCategories = new[]
+            {
+                new { id = "room_issue", name = "Room Issue", icon = "bi-house-door", description = "Problem with the room or amenities" },
+                new { id = "noise", name = "Noise Complaint", icon = "bi-volume-up", description = "Noise disturbance" },
+                new { id = "cleanliness", name = "Cleanliness", icon = "bi-brush", description = "Room needs cleaning" },
+                new { id = "service", name = "Service Issue", icon = "bi-person-badge", description = "Issue with staff or service" },
+                new { id = "other", name = "Other", icon = "bi-three-dots", description = "Other feedback" }
+            };
+
+            return Ok(new { categories = defaultCategories });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting feedback categories for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error retrieving feedback categories" });
+        }
+    }
+
+    /// <summary>
+    /// Submit quick feedback from the Welcome Settled journey
+    /// Creates a rating and optionally a staff task if there's an issue
+    /// </summary>
+    [HttpPost("feedback")]
+    public async Task<IActionResult> SubmitFeedback(string slug, [FromBody] GuestQuickFeedbackRequest request)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            // Validate rating
+            if (request.Rating < 1 || request.Rating > 5)
+            {
+                return BadRequest(new { error = "Rating must be between 1 and 5" });
+            }
+
+            // Store the rating
+            var guestRating = new GuestRating
+            {
+                TenantId = tenant.Id,
+                Rating = request.Rating,
+                Comment = request.Comment,
+                RoomNumber = request.RoomNumber,
+                RatingType = "WelcomeSettled", // Mark as from Welcome Settled journey
+                CollectionMethod = "Journey", // Guest Journey automated collection
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.GuestRatings.Add(guestRating);
+
+            // If there's an issue category, create a staff task
+            if (!string.IsNullOrEmpty(request.IssueCategory))
+            {
+                var priority = request.Rating <= 2 ? "High" : "Normal";
+                var department = request.IssueCategory switch
+                {
+                    "room_issue" => "Maintenance",
+                    "cleanliness" => "Housekeeping",
+                    "noise" => "FrontDesk",
+                    "service" => "FrontDesk",
+                    _ => "General"
+                };
+
+                var task = new StaffTask
+                {
+                    TenantId = tenant.Id,
+                    Title = $"Guest Feedback Issue - Room {request.RoomNumber}",
+                    Description = $"Issue Category: {request.IssueCategory}\nRating: {request.Rating}/5\n\n{request.Comment ?? "No additional details provided."}",
+                    TaskType = "general",
+                    Department = department,
+                    Priority = priority,
+                    Status = "Open",
+                    RoomNumber = request.RoomNumber,
+                    Notes = $"From Welcome Settled journey at {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.StaffTasks.Add(task);
+
+                // Send SignalR notification to staff
+                await _staffTaskHub.Clients.Group($"Tenant_{tenant.Id}")
+                    .SendAsync("TaskCreated", new
+                    {
+                        taskId = task.Id,
+                        title = task.Title,
+                        roomNumber = task.RoomNumber,
+                        department = task.Department,
+                        priority = task.Priority,
+                        createdAt = task.CreatedAt
+                    });
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Guest feedback submitted via Welcome Settled: {Rating}/5 for Room {RoomNumber} at Tenant {TenantId}",
+                request.Rating, request.RoomNumber, tenant.Id);
+
+            var responseMessage = request.Rating >= 4
+                ? "Thank you for your positive feedback!"
+                : "Thank you for letting us know. Our team will address this shortly.";
+
+            return Ok(new
+            {
+                success = true,
+                message = responseMessage
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting feedback for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error submitting feedback" });
+        }
+    }
+
+    #endregion
+
     #region Languages
 
     /// <summary>
@@ -1838,6 +2109,134 @@ public class PublicGuestController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Test endpoint: Schedule proactive messages for a booking (for development/testing)
+    /// </summary>
+    [HttpPost("test/schedule-booking/{bookingId}")]
+    public async Task<IActionResult> TestScheduleBooking(string slug, int bookingId)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            var booking = await _context.Bookings
+                .FirstOrDefaultAsync(b => b.Id == bookingId && b.TenantId == tenant.Id);
+
+            if (booking == null)
+            {
+                return NotFound(new { error = "Booking not found" });
+            }
+
+            await _proactiveMessageService.ScheduleMessagesForBookingAsync(tenant.Id, booking);
+
+            // Return the scheduled messages
+            var scheduledMessages = await _context.ScheduledMessages
+                .Where(m => m.BookingId == bookingId)
+                .OrderBy(m => m.ScheduledFor)
+                .Select(m => new
+                {
+                    m.Id,
+                    MessageType = m.MessageType.ToString(),
+                    m.ScheduledFor,
+                    Status = m.Status.ToString(),
+                    m.Content
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                message = $"Scheduled {scheduledMessages.Count} messages for booking {bookingId}",
+                booking = new
+                {
+                    booking.Id,
+                    booking.GuestName,
+                    booking.RoomNumber,
+                    booking.CheckinDate,
+                    booking.CheckoutDate
+                },
+                scheduledMessages
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error scheduling messages for booking {BookingId}", bookingId);
+            return StatusCode(500, new { error = "Failed to schedule messages", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Test endpoint: Simulate guest check-in to trigger WelcomeSettled message (for development/testing)
+    /// </summary>
+    [HttpPost("test/checkin/{bookingId}")]
+    public async Task<IActionResult> TestCheckin(string slug, int bookingId)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            var booking = await _context.Bookings
+                .FirstOrDefaultAsync(b => b.Id == bookingId && b.TenantId == tenant.Id);
+
+            if (booking == null)
+            {
+                return NotFound(new { error = "Booking not found" });
+            }
+
+            var previousStatus = booking.Status;
+
+            // Update booking status to CheckedIn
+            booking.Status = "CheckedIn";
+            booking.CheckInDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            // Schedule WelcomeSettled message (3 hours after check-in by default)
+            await _proactiveMessageService.ScheduleWelcomeSettledAsync(booking);
+
+            // Get all scheduled messages for this booking
+            var scheduledMessages = await _context.ScheduledMessages
+                .Where(m => m.BookingId == bookingId)
+                .OrderBy(m => m.ScheduledFor)
+                .Select(m => new
+                {
+                    m.Id,
+                    MessageType = m.MessageType.ToString(),
+                    m.ScheduledFor,
+                    Status = m.Status.ToString(),
+                    m.Content
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                message = $"Guest checked in! WelcomeSettled message scheduled.",
+                booking = new
+                {
+                    booking.Id,
+                    booking.GuestName,
+                    booking.RoomNumber,
+                    PreviousStatus = previousStatus,
+                    NewStatus = booking.Status,
+                    ActualCheckinTime = booking.CheckInDate
+                },
+                scheduledMessages
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error simulating check-in for booking {BookingId}", bookingId);
+            return StatusCode(500, new { error = "Failed to simulate check-in", details = ex.Message });
+        }
+    }
+
     #endregion
 }
 
@@ -1987,6 +2386,27 @@ public class GuestItemRequestDto
 
     [MaxLength(500)]
     public string? Notes { get; set; }
+}
+
+/// <summary>
+/// Request DTO for quick feedback from Welcome Settled journey
+/// </summary>
+public class GuestQuickFeedbackRequest
+{
+    [Required, Range(1, 5)]
+    public int Rating { get; set; }
+
+    [MaxLength(1000)]
+    public string? Comment { get; set; }
+
+    [MaxLength(20)]
+    public string? RoomNumber { get; set; }
+
+    /// <summary>
+    /// Issue category if guest has a problem (room_issue, noise, cleanliness, service, other)
+    /// </summary>
+    [MaxLength(50)]
+    public string? IssueCategory { get; set; }
 }
 
 #endregion

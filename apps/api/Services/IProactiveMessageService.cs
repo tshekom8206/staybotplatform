@@ -20,6 +20,12 @@ public interface IProactiveMessageService
     Task RescheduleMessagesForBookingAsync(int tenantId, Booking booking);
 
     /// <summary>
+    /// Schedule Welcome Settled message after actual check-in
+    /// Called when booking status changes to CheckedIn
+    /// </summary>
+    Task ScheduleWelcomeSettledAsync(Booking booking);
+
+    /// <summary>
     /// Process and send all due scheduled messages
     /// Called by the Quartz job every 5 minutes
     /// </summary>

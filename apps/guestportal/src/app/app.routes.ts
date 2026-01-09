@@ -45,6 +45,14 @@ export const routes: Routes = [
       {
         path: 'house-rules',
         loadComponent: () => import('./views/pages/house-rules/house-rules.component').then(c => c.HouseRulesComponent)
+      },
+      {
+        path: 'prepare',
+        loadComponent: () => import('./views/pages/prepare/prepare.component').then(c => c.PrepareComponent)
+      },
+      {
+        path: 'feedback',
+        loadComponent: () => import('./views/pages/feedback/feedback.component').then(c => c.FeedbackComponent)
       }
     ]
   },

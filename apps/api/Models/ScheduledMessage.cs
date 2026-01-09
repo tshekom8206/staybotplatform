@@ -8,7 +8,9 @@ public enum ScheduledMessageType
     CheckinDay,      // Morning of check-in day (9 AM default)
     MidStay,         // Day 2 satisfaction check (skip for 1-night stays)
     PreCheckout,     // Day before checkout or same day for 1-night stays
-    PostStay         // Post-checkout feedback request
+    PostStay,        // Post-checkout feedback request
+    PreArrival,      // 3 days before check-in (configurable)
+    WelcomeSettled   // 3 hours after actual check-in (configurable)
 }
 
 public enum ScheduledMessageStatus
@@ -77,12 +79,31 @@ public class ProactiveMessageSettings
     public bool MidStayEnabled { get; set; } = true;
     public bool PreCheckoutEnabled { get; set; } = true;
     public bool PostStayEnabled { get; set; } = true;
+    public bool PreArrivalEnabled { get; set; } = true;
+    public bool WelcomeSettledEnabled { get; set; } = true;
 
     // Timing configuration (stored as TimeSpan ticks for EF compatibility)
     public TimeSpan CheckinDayTime { get; set; } = new TimeSpan(9, 0, 0);   // 9:00 AM
     public TimeSpan MidStayTime { get; set; } = new TimeSpan(10, 0, 0);     // 10:00 AM
     public TimeSpan PreCheckoutTime { get; set; } = new TimeSpan(18, 0, 0); // 6:00 PM
     public TimeSpan PostStayTime { get; set; } = new TimeSpan(10, 0, 0);    // 10:00 AM
+    public TimeSpan PreArrivalTime { get; set; } = new TimeSpan(10, 0, 0);  // 10:00 AM
+
+    // Pre-Arrival specific settings
+    public int PreArrivalDaysBefore { get; set; } = 3;  // Days before check-in to send pre-arrival message
+
+    // Welcome Settled specific settings
+    public int WelcomeSettledHoursAfter { get; set; } = 3;  // Hours after check-in to send welcome settled message
+
+    // Message Templates (tenant-configurable with placeholders)
+    // Supported placeholders: {GuestFirstName}, {GuestName}, {HotelName}, {CheckInDate}, {CheckOutDate},
+    //                         {RoomNumber}, {PrepareLink}, {FeedbackLink}, {Nights}
+    public string? PreArrivalTemplate { get; set; }
+    public string? CheckinDayTemplate { get; set; }
+    public string? MidStayTemplate { get; set; }
+    public string? PreCheckoutTemplate { get; set; }
+    public string? PostStayTemplate { get; set; }
+    public string? WelcomeSettledTemplate { get; set; }
 
     // Media settings
     [MaxLength(500)]
