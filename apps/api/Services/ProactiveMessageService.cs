@@ -731,7 +731,7 @@ We're here for anything you need!";
                     token = GenerateRedirectToken(tenantSlug, $"feedback/{booking.Id}");
                     return new TemplateInfo(
                         "post_stay_survey_v03",
-                        new List<string> { hotelName, roomNumber },
+                        new List<string> { guestName, hotelName, roomNumber },
                         token);
 
                 default:
