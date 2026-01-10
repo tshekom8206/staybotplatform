@@ -699,7 +699,7 @@ We're here for anything you need!";
 
                 case ScheduledMessageType.CheckinDay:
                     var checkinTime = "2:00 PM"; // Default check-in time
-                    token = GenerateRedirectToken(tenantSlug, "checkin");
+                    token = GenerateRedirectToken(tenantSlug, "prepare");
                     return new TemplateInfo(
                         "checkin_day_ready_v04",
                         new List<string> { guestName, roomNumber, hotelName, checkinTime },
