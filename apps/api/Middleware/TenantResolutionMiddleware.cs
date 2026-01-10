@@ -114,7 +114,8 @@ public class TenantResolutionMiddleware
             "/api/dataseed", // Data seeding endpoint (temporary for demo)
             "/api/test", // Test endpoints for debugging
             "/api/public", // Public Guest Portal endpoints (handle tenant via slug parameter)
-            "/api/ga4/test" // GA4 diagnostic endpoint
+            "/api/ga4/test", // GA4 diagnostic endpoint
+            "/g" // Redirect service for WhatsApp template buttons
         };
 
         return systemPaths.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase));
@@ -143,7 +144,8 @@ public class TenantResolutionMiddleware
             "/api/dataseed", // Data seeding endpoint (temporary for demo)
             "/api/test", // Test endpoints for debugging
             "/api/public", // Public Guest Portal endpoints (handle tenant via slug parameter)
-            "/api/ga4/test" // GA4 diagnostic endpoint
+            "/api/ga4/test", // GA4 diagnostic endpoint
+            "/g" // Redirect service for WhatsApp template buttons
         };
 
         return !noTenantPaths.Any(p => context.Request.Path.StartsWithSegments(p, StringComparison.OrdinalIgnoreCase));

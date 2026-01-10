@@ -21,6 +21,14 @@ public enum ScheduledMessageStatus
     Cancelled        // Booking cancelled or dates changed
 }
 
+public enum DeliveryMethod
+{
+    Unknown = 0,                  // For migration of existing records
+    SMS = 1,                      // Delivered via SMS
+    WhatsApp = 2,                 // Delivered via WhatsApp
+    WhatsAppFailedToSMS = 3       // Tried WhatsApp first, fell back to SMS
+}
+
 public class ScheduledMessage
 {
     [Key]
@@ -55,6 +63,14 @@ public class ScheduledMessage
     public string? ErrorMessage { get; set; }
 
     public int RetryCount { get; set; } = 0;
+
+    // Delivery method tracking for cost analysis
+    public DeliveryMethod AttemptedMethod { get; set; } = DeliveryMethod.WhatsApp;
+
+    public DeliveryMethod? SuccessfulMethod { get; set; }
+
+    [MaxLength(500)]
+    public string? WhatsAppFailureReason { get; set; }
 
     // Navigation properties
     [ForeignKey("TenantId")]

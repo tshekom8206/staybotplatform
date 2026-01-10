@@ -20,6 +20,19 @@ public interface IWhatsAppService
     Task<bool> SendTextMessageAsync(int tenantId, string toPhone, string message);
     Task<bool> SendTemplateMessageAsync(int tenantId, string toPhone, string templateName, string language = "en");
     Task<bool> SendImageAsync(int tenantId, string toPhone, string imageUrl, string? caption = null);
+
+    // Enhanced methods with detailed error reporting for fallback logic
+    Task<(bool Success, string? ErrorMessage)> SendTextMessageWithDetailsAsync(int tenantId, string toPhone, string message);
+    Task<(bool Success, string? ErrorMessage)> SendImageWithDetailsAsync(int tenantId, string toPhone, string imageUrl, string? caption = null);
+
+    // Template message with parameters
+    Task<(bool Success, string? ErrorMessage)> SendTemplateWithParametersAsync(
+        int tenantId,
+        string toPhone,
+        string templateName,
+        List<string> bodyParameters,
+        string? buttonUrlParameter = null,
+        string language = "en");
 }
 
 public class WhatsAppApiClient : IWhatsAppApiClient
@@ -461,8 +474,9 @@ public class WhatsAppService : IWhatsAppService
         try
         {
             // Get WhatsApp number for tenant (WhatsApp Cloud API)
+            // Get shared WhatsApp number (TenantId is null for shared number across all tenants)
             var waNumber = await _context.WhatsAppNumbers
-                .FirstOrDefaultAsync(w => w.TenantId == tenantId && w.Status == "Active");
+                .FirstOrDefaultAsync(w => w.TenantId == null && w.Status == "Active");
 
             if (waNumber == null)
             {
@@ -544,13 +558,149 @@ public class WhatsAppService : IWhatsAppService
         }
     }
 
+    public async Task<(bool Success, string? ErrorMessage)> SendTemplateWithParametersAsync(
+        int tenantId,
+        string toPhone,
+        string templateName,
+        List<string> bodyParameters,
+        string? buttonUrlParameter = null,
+        string language = "en")
+    {
+        try
+        {
+            // Get WhatsApp number for tenant
+            // Get shared WhatsApp number (TenantId is null for shared number across all tenants)
+            var waNumber = await _context.WhatsAppNumbers
+                .FirstOrDefaultAsync(w => w.TenantId == null && w.Status == "Active");
+
+            if (waNumber == null)
+            {
+                var errorMsg = $"No active WhatsApp number found for tenant {tenantId}";
+                _logger.LogError(errorMsg);
+                return (false, errorMsg);
+            }
+
+            _logger.LogInformation("Sending template {TemplateName} to {Phone} for tenant {TenantId}",
+                templateName, toPhone, tenantId);
+
+            // Build template message payload
+            var components = new List<object>();
+
+            // Add body component with parameters
+            if (bodyParameters != null && bodyParameters.Count > 0)
+            {
+                var bodyParams = bodyParameters.Select(p => new { type = "text", text = p }).ToList();
+                components.Add(new
+                {
+                    type = "body",
+                    parameters = bodyParams
+                });
+            }
+
+            // Add button component with URL parameter if provided
+            if (!string.IsNullOrEmpty(buttonUrlParameter))
+            {
+                components.Add(new
+                {
+                    type = "button",
+                    sub_type = "url",
+                    index = "0",
+                    parameters = new[]
+                    {
+                        new { type = "text", text = buttonUrlParameter }
+                    }
+                });
+            }
+
+            var templatePayload = new
+            {
+                messaging_product = "whatsapp",
+                to = toPhone,
+                type = "template",
+                template = new
+                {
+                    name = templateName,
+                    language = new { code = language },
+                    components = components
+                }
+            };
+
+            // Send via WhatsApp Cloud API
+            var apiUrl = $"https://graph.facebook.com/v22.0/{waNumber.PhoneNumberId}/messages";
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Clear();
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {waNumber.PageAccessToken}");
+
+            var json = JsonSerializer.Serialize(templatePayload);
+            _logger.LogInformation("Template payload: {Payload}", json);
+
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await httpClient.PostAsync(apiUrl, content);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            _logger.LogInformation("WhatsApp template API response - Status: {StatusCode}, Body: {ResponseBody}",
+                response.StatusCode, responseBody);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Template {TemplateName} sent successfully to {Phone}",
+                    templateName, toPhone);
+
+                // Save to conversation history
+                var conversation = await _context.Conversations
+                    .FirstOrDefaultAsync(c => c.WaUserPhone == toPhone);
+
+                if (conversation != null)
+                {
+                    var messageRecord = new Message
+                    {
+                        TenantId = tenantId,
+                        ConversationId = conversation.Id,
+                        Direction = "Outbound",
+                        Body = $"[Template: {templateName}]",
+                        MessageType = "template",
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Messages.Add(messageRecord);
+                    conversation.LastBotReplyAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("✅ Saved template message to conversation {ConversationId}", conversation.Id);
+                }
+
+                return (true, null);
+            }
+            else
+            {
+                var errorMsg = $"WhatsApp template API error: {response.StatusCode} - {responseBody}";
+                _logger.LogError("Template {TemplateName} failed to {Phone}. Status: {Status}, Response: {Response}",
+                    templateName, toPhone, response.StatusCode, responseBody);
+                return (false, errorMsg);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            var errorMsg = $"WhatsApp template API network error: {ex.Message}";
+            _logger.LogError(ex, "Network error sending template to {Phone}", toPhone);
+            return (false, errorMsg);
+        }
+        catch (Exception ex)
+        {
+            var errorMsg = $"Template send error: {ex.Message}";
+            _logger.LogError(ex, "Error sending template message to {Phone}", toPhone);
+            return (false, errorMsg);
+        }
+    }
+
     public async Task<bool> SendImageAsync(int tenantId, string toPhone, string imageUrl, string? caption = null)
     {
         try
         {
             // Get WhatsApp number for tenant
+            // Get shared WhatsApp number (TenantId is null for shared number across all tenants)
             var waNumber = await _context.WhatsAppNumbers
-                .FirstOrDefaultAsync(w => w.TenantId == tenantId && w.Status == "Active");
+                .FirstOrDefaultAsync(w => w.TenantId == null && w.Status == "Active");
 
             if (waNumber == null)
             {
@@ -625,6 +775,178 @@ public class WhatsAppService : IWhatsAppService
         {
             _logger.LogError(ex, "Error sending image to {Phone}", toPhone);
             return false;
+        }
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> SendTextMessageWithDetailsAsync(int tenantId, string toPhone, string messageText)
+    {
+        try
+        {
+            // Get WhatsApp number for tenant
+            // Get shared WhatsApp number (TenantId is null for shared number across all tenants)
+            var waNumber = await _context.WhatsAppNumbers
+                .FirstOrDefaultAsync(w => w.TenantId == null && w.Status == "Active");
+
+            if (waNumber == null)
+            {
+                var errorMsg = $"No active WhatsApp number found for tenant {tenantId}";
+                _logger.LogError(errorMsg);
+                return (false, errorMsg);
+            }
+
+            var message = new OutboundMessage
+            {
+                To = toPhone,
+                Text = new OutboundText { Body = messageText }
+            };
+
+            var success = await _whatsAppClient.SendMessageAsync(waNumber.PhoneNumberId, message, waNumber.PageAccessToken);
+
+            if (!success)
+            {
+                return (false, "WhatsApp API returned failure");
+            }
+
+            // Save outbound message to database
+            using var scope = new TenantScope(_context, tenantId);
+
+            var conversation = await _context.Conversations
+                .FirstOrDefaultAsync(c => c.WaUserPhone == toPhone);
+
+            if (conversation != null)
+            {
+                try
+                {
+                    var outboundMessage = new Message
+                    {
+                        TenantId = tenantId,
+                        ConversationId = conversation.Id,
+                        Direction = "Outbound",
+                        MessageType = "text",
+                        Body = messageText,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Messages.Add(outboundMessage);
+                    conversation.LastBotReplyAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("✅ Saved outbound message {MessageId} to conversation {ConversationId}",
+                        outboundMessage.Id, conversation.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ FAILED to save outbound message for conversation {ConversationId}", conversation.Id);
+                }
+            }
+
+            return (true, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            var errorMsg = $"WhatsApp API network error: {ex.Message}";
+            _logger.LogError(ex, "Error sending text message to {Phone}", toPhone);
+            return (false, errorMsg);
+        }
+        catch (Exception ex)
+        {
+            var errorMsg = $"WhatsApp send error: {ex.Message}";
+            _logger.LogError(ex, "Error sending text message to {Phone}", toPhone);
+            return (false, errorMsg);
+        }
+    }
+
+    public async Task<(bool Success, string? ErrorMessage)> SendImageWithDetailsAsync(int tenantId, string toPhone, string imageUrl, string? caption = null)
+    {
+        try
+        {
+            // Get WhatsApp number for tenant
+            // Get shared WhatsApp number (TenantId is null for shared number across all tenants)
+            var waNumber = await _context.WhatsAppNumbers
+                .FirstOrDefaultAsync(w => w.TenantId == null && w.Status == "Active");
+
+            if (waNumber == null)
+            {
+                var errorMsg = $"No active WhatsApp number found for tenant {tenantId}";
+                _logger.LogError(errorMsg);
+                return (false, errorMsg);
+            }
+
+            var message = new OutboundMessage
+            {
+                To = toPhone,
+                Type = "image",
+                Image = new OutboundImage
+                {
+                    Link = imageUrl,
+                    Caption = caption
+                }
+            };
+
+            // Send via WhatsApp API
+            var apiUrl = $"https://graph.facebook.com/v18.0/{waNumber.PhoneNumberId}/messages";
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {waNumber.PageAccessToken}");
+
+            var json = System.Text.Json.JsonSerializer.Serialize(message);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await httpClient.PostAsync(apiUrl, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Image sent successfully to {Phone} with caption: {Caption}",
+                    toPhone, caption?.Substring(0, Math.Min(50, caption?.Length ?? 0)));
+
+                // Save outbound message to database
+                using var scope = new TenantScope(_context, tenantId);
+
+                var conversation = await _context.Conversations
+                    .FirstOrDefaultAsync(c => c.WaUserPhone == toPhone);
+
+                if (conversation != null)
+                {
+                    var outboundMessage = new Message
+                    {
+                        TenantId = tenantId,
+                        ConversationId = conversation.Id,
+                        Direction = "Outbound",
+                        MessageType = "image",
+                        Body = caption ?? "[Image]",
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Messages.Add(outboundMessage);
+                    conversation.LastBotReplyAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Saved image message {MessageId} to conversation {ConversationId}",
+                        outboundMessage.Id, conversation.Id);
+                }
+
+                return (true, null);
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var errorMsg = $"WhatsApp API error: {response.StatusCode} - {errorContent}";
+                _logger.LogError("Failed to send image to {Phone}. Status: {Status}, Error: {Error}",
+                    toPhone, response.StatusCode, errorContent);
+                return (false, errorMsg);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            var errorMsg = $"WhatsApp API network error: {ex.Message}";
+            _logger.LogError(ex, "Error sending image to {Phone}", toPhone);
+            return (false, errorMsg);
+        }
+        catch (Exception ex)
+        {
+            var errorMsg = $"WhatsApp send error: {ex.Message}";
+            _logger.LogError(ex, "Error sending image to {Phone}", toPhone);
+            return (false, errorMsg);
         }
     }
 

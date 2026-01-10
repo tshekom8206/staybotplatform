@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Hostr.Api.Data;
 using Hostr.Api.Models;
+using System.Text;
 
 namespace Hostr.Api.Services;
 
@@ -79,7 +80,7 @@ public class ProactiveMessageService : IProactiveMessageService
                 // Skip if scheduled time already passed (same-day booking after 9 AM)
                 if (checkinDateTime > now)
                 {
-                    var content = BuildCheckinDayMessage(hotelName, booking, isRepeatGuest, previousBooking, settings);
+                    var content = BuildCheckinDayMessage(hotelName, booking, isRepeatGuest, previousBooking, settings, portalUrl);
                     await CreateScheduledMessageAsync(tenantId, booking, ScheduledMessageType.CheckinDay,
                         checkinDateTime, content, settings.WelcomeImageUrl);
                 }
@@ -97,7 +98,7 @@ public class ProactiveMessageService : IProactiveMessageService
 
                 if (midStayDateTime > now)
                 {
-                    var content = BuildMidStayMessage(hotelName, booking, tenantId);
+                    var content = BuildMidStayMessage(hotelName, booking, tenantId, portalUrl);
                     await CreateScheduledMessageAsync(tenantId, booking, ScheduledMessageType.MidStay,
                         midStayDateTime, content, null);
                 }
@@ -122,7 +123,7 @@ public class ProactiveMessageService : IProactiveMessageService
 
                 if (preCheckoutDateTime > now)
                 {
-                    var content = BuildPreCheckoutMessage(hotelName, booking, isOneNight);
+                    var content = BuildPreCheckoutMessage(hotelName, booking, isOneNight, portalUrl);
                     await CreateScheduledMessageAsync(tenantId, booking, ScheduledMessageType.PreCheckout,
                         preCheckoutDateTime, content, null);
                 }
@@ -134,7 +135,7 @@ public class ProactiveMessageService : IProactiveMessageService
                 var postStayDate = booking.CheckoutDate.AddDays(1);
                 var postStayDateTime = postStayDate.ToDateTime(TimeOnly.FromTimeSpan(settings.PostStayTime));
 
-                var content = BuildPostStayMessage(hotelName, booking);
+                var content = BuildPostStayMessage(hotelName, booking, portalUrl);
                 await CreateScheduledMessageAsync(tenantId, booking, ScheduledMessageType.PostStay,
                     postStayDateTime, content, null);
             }
@@ -241,35 +242,44 @@ public class ProactiveMessageService : IProactiveMessageService
                         continue;
                     }
 
-                    // Send the message via SMS (for proactive Guest Journey messages)
-                    bool sent;
-                    if (!string.IsNullOrEmpty(message.MediaUrl))
-                    {
-                        // SMS doesn't support images - send text only
-                        _logger.LogWarning("Media messages not supported via SMS, sending text only for message {MessageId}", message.Id);
-                        sent = await _smsService.SendMessageAsync(message.Phone, message.Content);
-                    }
-                    else
-                    {
-                        sent = await _smsService.SendMessageAsync(message.Phone, message.Content);
-                    }
+                    // NEW: WhatsApp-first with SMS fallback (using templates if WhatsApp available)
+                    var result = await AttemptMessageDeliveryAsync(
+                        message.Id,
+                        message.TenantId,
+                        message.Phone,
+                        message.Content,
+                        message.MediaUrl,
+                        message.AttemptedMethod,
+                        message.MessageType,
+                        message.Booking);
 
-                    if (sent)
+                    if (result.Success)
                     {
                         message.Status = ScheduledMessageStatus.Sent;
                         message.SentAt = DateTime.UtcNow;
-                        _logger.LogInformation("Sent {MessageType} message to {Phone} for booking {BookingId}",
-                            message.MessageType, message.Phone, message.BookingId);
+                        message.SuccessfulMethod = result.SuccessfulMethod;
+                        message.ErrorMessage = null;
+                        message.WhatsAppFailureReason = result.WhatsAppError;
+
+                        _logger.LogInformation("Sent {MessageType} message to {Phone} for booking {BookingId} via {Method}",
+                            message.MessageType, message.Phone, message.BookingId, result.SuccessfulMethod);
                     }
                     else
                     {
                         message.RetryCount++;
-                        message.ErrorMessage = "SMS send failed";
+                        message.ErrorMessage = result.ErrorMessage;
+                        message.WhatsAppFailureReason = result.WhatsAppError;
 
                         if (message.RetryCount >= 3)
                         {
                             message.Status = ScheduledMessageStatus.Failed;
-                            _logger.LogWarning("Message {MessageId} failed after 3 retries", message.Id);
+                            _logger.LogWarning("Message {MessageId} failed after 3 retries. Last error: {Error}",
+                                message.Id, result.ErrorMessage);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Message {MessageId} failed (attempt {Attempt}/3). Error: {Error}",
+                                message.Id, message.RetryCount, result.ErrorMessage);
                         }
                     }
                 }
@@ -288,6 +298,17 @@ public class ProactiveMessageService : IProactiveMessageService
             }
 
             await _context.SaveChangesAsync();
+
+            // Log summary statistics
+            var sentCount = dueMessages.Count(m => m.Status == ScheduledMessageStatus.Sent);
+            var failedCount = dueMessages.Count(m => m.Status == ScheduledMessageStatus.Failed);
+            var whatsAppCount = dueMessages.Count(m => m.SuccessfulMethod == DeliveryMethod.WhatsApp);
+            var smsCount = dueMessages.Count(m => m.SuccessfulMethod == DeliveryMethod.SMS);
+            var fallbackCount = dueMessages.Count(m => m.SuccessfulMethod == DeliveryMethod.WhatsAppFailedToSMS);
+
+            _logger.LogInformation(
+                "Processed {Total} messages: {Sent} sent ({WhatsApp} WhatsApp, {SMS} SMS, {Fallback} fallback), {Failed} failed",
+                dueMessages.Count, sentCount, whatsAppCount, smsCount, fallbackCount, failedCount);
         }
         catch (Exception ex)
         {
@@ -457,7 +478,8 @@ We're here for anything you need!";
         Booking booking,
         bool isRepeatGuest,
         Booking? previousBooking,
-        ProactiveMessageSettings settings)
+        ProactiveMessageSettings settings,
+        string portalUrl)
     {
         var firstName = booking.GuestName.Split(' ')[0];
         var checkInDate = booking.CheckinDate.ToString("dddd, MMMM d");
@@ -491,6 +513,8 @@ We're here for anything you need!";
         }
 
         sb.AppendLine();
+        sb.AppendLine($"Guest Portal: {portalUrl}");
+        sb.AppendLine();
         sb.AppendLine("Need early check-in or have special requests? Just reply to this message!");
         sb.AppendLine();
         sb.AppendLine("Safe travels - we look forward to welcoming you!");
@@ -498,9 +522,12 @@ We're here for anything you need!";
         return sb.ToString();
     }
 
-    private string BuildMidStayMessage(string hotelName, Booking booking, int tenantId)
+    private string BuildMidStayMessage(string hotelName, Booking booking, int tenantId, string portalUrl)
     {
         var firstName = booking.GuestName.Split(' ')[0];
+        var feedbackUrl = !string.IsNullOrEmpty(booking.RoomNumber)
+            ? $"{portalUrl}/feedback?room={booking.RoomNumber}"
+            : $"{portalUrl}/feedback?booking={booking.Id}";
 
         var sb = new System.Text.StringBuilder();
 
@@ -508,8 +535,8 @@ We're here for anything you need!";
         sb.AppendLine();
         sb.AppendLine("How's your stay so far? We'd love to hear if there's anything we can do to make it even better.");
         sb.AppendLine();
-
-        // TODO: Add featured services from tenant's service list
+        sb.AppendLine($"Share your feedback: {feedbackUrl}");
+        sb.AppendLine();
         sb.AppendLine("While you're here, don't forget to explore our amenities and services - just ask if you need any recommendations!");
         sb.AppendLine();
         sb.AppendLine("Reply anytime - we're here for you!");
@@ -517,7 +544,7 @@ We're here for anything you need!";
         return sb.ToString();
     }
 
-    private string BuildPreCheckoutMessage(string hotelName, Booking booking, bool isOneNight)
+    private string BuildPreCheckoutMessage(string hotelName, Booking booking, bool isOneNight, string portalUrl)
     {
         var firstName = booking.GuestName.Split(' ')[0];
         var checkoutDate = booking.CheckoutDate.ToString("dddd, MMMM d");
@@ -541,6 +568,8 @@ We're here for anything you need!";
         }
 
         sb.AppendLine();
+        sb.AppendLine($"Manage your checkout: {portalUrl}");
+        sb.AppendLine();
         sb.AppendLine("Need help with luggage storage or airport transfer? Just ask!");
         sb.AppendLine();
         sb.AppendLine("Thank you for staying with us!");
@@ -548,9 +577,12 @@ We're here for anything you need!";
         return sb.ToString();
     }
 
-    private string BuildPostStayMessage(string hotelName, Booking booking)
+    private string BuildPostStayMessage(string hotelName, Booking booking, string portalUrl)
     {
         var firstName = booking.GuestName.Split(' ')[0];
+        var feedbackUrl = !string.IsNullOrEmpty(booking.RoomNumber)
+            ? $"{portalUrl}/feedback?room={booking.RoomNumber}"
+            : $"{portalUrl}/feedback?booking={booking.Id}";
 
         var sb = new System.Text.StringBuilder();
 
@@ -559,6 +591,8 @@ We're here for anything you need!";
         sb.AppendLine($"Thank you for staying with us at {hotelName}!");
         sb.AppendLine();
         sb.AppendLine("We'd love to hear about your experience. How was your stay?");
+        sb.AppendLine();
+        sb.AppendLine($"Share your feedback: {feedbackUrl}");
         sb.AppendLine();
         sb.AppendLine("Simply reply with a number from 1-10 (10 being excellent).");
         sb.AppendLine();
@@ -599,6 +633,252 @@ We're here for anything you need!";
             }
         }
     }
+
+    #region WhatsApp-First Delivery with SMS Fallback
+
+    /// <summary>
+    /// Result of attempting to deliver a message via WhatsApp and/or SMS
+    /// </summary>
+    private record MessageDeliveryResult(
+        bool Success,
+        DeliveryMethod? SuccessfulMethod,
+        string? ErrorMessage,
+        string? WhatsAppError);
+
+    /// <summary>
+    /// Template information for a message type
+    /// </summary>
+    /// <summary>
+    /// Generates a redirect token for WhatsApp button URLs
+    /// </summary>
+    private string GenerateRedirectToken(string tenantSlug, string path)
+    {
+        var json = $"{{\"t\":\"{tenantSlug}\",\"p\":\"{path}\"}}";
+        var bytes = Encoding.UTF8.GetBytes(json);
+        return Convert.ToBase64String(bytes);
+    }
+
+    private record TemplateInfo(
+        string TemplateName,
+        List<string> BodyParameters,
+        string? ButtonUrlParameter);
+
+    /// <summary>
+    /// Builds WhatsApp template parameters based on message type and booking data
+    /// </summary>
+    private async Task<TemplateInfo?> BuildTemplateParametersAsync(
+        ScheduledMessageType messageType,
+        int tenantId,
+        Booking booking)
+    {
+        try
+        {
+            // Get tenant info for URLs and display name
+            var tenant = await _context.Tenants.FindAsync(tenantId);
+            if (tenant == null)
+            {
+                _logger.LogWarning("Tenant {TenantId} not found for template building", tenantId);
+                return null;
+            }
+
+            var tenantSlug = tenant.Slug ?? tenant.Name.ToLower().Replace(" ", "-");
+            var hotelName = tenant.Name;
+            var guestName = booking.GuestName;
+            var roomNumber = booking.RoomNumber ?? "your room";
+
+            // Build template based on message type
+            switch (messageType)
+            {
+                case ScheduledMessageType.PreArrival:
+                    var checkinDate = booking.CheckinDate.ToString("dddd, MMMM d");
+                    var token = GenerateRedirectToken(tenantSlug, "prepare");
+                    return new TemplateInfo(
+                        "pre_arrival_welcome_v02",
+                        new List<string> { guestName, hotelName, roomNumber, checkinDate },
+                        token);
+
+                case ScheduledMessageType.CheckinDay:
+                    var checkinTime = "2:00 PM"; // Default check-in time
+                    token = GenerateRedirectToken(tenantSlug, "checkin");
+                    return new TemplateInfo(
+                        "checkin_day_ready_v01",
+                        new List<string> { guestName, roomNumber, hotelName, checkinTime },
+                        token);
+
+                case ScheduledMessageType.WelcomeSettled:
+                    token = GenerateRedirectToken(tenantSlug, "services");
+                    return new TemplateInfo(
+                        "welcome_settled_v03",
+                        new List<string> { roomNumber },
+                        token);
+
+                case ScheduledMessageType.MidStay:
+                    token = GenerateRedirectToken(tenantSlug, "housekeeping");
+                    return new TemplateInfo(
+                        "mid_stay_checkup_v02",
+                        new List<string> { guestName, hotelName, roomNumber },
+                        token);
+
+                case ScheduledMessageType.PreCheckout:
+                    var checkoutTime = "11:00 AM"; // Default checkout time
+                    token = GenerateRedirectToken(tenantSlug, "checkout");
+                    return new TemplateInfo(
+                        "pre_checkout_reminder_v02",
+                        new List<string> { guestName, hotelName, roomNumber, checkoutTime },
+                        token);
+
+                case ScheduledMessageType.PostStay:
+                    token = GenerateRedirectToken(tenantSlug, $"feedback/{booking.Id}");
+                    return new TemplateInfo(
+                        "post_stay_survey_v02",
+                        new List<string> { hotelName, roomNumber },
+                        token);
+
+                default:
+                    _logger.LogWarning("No template mapping for message type {MessageType}", messageType);
+                    return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error building template parameters for {MessageType}", messageType);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Attempts to deliver a message using WhatsApp templates first, falling back to SMS on failure
+    /// </summary>
+    private async Task<MessageDeliveryResult> AttemptMessageDeliveryAsync(
+        int messageId,
+        int tenantId,
+        string phone,
+        string content,
+        string? mediaUrl,
+        DeliveryMethod attemptedMethod,
+        ScheduledMessageType messageType,
+        Booking booking)
+    {
+        // If configured for SMS-only, skip WhatsApp
+        if (attemptedMethod == DeliveryMethod.SMS)
+        {
+            return await SendViaSmsAsync(phone, content);
+        }
+
+        // Check if shared WhatsApp number is configured (TenantId is null for shared number)
+        var hasWhatsApp = await _context.WhatsAppNumbers
+            .AnyAsync(w => w.TenantId == null && w.Status == "Active");
+
+        if (!hasWhatsApp)
+        {
+            _logger.LogInformation("Message {Id}: No WhatsApp for tenant {TenantId}, using SMS",
+                messageId, tenantId);
+            return await SendViaSmsAsync(phone, content);
+        }
+
+        // Try WhatsApp first
+        _logger.LogInformation("Message {Id}: Attempting WhatsApp to {Phone}", messageId, phone);
+
+        // Handle media messages (no templates for media yet)
+        if (!string.IsNullOrEmpty(mediaUrl))
+        {
+            var (success, error) = await _whatsAppService.SendImageWithDetailsAsync(tenantId, phone, mediaUrl, content);
+            if (success)
+            {
+                _logger.LogInformation("Message {Id}: WhatsApp image success", messageId);
+                return new MessageDeliveryResult(true, DeliveryMethod.WhatsApp, null, null);
+            }
+
+            // WhatsApp failed - fallback to SMS (text only, no image)
+            _logger.LogWarning("Message {Id}: WhatsApp image failed ({Error}), SMS fallback", messageId, error);
+            var smsResult = await SendViaSmsAsync(phone, content);
+            if (smsResult.Success)
+            {
+                _logger.LogInformation("Message {Id}: SMS fallback success (text only, image not sent)", messageId);
+                return new MessageDeliveryResult(true, DeliveryMethod.WhatsAppFailedToSMS, null, error);
+            }
+
+            return new MessageDeliveryResult(false, null,
+                $"Both failed. WA: {error}, SMS: {smsResult.ErrorMessage}", error);
+        }
+
+        // Try sending via WhatsApp template
+        var templateInfo = await BuildTemplateParametersAsync(messageType, tenantId, booking);
+
+        if (templateInfo != null)
+        {
+            _logger.LogInformation("Message {Id}: Sending template {TemplateName} to {Phone}",
+                messageId, templateInfo.TemplateName, phone);
+
+            var (templateSuccess, templateError) = await _whatsAppService.SendTemplateWithParametersAsync(
+                tenantId,
+                phone,
+                templateInfo.TemplateName,
+                templateInfo.BodyParameters,
+                templateInfo.ButtonUrlParameter);
+
+            if (templateSuccess)
+            {
+                _logger.LogInformation("Message {Id}: WhatsApp template success", messageId);
+                return new MessageDeliveryResult(true, DeliveryMethod.WhatsApp, null, null);
+            }
+
+            // Template failed - try SMS fallback
+            _logger.LogWarning("Message {Id}: WhatsApp template failed ({Error}), SMS fallback",
+                messageId, templateError);
+            var (smsSuccess, smsError) = await _smsService.SendMessageWithDetailsAsync(phone, content);
+
+            if (smsSuccess)
+            {
+                _logger.LogInformation("Message {Id}: SMS fallback success", messageId);
+                return new MessageDeliveryResult(true, DeliveryMethod.WhatsAppFailedToSMS, null, templateError);
+            }
+
+            // Both failed
+            return new MessageDeliveryResult(false, null,
+                $"Both failed. Template: {templateError}, SMS: {smsError}", templateError);
+        }
+
+        // No template available - fall back to regular text message (should not happen for guest journey messages)
+        _logger.LogWarning("Message {Id}: No template for {MessageType}, using free-form text",
+            messageId, messageType);
+
+        var (waSuccess, waError) = await _whatsAppService.SendTextMessageWithDetailsAsync(
+            tenantId, phone, content);
+
+        if (waSuccess)
+        {
+            _logger.LogInformation("Message {Id}: WhatsApp text success", messageId);
+            return new MessageDeliveryResult(true, DeliveryMethod.WhatsApp, null, null);
+        }
+
+        // WhatsApp failed - try SMS
+        _logger.LogWarning("Message {Id}: WhatsApp text failed ({Error}), SMS fallback", messageId, waError);
+        var (smsFinalSuccess, smsFinalError) = await _smsService.SendMessageWithDetailsAsync(phone, content);
+
+        if (smsFinalSuccess)
+        {
+            _logger.LogInformation("Message {Id}: SMS fallback success", messageId);
+            return new MessageDeliveryResult(true, DeliveryMethod.WhatsAppFailedToSMS, null, waError);
+        }
+
+        // Both failed
+        return new MessageDeliveryResult(false, null,
+            $"Both failed. WA: {waError}, SMS: {smsFinalError}", waError);
+    }
+
+    /// <summary>
+    /// Sends a message via SMS only (for SMS-only mode)
+    /// </summary>
+    private async Task<MessageDeliveryResult> SendViaSmsAsync(string phone, string content)
+    {
+        var (success, error) = await _smsService.SendMessageWithDetailsAsync(phone, content);
+        return success
+            ? new MessageDeliveryResult(true, DeliveryMethod.SMS, null, null)
+            : new MessageDeliveryResult(false, null, $"SMS failed: {error}", null);
+    }
+
+    #endregion
 
 
     #endregion
