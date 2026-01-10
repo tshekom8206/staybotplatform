@@ -693,7 +693,7 @@ We're here for anything you need!";
                     var checkinDate = booking.CheckinDate.ToString("dddd, MMMM d");
                     var token = GenerateRedirectToken(tenantSlug, "prepare");
                     return new TemplateInfo(
-                        "pre_arrival_welcome_v02",
+                        "pre_arrival_welcome_v04",
                         new List<string> { guestName, hotelName, roomNumber, checkinDate },
                         token);
 
@@ -701,21 +701,21 @@ We're here for anything you need!";
                     var checkinTime = "2:00 PM"; // Default check-in time
                     token = GenerateRedirectToken(tenantSlug, "checkin");
                     return new TemplateInfo(
-                        "checkin_day_ready_v01",
+                        "checkin_day_ready_v04",
                         new List<string> { guestName, roomNumber, hotelName, checkinTime },
                         token);
 
                 case ScheduledMessageType.WelcomeSettled:
                     token = GenerateRedirectToken(tenantSlug, "services");
                     return new TemplateInfo(
-                        "welcome_settled_v03",
+                        "welcome_settled_v05",
                         new List<string> { roomNumber },
                         token);
 
                 case ScheduledMessageType.MidStay:
                     token = GenerateRedirectToken(tenantSlug, "housekeeping");
                     return new TemplateInfo(
-                        "mid_stay_checkup_v02",
+                        "mid_stay_checkup_v04",
                         new List<string> { guestName, hotelName, roomNumber },
                         token);
 
@@ -723,14 +723,14 @@ We're here for anything you need!";
                     var checkoutTime = "11:00 AM"; // Default checkout time
                     token = GenerateRedirectToken(tenantSlug, "checkout");
                     return new TemplateInfo(
-                        "pre_checkout_reminder_v02",
+                        "pre_checkout_reminder_v03",
                         new List<string> { guestName, hotelName, roomNumber, checkoutTime },
                         token);
 
                 case ScheduledMessageType.PostStay:
                     token = GenerateRedirectToken(tenantSlug, $"feedback/{booking.Id}");
                     return new TemplateInfo(
-                        "post_stay_survey_v02",
+                        "post_stay_survey_v03",
                         new List<string> { hotelName, roomNumber },
                         token);
 
