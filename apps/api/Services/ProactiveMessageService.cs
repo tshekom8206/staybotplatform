@@ -699,21 +699,21 @@ We're here for anything you need!";
 
                 case ScheduledMessageType.CheckinDay:
                     var checkinTime = "2:00 PM"; // Default check-in time
-                    token = GenerateRedirectToken(tenantSlug, "prepare");
+                    token = GenerateRedirectToken(tenantSlug, $"services/{booking.Id}");
                     return new TemplateInfo(
                         "checkin_day_ready_v04",
                         new List<string> { guestName, roomNumber, hotelName, checkinTime },
                         token);
 
                 case ScheduledMessageType.WelcomeSettled:
-                    token = GenerateRedirectToken(tenantSlug, "services");
+                    token = GenerateRedirectToken(tenantSlug, $"services/{booking.Id}");
                     return new TemplateInfo(
                         "welcome_settled_v05",
                         new List<string> { roomNumber },
                         token);
 
                 case ScheduledMessageType.MidStay:
-                    token = GenerateRedirectToken(tenantSlug, "housekeeping");
+                    token = GenerateRedirectToken(tenantSlug, $"housekeeping/{booking.Id}");
                     return new TemplateInfo(
                         "mid_stay_checkup_v04",
                         new List<string> { guestName, hotelName, roomNumber },
@@ -721,7 +721,7 @@ We're here for anything you need!";
 
                 case ScheduledMessageType.PreCheckout:
                     var checkoutTime = "11:00 AM"; // Default checkout time
-                    token = GenerateRedirectToken(tenantSlug, "checkout");
+                    token = GenerateRedirectToken(tenantSlug, $"checkout/{booking.Id}");
                     return new TemplateInfo(
                         "pre_checkout_reminder_v03",
                         new List<string> { guestName, hotelName, roomNumber, checkoutTime },
