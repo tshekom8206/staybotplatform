@@ -105,23 +105,31 @@ import { TranslateModule } from '@ngx-translate/core';
 
     .btn-close {
       position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: transparent;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: rgba(0, 0, 0, 0.05);
       border: none;
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       cursor: pointer;
-      color: #888;
+      color: #333;
       padding: 0.5rem;
-      transition: color 0.2s ease;
+      border-radius: 50%;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      z-index: 10;
     }
 
     .btn-close:hover {
-      color: #333;
+      background: rgba(0, 0, 0, 0.1);
+      color: #000;
     }
 
     .modal-header {
-      padding: 2rem 2rem 1rem;
+      padding: 3rem 2rem 1rem;
       text-align: center;
     }
 
