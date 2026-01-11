@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Hostr.Api.Data;
+using Hostr.Api.DTOs;
 using Hostr.Api.Hubs;
 using Hostr.Api.Models;
 using Hostr.Api.Services;
