@@ -1,0 +1,25 @@
+2026-01-06T06:25:24
+System.ApplicationException: The trace listener AzureBlobTraceListener is disabled. ---> System.InvalidOperationException: The SAS URL for the cloud storage account is not specified. Use the environment variable 'DIAGNOSTICS_AZUREBLOBCONTAINERSASURL' to define it.
+   at Microsoft.WindowsAzure.WebSites.Diagnostics.AzureBlobTraceListener.RefreshConfig()
+   --- End of inner exception stack trace ---
+
+2026-01-06T08:33:51
+System.ApplicationException: The trace listener AzureBlobTraceListener is disabled. ---> System.InvalidOperationException: The SAS URL for the cloud storage account is not specified. Use the environment variable 'DIAGNOSTICS_AZUREBLOBCONTAINERSASURL' to define it.
+   at Microsoft.WindowsAzure.WebSites.Diagnostics.AzureBlobTraceListener.RefreshConfig()
+   --- End of inner exception stack trace ---
+
+2026-01-06T08:33:52
+System.Threading.ThreadAbortException: Thread was being aborted.
+   at Microsoft.WindowsAzure.WebSites.Diagnostics.AzureDriveTraceListener.InitializeOutput(Int32 bytesToWrite)
+   at Microsoft.WindowsAzure.WebSites.Diagnostics.AzureDriveTraceListener.ConsumeBuffer()
+
+2026-01-06T08:33:52
+System.Threading.ThreadAbortException: Thread was being aborted.
+   at Microsoft.WindowsAzure.WebSites.Diagnostics.AzureDriveTraceListener.ConsumeBuffer()
+   at Microsoft.WindowsAzure.WebSites.Diagnostics.BaseTraceListener.FlushBuffer(Boolean waitForCompletion)
+
+2026-01-06T08:33:52
+System.Threading.ThreadAbortException: Thread was being aborted.
+   at Microsoft.WindowsAzure.WebSites.Diagnostics.BaseTraceListener.FlushBuffer(Boolean waitForCompletion)
+   at Microsoft.WindowsAzure.WebSites.Diagnostics.BaseTraceListener.OnFlushBuffer(Object state)
+

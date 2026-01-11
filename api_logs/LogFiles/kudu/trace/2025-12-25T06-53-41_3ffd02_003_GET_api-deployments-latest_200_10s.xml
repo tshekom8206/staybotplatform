@@ -1,0 +1,12 @@
+<step title="Incoming Request" date="2025-12-25T06:53:41.245" instance="3ffd02" url="/api/deployments/latest" method="GET" type="request" pid="8064,2,13" Accept="*/*" Accept-Encoding="gzip, deflate" Authorization="Bea..." Host="staybot-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" x-ms-client-request-id="566f538c-e15e-11f0-8a3f-5414f369fc7f" X-ARR-LOG-ID="566f538c-e15e-11f0-8a3f-5414f369fc7f" CLIENT-IP="41.121.49.179:44007" X-SITE-DEPLOYMENT-ID="staybot-api" WAS-DEFAULT-HOSTNAME="staybot-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest" >
+  <step title="Cleanup Xml Logs" date="2025-12-25T06:53:41.293" >
+    <step title="Cleanup Infos" date="2025-12-25T06:53:41.432" totalFiles="200" totalCleanup="40" /><!-- duration: 8028ms -->
+  </step><!-- duration: 8179ms -->
+  <step title="DeploymentService.GetResult" date="2025-12-25T06:53:49.571" >
+    <step title="DeploymentService.GetLatestDeployment" date="2025-12-25T06:53:49.631" >
+      <step title="DeploymentManager.GetResults" date="2025-12-25T06:53:49.644" /><!-- duration: 906ms -->
+      <step title="Deployment 9b4c7ab6e94c43a3b37a7d1249814bad is Success at 2025-12-25T06:53:30.2540174Z" date="2025-12-25T06:53:50.562" /><!-- duration: 0ms -->
+    </step><!-- duration: 949ms -->
+  </step><!-- duration: 1601ms -->
+  <step title="Outgoing response" date="2025-12-25T06:53:51.374" type="response" statusCode="200" statusText="OK" Server="Microsoft-IIS/10.0" x-ms-request-id="566f538c-e15e-11f0-8a3f-5414f369fc7f" Cache-Control="private" X-AspNet-Version="4.0.30319" Content-Type="application/json; charset=utf-8" /><!-- duration: 17ms -->
+</step><!-- duration: 10167ms -->

@@ -1,0 +1,12 @@
+2026-01-08T18:25:20  PID[7056] Information 1/8/2026 6:25:16 PM [[4.8]] [DW0SDWK000IJO] DaasRunner.exe with version 4.8.40625.1 and ProcessId=7056 started
+2026-01-08T18:25:21  PID[7056] Information 1/8/2026 6:25:21 PM [[4.8]] [DW0SDWK000IJO] Checking DaaS bits and updating if required
+2026-01-08T18:25:21  PID[7056] Information 1/8/2026 6:25:21 PM [[4.8]] [DW0SDWK000IJO] [daasrunner.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-08T18:25:21  PID[7056] Information 1/8/2026 6:25:21 PM [[4.8]] [DW0SDWK000IJO] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-08T18:25:21  PID[7056] Information 1/8/2026 6:25:21 PM [[4.8]] [DW0SDWK000IJO] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-08T18:25:22  PID[7056] Information 1/8/2026 6:25:22 PM [[4.8]] [DW0SDWK000IJO] [daasconsole.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-08T18:25:22  PID[7056] Information 1/8/2026 6:25:22 PM [[4.8]] [DW0SDWK000IJO] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-08T18:25:22  PID[7056] Information 1/8/2026 6:25:22 PM [[4.8]] [DW0SDWK000IJO] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-08T18:25:22  PID[7056] Information 1/8/2026 6:25:22 PM [[4.8]] [DW0SDWK000IJO] Done checking DaaS bits for any new updates
+2026-01-08T18:26:42  PID[7056] Information 1/8/2026 6:26:42 PM [[4.8]] [DW0SDWK000IJO] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2026-01-08T18:26:42  PID[7056] Information 1/8/2026 6:26:42 PM [[4.8]] [DW0SDWK000IJO] Storage account is not configured
+2026-01-08T22:26:42  PID[7056] Warning     The trace listener is disabled after running too long.

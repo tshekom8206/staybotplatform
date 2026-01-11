@@ -1,0 +1,12 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Hostr.Contracts -> C:\Users\Administrator\Downloads\hostr\packages\contracts\bin\Debug\net8.0\Hostr.Contracts.dll
+  Hostr.Api -> C:\Users\Administrator\Downloads\hostr\apps\api\bin\Debug\net8.0\Hostr.Api.dll
+  Hostr.Tests -> C:\Users\Administrator\Downloads\hostr\tests\bin\Debug\net8.0\Hostr.Tests.dll
+Test run for C:\Users\Administrator\Downloads\hostr\tests\bin\Debug\net8.0\Hostr.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+No test matches the given testcase filter `FullyQualifiedName~ComprehensiveSuite` in C:\Users\Administrator\Downloads\hostr\tests\bin\Debug\net8.0\Hostr.Tests.dll
+

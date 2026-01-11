@@ -1620,20 +1620,6 @@ public class PublicGuestController : ControllerBase
             _context.StaffTasks.Add(task);
             await _context.SaveChangesAsync();
 
-            // Track metric
-            var metric = new PortalUpsellMetric
-            {
-                TenantId = tenant.Id,
-                ServiceType = "Custom Request",
-                RoomNumber = request.RoomNumber,
-                ActionTaken = "requested",
-                Timestamp = DateTime.UtcNow,
-                Source = request.Source ?? "prepare_page"
-            };
-
-            _context.PortalUpsellMetrics.Add(metric);
-            await _context.SaveChangesAsync();
-
             // Send SignalR notification to staff
             await _staffTaskHub.Clients.Group($"Tenant_{tenant.Id}")
                 .SendAsync("TaskCreated", new

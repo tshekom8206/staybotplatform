@@ -1,0 +1,11 @@
+2026-01-06T17:38:40  PID[7640] Information 1/6/2026 5:38:39 PM [[4.8]] [dw1sdwk000MQ3] DaasRunner.exe with version 4.8.40625.1 and ProcessId=7640 started
+2026-01-06T17:38:41  PID[7640] Information 1/6/2026 5:38:41 PM [[4.8]] [dw1sdwk000MQ3] Checking DaaS bits and updating if required
+2026-01-06T17:38:41  PID[7640] Information 1/6/2026 5:38:41 PM [[4.8]] [dw1sdwk000MQ3] [daasrunner.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-06T17:38:41  PID[7640] Information 1/6/2026 5:38:41 PM [[4.8]] [dw1sdwk000MQ3] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-06T17:38:41  PID[7640] Information 1/6/2026 5:38:41 PM [[4.8]] [dw1sdwk000MQ3] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-06T17:38:42  PID[7640] Information 1/6/2026 5:38:42 PM [[4.8]] [dw1sdwk000MQ3] [daasconsole.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-06T17:38:42  PID[7640] Information 1/6/2026 5:38:42 PM [[4.8]] [dw1sdwk000MQ3] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-06T17:38:43  PID[7640] Information 1/6/2026 5:38:43 PM [[4.8]] [dw1sdwk000MQ3] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-06T17:38:43  PID[7640] Information 1/6/2026 5:38:43 PM [[4.8]] [dw1sdwk000MQ3] Done checking DaaS bits for any new updates
+2026-01-06T17:40:03  PID[7640] Information 1/6/2026 5:40:03 PM [[4.8]] [dw1sdwk000MQ3] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2026-01-06T17:40:03  PID[7640] Information 1/6/2026 5:40:03 PM [[4.8]] [dw1sdwk000MQ3] Storage account is not configured

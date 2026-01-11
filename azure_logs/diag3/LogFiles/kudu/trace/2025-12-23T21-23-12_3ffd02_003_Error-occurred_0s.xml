@@ -1,0 +1,6 @@
+<step title="Error occurred" date="2025-12-23T21:23:12.356" instance="3ffd02" type="error" text="StartWatcher() at C:\__w\1\s\Kudu.Core\Jobs\JobsFileWatcher.cs:181: Thread was being aborted." stackTrace="   at Microsoft.Win32.Win32Native.GetFileAttributesEx(String name, Int32 fileInfoLevel, WIN32_FILE_ATTRIBUTE_DATA&amp; lpFileInformation)
+   at System.IO.File.FillAttributeInfo(String path, WIN32_FILE_ATTRIBUTE_DATA&amp; data, Boolean tryagain, Boolean returnErrorOnNotFound)
+   at System.IO.Directory.InternalExists(String path, Int32&amp; lastError)
+   at System.IO.Directory.InternalExistsHelper(String path, Boolean checkHost)
+   at System.IO.Abstractions.DirectoryWrapper.Exists(String path)
+   at Kudu.Core.Jobs.JobsFileWatcher.StartWatcher(Object state)" /><!-- duration: 30ms -->

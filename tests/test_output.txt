@@ -1,0 +1,926 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Hostr.Contracts -> C:\Users\Administrator\Downloads\hostr\packages\contracts\bin\Debug\net8.0\Hostr.Contracts.dll
+  Hostr.Api -> C:\Users\Administrator\Downloads\hostr\apps\api\bin\Debug\net8.0\Hostr.Api.dll
+  Hostr.Tests -> C:\Users\Administrator\Downloads\hostr\tests\bin\Debug\net8.0\Hostr.Tests.dll
+Test run for C:\Users\Administrator\Downloads\hostr\tests\bin\Debug\net8.0\Hostr.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.3.1+6b60a9e56a (64-bit .NET 8.0.19)
+[xUnit.net 00:00:00.34]   Discovering: Hostr.Tests
+[xUnit.net 00:00:00.49]   Discovered:  Hostr.Tests
+[xUnit.net 00:00:00.50]   Starting:    Hostr.Tests
+  Passed Hostr.Tests.UnitTests.BasicSurveyTests.WhatsAppRateLimiter_RespectsMaximumMessages [612 ms]
+  Passed Hostr.Tests.UnitTests.BasicSurveyTests.ShouldSendSurveyAsync_WhenStaffBooking_ReturnsFalse [21 ms]
+  Passed Hostr.Tests.UnitTests.BasicSurveyTests.ShouldSendSurveyAsync_WhenNoPhoneNumber_ReturnsFalse [2 ms]
+  Passed Hostr.Tests.UnitTests.BasicSurveyTests.SendSurveyWithRateLimitAsync_WhenRateLimitAllows_SendsSurvey [63 ms]
+  Passed Hostr.Tests.ChatbotQA.Tests.HallucinationTests.ChargerCorrectResponse_ShouldPass [2 s]
+[xUnit.net 00:00:02.98]     Hostr.Tests.ChatbotQA.Tests.PolicyComplianceTests.DinnerAfterHours_ShouldFailPolicyCompliance [FAIL]
+[xUnit.net 00:00:02.98]       Expected result.Issues {"Accuracy"} to have an item matching (i.Contains("policy", OrdinalIgnoreCase) OrElse i.Contains("hours", OrdinalIgnoreCase)).
+[xUnit.net 00:00:02.98]       Stack Trace:
+[xUnit.net 00:00:02.98]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:02.98]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:02.98]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:02.98]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:02.98]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:02.98]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:02.98]            at FluentAssertions.Collections.GenericCollectionAssertions`3.Contain(Expression`1 predicate, String because, Object[] becauseArgs)
+[xUnit.net 00:00:02.98]         C:\Users\Administrator\Downloads\hostr\tests\ChatbotQA\Tests\PolicyComplianceTests.cs(33,0): at Hostr.Tests.ChatbotQA.Tests.PolicyComplianceTests.DinnerAfterHours_ShouldFailPolicyCompliance()
+[xUnit.net 00:00:02.98]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.98]       Output:
+[xUnit.net 00:00:02.98]         Verdict: inaccurate
+[xUnit.net 00:00:02.98]         Policy Compliance: 0,00
+[xUnit.net 00:00:02.98]         Issues: Accuracy
+[xUnit.net 00:00:03.85]     Hostr.Tests.UnitTests.BasicGuestLifecycleTests.GetGuestMetricsAsync_WhenMetricsDoNotExist_ReturnsNull [FAIL]
+[xUnit.net 00:00:03.85]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:03.85]       Stack Trace:
+[xUnit.net 00:00:03.85]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(614,0): at Hostr.Api.Data.HostrDbContext.GetCurrentTenantId()
+[xUnit.net 00:00:03.85]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(514,0): at Hostr.Api.Data.HostrDbContext.ApplyGlobalFilters(ModelBuilder builder)
+[xUnit.net 00:00:03.85]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(156,0): at Hostr.Api.Data.HostrDbContext.OnModelCreating(ModelBuilder builder)
+[xUnit.net 00:00:03.85]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelCustomizer.Customize(ModelBuilder modelBuilder, DbContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.CreateModel(DbContext context, IConventionSetBuilder conventionSetBuilder, ModelDependencies modelDependencies)
+[xUnit.net 00:00:03.85]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)
+[xUnit.net 00:00:03.85]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)
+[xUnit.net 00:00:03.85]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()
+[xUnit.net 00:00:03.85]            at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.<>c.<TryAddCoreServices>b__8_4(IServiceProvider p)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+[xUnit.net 00:00:03.85]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+[xUnit.net 00:00:03.85]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+[xUnit.net 00:00:03.85]            at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+[xUnit.net 00:00:03.86]            at Microsoft.EntityFrameworkCore.DbContext.get_Model()
+[xUnit.net 00:00:03.86]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.get_EntityType()
+[xUnit.net 00:00:03.86]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.CheckState()
+[xUnit.net 00:00:03.86]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.get_EntityQueryable()
+[xUnit.net 00:00:03.86]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.System.Linq.IQueryable.get_Provider()
+[xUnit.net 00:00:03.86]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)
+[xUnit.net 00:00:03.86]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, LambdaExpression expression, CancellationToken cancellationToken)
+[xUnit.net 00:00:03.86]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync[TSource](IQueryable`1 source, Expression`1 predicate, CancellationToken cancellationToken)
+[xUnit.net 00:00:03.86]         C:\Users\Administrator\Downloads\hostr\apps\api\Services\GuestLifecycleService.cs(153,0): at Hostr.Api.Services.GuestLifecycleService.GetGuestMetricsAsync(String phoneNumber)
+[xUnit.net 00:00:03.86]         C:\Users\Administrator\Downloads\hostr\tests\UnitTests\BasicGuestLifecycleTests.cs(145,0): at Hostr.Tests.UnitTests.BasicGuestLifecycleTests.GetGuestMetricsAsync_WhenMetricsDoNotExist_ReturnsNull()
+[xUnit.net 00:00:03.86]         --- End of stack trace from previous location ---
+  Failed Hostr.Tests.ChatbotQA.Tests.PolicyComplianceTests.DinnerAfterHours_ShouldFailPolicyCompliance [2 s]
+  Error Message:
+   Expected result.Issues {"Accuracy"} to have an item matching (i.Contains("policy", OrdinalIgnoreCase) OrElse i.Contains("hours", OrdinalIgnoreCase)).
+  Stack Trace:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Collections.GenericCollectionAssertions`3.Contain(Expression`1 predicate, String because, Object[] becauseArgs)
+   at Hostr.Tests.ChatbotQA.Tests.PolicyComplianceTests.DinnerAfterHours_ShouldFailPolicyCompliance() in C:\Users\Administrator\Downloads\hostr\tests\ChatbotQA\Tests\PolicyComplianceTests.cs:line 33
+--- End of stack trace from previous location ---
+  Standard Output Messages:
+ Verdict: inaccurate
+ Policy Compliance: 0,00
+ Issues: Accuracy
+
+
+  Failed Hostr.Tests.UnitTests.BasicGuestLifecycleTests.GetGuestMetricsAsync_WhenMetricsDoNotExist_ReturnsNull [3 s]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Hostr.Api.Data.HostrDbContext.GetCurrentTenantId() in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 614
+   at Hostr.Api.Data.HostrDbContext.ApplyGlobalFilters(ModelBuilder builder) in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 514
+   at Hostr.Api.Data.HostrDbContext.OnModelCreating(ModelBuilder builder) in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 156
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelCustomizer.Customize(ModelBuilder modelBuilder, DbContext context)
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.CreateModel(DbContext context, IConventionSetBuilder conventionSetBuilder, ModelDependencies modelDependencies)
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()
+   at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.<>c.<TryAddCoreServices>b__8_4(IServiceProvider p)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+   at Microsoft.EntityFrameworkCore.DbContext.get_Model()
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.get_EntityType()
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.CheckState()
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.get_EntityQueryable()
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.System.Linq.IQueryable.get_Provider()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, LambdaExpression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync[TSource](IQueryable`1 source, Expression`1 predicate, CancellationToken cancellationToken)
+   at Hostr.Api.Services.GuestLifecycleService.GetGuestMetricsAsync(String phoneNumber) in C:\Users\Administrator\Downloads\hostr\apps\api\Services\GuestLifecycleService.cs:line 153
+   at Hostr.Tests.UnitTests.BasicGuestLifecycleTests.GetGuestMetricsAsync_WhenMetricsDoNotExist_ReturnsNull() in C:\Users\Administrator\Downloads\hostr\tests\UnitTests\BasicGuestLifecycleTests.cs:line 145
+--- End of stack trace from previous location ---
+  Passed Hostr.Tests.ChatbotQA.Tests.HallucinationTests.RestaurantHallucination_ShouldBeDetected [1 s]
+[xUnit.net 00:00:05.18]     Hostr.Tests.UnitTests.BasicSurveyTests.ShouldSendSurveyAsync_WhenBookingIsEligible_ReturnsTrue [FAIL]
+[xUnit.net 00:00:05.18]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:05.18]       Stack Trace:
+[xUnit.net 00:00:05.18]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(614,0): at Hostr.Api.Data.HostrDbContext.GetCurrentTenantId()
+[xUnit.net 00:00:05.18]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(514,0): at Hostr.Api.Data.HostrDbContext.ApplyGlobalFilters(ModelBuilder builder)
+[xUnit.net 00:00:05.18]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(156,0): at Hostr.Api.Data.HostrDbContext.OnModelCreating(ModelBuilder builder)
+[xUnit.net 00:00:05.18]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelCustomizer.Customize(ModelBuilder modelBuilder, DbContext context)
+[xUnit.net 00:00:05.18]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.CreateModel(DbContext context, IConventionSetBuilder conventionSetBuilder, ModelDependencies modelDependencies)
+[xUnit.net 00:00:05.18]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)
+[xUnit.net 00:00:05.18]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)
+[xUnit.net 00:00:05.18]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()
+[xUnit.net 00:00:05.18]            at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.<>c.<TryAddCoreServices>b__8_4(IServiceProvider p)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:05.18]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+[xUnit.net 00:00:05.19]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+[xUnit.net 00:00:05.19]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+[xUnit.net 00:00:05.19]            at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+[xUnit.net 00:00:05.19]            at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+[xUnit.net 00:00:05.19]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+[xUnit.net 00:00:05.19]            at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()
+[xUnit.net 00:00:05.19]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.EntryWithoutDetectChanges(TEntity entity)
+[xUnit.net 00:00:05.19]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.Add(TEntity entity)
+[xUnit.net 00:00:05.19]         C:\Users\Administrator\Downloads\hostr\tests\UnitTests\BasicSurveyTests.cs(51,0): at Hostr.Tests.UnitTests.BasicSurveyTests.ShouldSendSurveyAsync_WhenBookingIsEligible_ReturnsTrue()
+[xUnit.net 00:00:05.19]         --- End of stack trace from previous location ---
+  Failed Hostr.Tests.UnitTests.BasicSurveyTests.ShouldSendSurveyAsync_WhenBookingIsEligible_ReturnsTrue [3 s]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Hostr.Api.Data.HostrDbContext.GetCurrentTenantId() in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 614
+   at Hostr.Api.Data.HostrDbContext.ApplyGlobalFilters(ModelBuilder builder) in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 514
+   at Hostr.Api.Data.HostrDbContext.OnModelCreating(ModelBuilder builder) in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 156
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelCustomizer.Customize(ModelBuilder modelBuilder, DbContext context)
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.CreateModel(DbContext context, IConventionSetBuilder conventionSetBuilder, ModelDependencies modelDependencies)
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()
+   at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.<>c.<TryAddCoreServices>b__8_4(IServiceProvider p)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.EntryWithoutDetectChanges(TEntity entity)
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.Add(TEntity entity)
+   at Hostr.Tests.UnitTests.BasicSurveyTests.ShouldSendSurveyAsync_WhenBookingIsEligible_ReturnsTrue() in C:\Users\Administrator\Downloads\hostr\tests\UnitTests\BasicSurveyTests.cs:line 51
+--- End of stack trace from previous location ---
+  Passed Hostr.Tests.UnitTests.BasicSurveyTests.SendSurveyWithRateLimitAsync_WhenRateLimitExceeded_SkipsSurvey [13 ms]
+  Passed Hostr.Tests.UnitTests.BasicSurveyTests.ShouldSendSurveyAsync_WhenGuestOptedOut_ReturnsFalse [3 ms]
+[xUnit.net 00:00:06.09]     Hostr.Tests.UnitTests.BasicGuestLifecycleTests.UpdateGuestMetricsAsync_WhenExistingGuest_UpdatesMetricsRecord [FAIL]
+[xUnit.net 00:00:06.09]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:06.09]       Stack Trace:
+[xUnit.net 00:00:06.09]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(614,0): at Hostr.Api.Data.HostrDbContext.GetCurrentTenantId()
+[xUnit.net 00:00:06.09]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(514,0): at Hostr.Api.Data.HostrDbContext.ApplyGlobalFilters(ModelBuilder builder)
+[xUnit.net 00:00:06.09]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(156,0): at Hostr.Api.Data.HostrDbContext.OnModelCreating(ModelBuilder builder)
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelCustomizer.Customize(ModelBuilder modelBuilder, DbContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.CreateModel(DbContext context, IConventionSetBuilder conventionSetBuilder, ModelDependencies modelDependencies)
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.<>c.<TryAddCoreServices>b__8_4(IServiceProvider p)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+[xUnit.net 00:00:06.09]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.EntryWithoutDetectChanges(TEntity entity)
+[xUnit.net 00:00:06.09]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.Add(TEntity entity)
+[xUnit.net 00:00:06.09]         C:\Users\Administrator\Downloads\hostr\tests\UnitTests\BasicGuestLifecycleTests.cs(99,0): at Hostr.Tests.UnitTests.BasicGuestLifecycleTests.UpdateGuestMetricsAsync_WhenExistingGuest_UpdatesMetricsRecord()
+[xUnit.net 00:00:06.09]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:06.99]     Hostr.Tests.UnitTests.BasicGuestLifecycleTests.GetGuestMetricsAsync_WhenMetricsExist_ReturnsMetrics [FAIL]
+[xUnit.net 00:00:06.99]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:06.99]       Stack Trace:
+[xUnit.net 00:00:06.99]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(614,0): at Hostr.Api.Data.HostrDbContext.GetCurrentTenantId()
+[xUnit.net 00:00:06.99]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(514,0): at Hostr.Api.Data.HostrDbContext.ApplyGlobalFilters(ModelBuilder builder)
+[xUnit.net 00:00:06.99]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(156,0): at Hostr.Api.Data.HostrDbContext.OnModelCreating(ModelBuilder builder)
+[xUnit.net 00:00:06.99]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelCustomizer.Customize(ModelBuilder modelBuilder, DbContext context)
+[xUnit.net 00:00:06.99]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.CreateModel(DbContext context, IConventionSetBuilder conventionSetBuilder, ModelDependencies modelDependencies)
+[xUnit.net 00:00:06.99]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)
+[xUnit.net 00:00:06.99]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)
+[xUnit.net 00:00:06.99]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()
+[xUnit.net 00:00:06.99]            at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.<>c.<TryAddCoreServices>b__8_4(IServiceProvider p)
+[xUnit.net 00:00:06.99]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:06.99]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:06.99]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+[xUnit.net 00:00:07.00]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+[xUnit.net 00:00:07.00]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+[xUnit.net 00:00:07.00]            at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+[xUnit.net 00:00:07.00]            at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+[xUnit.net 00:00:07.00]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+[xUnit.net 00:00:07.00]            at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()
+[xUnit.net 00:00:07.00]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.EntryWithoutDetectChanges(TEntity entity)
+[xUnit.net 00:00:07.00]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.Add(TEntity entity)
+[xUnit.net 00:00:07.00]         C:\Users\Administrator\Downloads\hostr\tests\UnitTests\BasicGuestLifecycleTests.cs(128,0): at Hostr.Tests.UnitTests.BasicGuestLifecycleTests.GetGuestMetricsAsync_WhenMetricsExist_ReturnsMetrics()
+[xUnit.net 00:00:07.00]         --- End of stack trace from previous location ---
+  Failed Hostr.Tests.UnitTests.BasicGuestLifecycleTests.UpdateGuestMetricsAsync_WhenExistingGuest_UpdatesMetricsRecord [2 s]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Hostr.Api.Data.HostrDbContext.GetCurrentTenantId() in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 614
+   at Hostr.Api.Data.HostrDbContext.ApplyGlobalFilters(ModelBuilder builder) in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 514
+   at Hostr.Api.Data.HostrDbContext.OnModelCreating(ModelBuilder builder) in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 156
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelCustomizer.Customize(ModelBuilder modelBuilder, DbContext context)
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.CreateModel(DbContext context, IConventionSetBuilder conventionSetBuilder, ModelDependencies modelDependencies)
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()
+   at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.<>c.<TryAddCoreServices>b__8_4(IServiceProvider p)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.EntryWithoutDetectChanges(TEntity entity)
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.Add(TEntity entity)
+   at Hostr.Tests.UnitTests.BasicGuestLifecycleTests.UpdateGuestMetricsAsync_WhenExistingGuest_UpdatesMetricsRecord() in C:\Users\Administrator\Downloads\hostr\tests\UnitTests\BasicGuestLifecycleTests.cs:line 99
+--- End of stack trace from previous location ---
+  Failed Hostr.Tests.UnitTests.BasicGuestLifecycleTests.GetGuestMetricsAsync_WhenMetricsExist_ReturnsMetrics [906 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Hostr.Api.Data.HostrDbContext.GetCurrentTenantId() in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 614
+   at Hostr.Api.Data.HostrDbContext.ApplyGlobalFilters(ModelBuilder builder) in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 514
+   at Hostr.Api.Data.HostrDbContext.OnModelCreating(ModelBuilder builder) in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 156
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelCustomizer.Customize(ModelBuilder modelBuilder, DbContext context)
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.CreateModel(DbContext context, IConventionSetBuilder conventionSetBuilder, ModelDependencies modelDependencies)
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()
+   at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.<>c.<TryAddCoreServices>b__8_4(IServiceProvider p)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.EntryWithoutDetectChanges(TEntity entity)
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.Add(TEntity entity)
+   at Hostr.Tests.UnitTests.BasicGuestLifecycleTests.GetGuestMetricsAsync_WhenMetricsExist_ReturnsMetrics() in C:\Users\Administrator\Downloads\hostr\tests\UnitTests\BasicGuestLifecycleTests.cs:line 128
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:07.69]     Hostr.Tests.UnitTests.BasicGuestLifecycleTests.UpdateGuestMetricsAsync_WhenNewGuest_CreatesMetricsRecord [FAIL]
+[xUnit.net 00:00:07.69]       System.NullReferenceException : Object reference not set to an instance of an object.
+[xUnit.net 00:00:07.69]       Stack Trace:
+[xUnit.net 00:00:07.69]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(614,0): at Hostr.Api.Data.HostrDbContext.GetCurrentTenantId()
+[xUnit.net 00:00:07.69]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(514,0): at Hostr.Api.Data.HostrDbContext.ApplyGlobalFilters(ModelBuilder builder)
+[xUnit.net 00:00:07.69]         C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs(156,0): at Hostr.Api.Data.HostrDbContext.OnModelCreating(ModelBuilder builder)
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelCustomizer.Customize(ModelBuilder modelBuilder, DbContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.CreateModel(DbContext context, IConventionSetBuilder conventionSetBuilder, ModelDependencies modelDependencies)
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.<>c.<TryAddCoreServices>b__8_4(IServiceProvider p)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+[xUnit.net 00:00:07.69]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.EntryWithoutDetectChanges(TEntity entity)
+[xUnit.net 00:00:07.69]            at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.Add(TEntity entity)
+[xUnit.net 00:00:07.69]         C:\Users\Administrator\Downloads\hostr\tests\UnitTests\BasicGuestLifecycleTests.cs(47,0): at Hostr.Tests.UnitTests.BasicGuestLifecycleTests.UpdateGuestMetricsAsync_WhenNewGuest_CreatesMetricsRecord()
+[xUnit.net 00:00:07.69]         --- End of stack trace from previous location ---
+  Failed Hostr.Tests.UnitTests.BasicGuestLifecycleTests.UpdateGuestMetricsAsync_WhenNewGuest_CreatesMetricsRecord [690 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Hostr.Api.Data.HostrDbContext.GetCurrentTenantId() in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 614
+   at Hostr.Api.Data.HostrDbContext.ApplyGlobalFilters(ModelBuilder builder) in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 514
+   at Hostr.Api.Data.HostrDbContext.OnModelCreating(ModelBuilder builder) in C:\Users\Administrator\Downloads\hostr\apps\api\Data\HostrDbContext.cs:line 156
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelCustomizer.Customize(ModelBuilder modelBuilder, DbContext context)
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.CreateModel(DbContext context, IConventionSetBuilder conventionSetBuilder, ModelDependencies modelDependencies)
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()
+   at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.<>c.<TryAddCoreServices>b__8_4(IServiceProvider p)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.Microsoft.EntityFrameworkCore.Internal.IDbContextDependencies.get_StateManager()
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.EntryWithoutDetectChanges(TEntity entity)
+   at Microsoft.EntityFrameworkCore.Internal.InternalDbSet`1.Add(TEntity entity)
+   at Hostr.Tests.UnitTests.BasicGuestLifecycleTests.UpdateGuestMetricsAsync_WhenNewGuest_CreatesMetricsRecord() in C:\Users\Administrator\Downloads\hostr\tests\UnitTests\BasicGuestLifecycleTests.cs:line 47
+--- End of stack trace from previous location ---
+  Passed Hostr.Tests.ChatbotQA.Tests.HallucinationTests.AllHallucinationCases_ShouldHaveHighDetectionRate [9 s]
+  Passed Hostr.Tests.ChatbotQA.Tests.HallucinationTests.SpaHallucination_ShouldBeDetected [1 s]
+  Passed Hostr.Tests.ChatbotQA.Tests.HallucinationTests.LostAndFoundLocationExamples_ShouldBeMarkedAsIssue [1 s]
+  Passed Hostr.Tests.ChatbotQA.Tests.HallucinationTests.ChargerHallucination_ShouldBeDetected [1 s]
+  Passed Hostr.Tests.ChatbotQA.Tests.FullSuiteTests.RunFullEvaluationSuite [59 s]
+  Passed Hostr.Tests.ChatbotQA.Tests.FullSuiteTests.ValidateHallucinationFixes [2 s]
+  Passed Hostr.Tests.ChatbotQA.Tests.PolicyComplianceTests.AllPolicyViolationCases_ShouldFail [2 m 4 s]
+  Passed Hostr.Tests.ChatbotQA.Tests.PolicyComplianceTests.PolicyHoursCases_ShouldRespectHours [5 s]
+[xUnit.net 00:02:57.58]     Hostr.Tests.ChatbotQA.Tests.LiveApiTests.GenerateAndEvaluateLiveResponses_Subset [FAIL]
+[xUnit.net 00:02:57.58]       Expected liveMetrics.OverallAccuracyRate to be greater than 0.1 because live API should have >10% accuracy rate, but found 0.1.
+[xUnit.net 00:02:57.58]       Stack Trace:
+[xUnit.net 00:02:57.58]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:02:57.58]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:02:57.58]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:02:57.58]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:02:57.58]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:02:57.58]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:02:57.58]            at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThan(T expected, String because, Object[] becauseArgs)
+[xUnit.net 00:02:57.58]         C:\Users\Administrator\Downloads\hostr\tests\ChatbotQA\Tests\LiveApiTests.cs(129,0): at Hostr.Tests.ChatbotQA.Tests.LiveApiTests.GenerateAndEvaluateLiveResponses_Subset()
+[xUnit.net 00:02:57.58]         --- End of stack trace from previous location ---
+[xUnit.net 00:02:57.58]       Output:
+[xUnit.net 00:02:57.58]         Loaded 10 test cases (subset of 40)
+[xUnit.net 00:02:57.58]         
+Generating fresh responses from localhost API...
+
+[xUnit.net 00:02:57.58]         T-001: Our dinner service is available from 18:00 to 21:00. Would you like to know abou...
+[xUnit.net 00:02:57.58]         T-002: Welcome back! While I cannot process room requests for past stays, I can help yo...
+[xUnit.net 00:02:57.58]         T-003: I apologize for any confusion. The current price for the Kruger National Park Da...
+[xUnit.net 00:02:57.58]         T-004: I'd be happy to help! We have USB Charger, iPhone Charger, Android Charger, Univ...
+[xUnit.net 00:02:57.58]         T-005: To help you book the perfect spa treatment, could you please tell me which massa...
+[xUnit.net 00:02:57.58]         T-006: I understand you're looking for your lost item. To help our staff search for it,...
+[xUnit.net 00:02:57.58]         T-007: I'd be happy to help! Could you please specify what item or service you would li...
+[xUnit.net 00:02:57.58]         T-008: Which service would you like to book for your dinner reservation? Would you like...
+[xUnit.net 00:02:57.58]         T-009: I see you need help now. Could you please specify what kind of assistance you re...
+[xUnit.net 00:02:57.58]         T-010: Welcome! I'd be happy to help you with:
+[xUnit.net 00:02:57.58]         • Viewing our menu and services
+[xUnit.net 00:02:57.58]         • Hote...
+[xUnit.net 00:02:57.58]         
+================================================================================
+[xUnit.net 00:02:57.58]         EVALUATION RESULTS - LIVE RESPONSES
+[xUnit.net 00:02:57.58]         ================================================================================
+[xUnit.net 00:02:57.58]         
+=== T-001 ===
+[xUnit.net 00:02:57.58]         Guest: Can I get dinner at 22:30?
+[xUnit.net 00:02:57.58]         Bot (Live): Our dinner service is available from 18:00 to 21:00. Would you like to know about options for dining after 21:00 or room service availability until 22:30?
+[xUnit.net 00:02:57.58]         Verdict: inaccurate
+[xUnit.net 00:02:57.58]         Scores: U=1,00, A=0,00, C=1,00, P=0,00, T=1,00
+[xUnit.net 00:02:57.58]         Average: 0,60
+[xUnit.net 00:02:57.58]         Issues: Accuracy
+[xUnit.net 00:02:57.58]         
+=== T-002 ===
+[xUnit.net 00:02:57.58]         Guest: I need towels
+[xUnit.net 00:02:57.58]         Bot (Live): Welcome back! While I cannot process room requests for past stays, I can help you with:
+[xUnit.net 00:02:57.58]         • Information about our services and amenities
+[xUnit.net 00:02:57.58]         • Making a new reservation
+[xUnit.net 00:02:57.58]         • General inquiries
+[xUnit.net 00:02:57.58]         
+What would you like to know?
+[xUnit.net 00:02:57.58]         Verdict: inaccurate
+[xUnit.net 00:02:57.58]         Scores: U=0,00, A=0,00, C=0,00, P=1,00, T=1,00
+[xUnit.net 00:02:57.58]         Average: 0,40
+[xUnit.net 00:02:57.58]         Issues: Understanding; Accuracy
+[xUnit.net 00:02:57.58]         
+=== T-003 ===
+[xUnit.net 00:02:57.58]         Guest: You said the safari was R200, not R1800.
+[xUnit.net 00:02:57.58]         Bot (Live): I apologize for any confusion. The current price for the Kruger National Park Day Trip safari is ZAR850 per person. Would you like me to check availability or provide more information about the safari experience?
+[xUnit.net 00:02:57.58]         Verdict: inaccurate
+[xUnit.net 00:02:57.59]         Scores: U=0,00, A=0,00, C=0,50, P=0,00, T=1,00
+[xUnit.net 00:02:57.59]         Average: 0,30
+[xUnit.net 00:02:57.59]         Issues: accuracy
+[xUnit.net 00:02:57.59]         
+=== T-004 ===
+[xUnit.net 00:02:57.59]         Guest: I need a charger
+[xUnit.net 00:02:57.59]         Bot (Live): I'd be happy to help! We have USB Charger, iPhone Charger, Android Charger, Universal Adapter, Extension Cord, HDMI Cable, Laptop Charger, or Power Bank. Which one would you prefer?
+[xUnit.net 00:02:57.59]         Verdict: partial
+[xUnit.net 00:02:57.59]         Scores: U=1,00, A=0,50, C=0,50, P=1,00, T=1,00
+[xUnit.net 00:02:57.59]         Average: 0,80
+[xUnit.net 00:02:57.59]         Issues: Accuracy
+[xUnit.net 00:02:57.59]         
+=== T-005 ===
+[xUnit.net 00:02:57.59]         Guest: I want to book a spa treatment
+[xUnit.net 00:02:57.59]         Bot (Live): To help you book the perfect spa treatment, could you please tell me which massage type you prefer? We have Traditional Massage and Aromatherapy Massage. Would you like me to connect you with a team member who can help?
+[xUnit.net 00:02:57.59]         Verdict: partial
+[xUnit.net 00:02:57.59]         Scores: U=1,00, A=1,00, C=0,50, P=1,00, T=1,00
+[xUnit.net 00:02:57.59]         Average: 0,90
+[xUnit.net 00:02:57.59]         
+=== T-006 ===
+[xUnit.net 00:02:57.59]         Guest: Where did I leave my keys?
+[xUnit.net 00:02:57.59]         Bot (Live): I understand you're looking for your lost item. To help our staff search for it, could you please tell me where you last remember seeing it?
+[xUnit.net 00:02:57.59]         Verdict: partial
+[xUnit.net 00:02:57.59]         Scores: U=1,00, A=1,00, C=0,50, P=1,00, T=1,00
+[xUnit.net 00:02:57.59]         Average: 0,90
+[xUnit.net 00:02:57.59]         
+=== T-007 ===
+[xUnit.net 00:02:57.59]         Guest: Can I get one?
+[xUnit.net 00:02:57.59]         Bot (Live): I'd be happy to help! Could you please specify what item or service you would like to get one of?
+[xUnit.net 00:02:57.59]         Verdict: partial
+[xUnit.net 00:02:57.59]         Scores: U=0,50, A=1,00, C=0,80, P=1,00, T=1,00
+[xUnit.net 00:02:57.59]         Average: 0,86
+[xUnit.net 00:02:57.59]         
+=== T-008 ===
+[xUnit.net 00:02:57.59]         Guest: I want dinner reservation
+[xUnit.net 00:02:57.59]         Bot (Live): Which service would you like to book for your dinner reservation? Would you like me to connect you with a team member who can help?
+[xUnit.net 00:02:57.59]         Verdict: partial
+[xUnit.net 00:02:57.59]         Scores: U=0,50, A=0,50, C=0,80, P=1,00, T=1,00
+[xUnit.net 00:02:57.59]         Average: 0,76
+[xUnit.net 00:02:57.60]         
+=== T-009 ===
+[xUnit.net 00:02:57.61]         Guest: I need help NOW
+[xUnit.net 00:02:57.61]         Bot (Live): I see you need help now. Could you please specify what kind of assistance you require? For example, do you need housekeeping items like fresh towels or extra pillows, maintenance support, dining services, or something else?
+[xUnit.net 00:02:57.61]         Verdict: accurate
+[xUnit.net 00:02:57.61]         Scores: U=1,00, A=1,00, C=1,00, P=1,00, T=1,00
+[xUnit.net 00:02:57.61]         Average: 1,00
+[xUnit.net 00:02:57.61]         
+=== T-010 ===
+[xUnit.net 00:02:57.61]         Guest: Can you bring breakfast to room 305?
+[xUnit.net 00:02:57.61]         Bot (Live): Welcome! I'd be happy to help you with:
+[xUnit.net 00:02:57.61]         • Viewing our menu and services
+[xUnit.net 00:02:57.61]         • Hotel information and amenities
+[xUnit.net 00:02:57.61]         • Making a reservation
+[xUnit.net 00:02:57.61]         
+To access room service, you'll need an active booking. How can I help you today?
+[xUnit.net 00:02:57.61]         Verdict: inaccurate
+[xUnit.net 00:02:57.61]         Scores: U=0,00, A=0,00, C=0,20, P=0,00, T=1,00
+[xUnit.net 00:02:57.61]         Average: 0,24
+[xUnit.net 00:02:57.61]         Issues: Accuracy
+[xUnit.net 00:02:57.61]         
+================================================================================
+[xUnit.net 00:02:57.61]         SUMMARY - LIVE API RESPONSES
+[xUnit.net 00:02:57.61]         ================================================================================
+[xUnit.net 00:02:57.61]         Total Cases: 10
+Accurate: 1 (10,0%)
+Partial: 5
+Inaccurate: 4
+Hard Violations: 3
+Hallucinations: 0
+
+Average Scores:
+  Understanding: 0,60
+  Accuracy: 0,50
+  Completeness: 0,58
+  Policy Compliance: 0,70
+  Tone: 1,00
+  Overall: 0,68
+[xUnit.net 00:02:57.61]         
+✓ Live responses saved to: C:\Users\Administrator\Downloads\hostr\tests\ChatbotQA\Data\eval_cases_live.jsonl
+  Failed Hostr.Tests.ChatbotQA.Tests.LiveApiTests.GenerateAndEvaluateLiveResponses_Subset [2 m 56 s]
+  Error Message:
+   Expected liveMetrics.OverallAccuracyRate to be greater than 0.1 because live API should have >10% accuracy rate, but found 0.1.
+  Stack Trace:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThan(T expected, String because, Object[] becauseArgs)
+   at Hostr.Tests.ChatbotQA.Tests.LiveApiTests.GenerateAndEvaluateLiveResponses_Subset() in C:\Users\Administrator\Downloads\hostr\tests\ChatbotQA\Tests\LiveApiTests.cs:line 129
+--- End of stack trace from previous location ---
+  Standard Output Messages:
+ Loaded 10 test cases (subset of 40)
+ 
+Generating fresh responses from localhost API...
+
+ T-001: Our dinner service is available from 18:00 to 21:00. Would you like to know abou...
+ T-002: Welcome back! While I cannot process room requests for past stays, I can help yo...
+ T-003: I apologize for any confusion. The current price for the Kruger National Park Da...
+ T-004: I'd be happy to help! We have USB Charger, iPhone Charger, Android Charger, Univ...
+ T-005: To help you book the perfect spa treatment, could you please tell me which massa...
+ T-006: I understand you're looking for your lost item. To help our staff search for it,...
+ T-007: I'd be happy to help! Could you please specify what item or service you would li...
+ T-008: Which service would you like to book for your dinner reservation? Would you like...
+ T-009: I see you need help now. Could you please specify what kind of assistance you re...
+ T-010: Welcome! I'd be happy to help you with:
+ • Viewing our menu and services
+ • Hote...
+ 
+================================================================================
+ EVALUATION RESULTS - LIVE RESPONSES
+ ================================================================================
+ 
+=== T-001 ===
+ Guest: Can I get dinner at 22:30?
+ Bot (Live): Our dinner service is available from 18:00 to 21:00. Would you like to know about options for dining after 21:00 or room service availability until 22:30?
+ Verdict: inaccurate
+ Scores: U=1,00, A=0,00, C=1,00, P=0,00, T=1,00
+ Average: 0,60
+ Issues: Accuracy
+ 
+=== T-002 ===
+ Guest: I need towels
+ Bot (Live): Welcome back! While I cannot process room requests for past stays, I can help you with:
+ • Information about our services and amenities
+ • Making a new reservation
+ • General inquiries
+ 
+What would you like to know?
+ Verdict: inaccurate
+ Scores: U=0,00, A=0,00, C=0,00, P=1,00, T=1,00
+ Average: 0,40
+ Issues: Understanding; Accuracy
+ 
+=== T-003 ===
+ Guest: You said the safari was R200, not R1800.
+ Bot (Live): I apologize for any confusion. The current price for the Kruger National Park Day Trip safari is ZAR850 per person. Would you like me to check availability or provide more information about the safari experience?
+ Verdict: inaccurate
+ Scores: U=0,00, A=0,00, C=0,50, P=0,00, T=1,00
+ Average: 0,30
+ Issues: accuracy
+ 
+=== T-004 ===
+ Guest: I need a charger
+ Bot (Live): I'd be happy to help! We have USB Charger, iPhone Charger, Android Charger, Universal Adapter, Extension Cord, HDMI Cable, Laptop Charger, or Power Bank. Which one would you prefer?
+ Verdict: partial
+ Scores: U=1,00, A=0,50, C=0,50, P=1,00, T=1,00
+ Average: 0,80
+ Issues: Accuracy
+ 
+=== T-005 ===
+ Guest: I want to book a spa treatment
+ Bot (Live): To help you book the perfect spa treatment, could you please tell me which massage type you prefer? We have Traditional Massage and Aromatherapy Massage. Would you like me to connect you with a team member who can help?
+ Verdict: partial
+ Scores: U=1,00, A=1,00, C=0,50, P=1,00, T=1,00
+ Average: 0,90
+ 
+=== T-006 ===
+ Guest: Where did I leave my keys?
+ Bot (Live): I understand you're looking for your lost item. To help our staff search for it, could you please tell me where you last remember seeing it?
+ Verdict: partial
+ Scores: U=1,00, A=1,00, C=0,50, P=1,00, T=1,00
+ Average: 0,90
+ 
+=== T-007 ===
+ Guest: Can I get one?
+ Bot (Live): I'd be happy to help! Could you please specify what item or service you would like to get one of?
+ Verdict: partial
+ Scores: U=0,50, A=1,00, C=0,80, P=1,00, T=1,00
+ Average: 0,86
+ 
+=== T-008 ===
+ Guest: I want dinner reservation
+ Bot (Live): Which service would you like to book for your dinner reservation? Would you like me to connect you with a team member who can help?
+ Verdict: partial
+ Scores: U=0,50, A=0,50, C=0,80, P=1,00, T=1,00
+ Average: 0,76
+ 
+=== T-009 ===
+ Guest: I need help NOW
+ Bot (Live): I see you need help now. Could you please specify what kind of assistance you require? For example, do you need housekeeping items like fresh towels or extra pillows, maintenance support, dining services, or something else?
+ Verdict: accurate
+ Scores: U=1,00, A=1,00, C=1,00, P=1,00, T=1,00
+ Average: 1,00
+ 
+=== T-010 ===
+ Guest: Can you bring breakfast to room 305?
+ Bot (Live): Welcome! I'd be happy to help you with:
+ • Viewing our menu and services
+ • Hotel information and amenities
+ • Making a reservation
+ 
+To access room service, you'll need an active booking. How can I help you today?
+ Verdict: inaccurate
+ Scores: U=0,00, A=0,00, C=0,20, P=0,00, T=1,00
+ Average: 0,24
+ Issues: Accuracy
+ 
+================================================================================
+ SUMMARY - LIVE API RESPONSES
+ ================================================================================
+ Total Cases: 10
+Accurate: 1 (10,0%)
+Partial: 5
+Inaccurate: 4
+Hard Violations: 3
+Hallucinations: 0
+
+Average Scores:
+  Understanding: 0,60
+  Accuracy: 0,50
+  Completeness: 0,58
+  Policy Compliance: 0,70
+  Tone: 1,00
+  Overall: 0,68
+ 
+✓ Live responses saved to: C:\Users\Administrator\Downloads\hostr\tests\ChatbotQA\Data\eval_cases_live.jsonl
+
+
+  Passed Hostr.Tests.ChatbotQA.Tests.LiveApiTests.TestSecurityCases [1 m 30 s]
+[xUnit.net 00:05:31.76]   Finished:    Hostr.Tests
+  Passed Hostr.Tests.ChatbotQA.Tests.LiveApiTests.TestMultilingualSupport [1 m 3 s]
+
+Test Run Failed.
+Total tests: 25
+     Passed: 18
+     Failed: 7
+ Total time: 5,5580 Minutes

@@ -1,0 +1,20 @@
+<step title="Incoming Request" date="2026-01-09T14:59:34.246" instance="1a2f11" url="/api/zipdeploy?isAsync=true" method="POST" type="request" pid="5124,2,9" Cache-Control="no-cache" Content-Length="46038443" Content-Type="application/octet-stream" Accept="*/*" Accept-Encoding="gzip, deflate" Authorization="Bea..." Host="staybot-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" x-ms-client-request-id="c8d7eed1-ed6b-11f0-a880-5414f369fc7f" X-ARR-LOG-ID="c8d7eed1-ed6b-11f0-a880-5414f369fc7f" CLIENT-IP="41.121.23.223:9862" X-SITE-DEPLOYMENT-ID="staybot-api" WAS-DEFAULT-HOSTNAME="staybot-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?isAsync=true" >
+  <step title="Cleanup Xml Logs" date="2026-01-09T14:59:34.262" /><!-- duration: 0ms -->
+  <step title="ZipPushDeploy" date="2026-01-09T14:59:34.277" >
+    <step title="ZipDeploy. Extract zip. " date="2026-01-09T14:59:34.277" /><!-- duration: 31ms -->
+    <step title="Starting PushDeployAsync" date="2026-01-09T14:59:34.309" /><!-- duration: 18ms -->
+    <step title="Updating shutdown sentinel last write time" date="2026-01-09T14:59:34.327" SemaphoreCount="7" /><!-- duration: 13ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2026-01-09T14:59:34.371" /><!-- duration: 0ms -->
+    <step title="Saving request content to C:\local\Temp\zipdeploy\o5xlkv1w.zip" date="2026-01-09T14:59:34.387" >
+      <step title="Writing 12,988,416 bytes to C:\local\Temp\zipdeploy\o5xlkv1w.zip" date="2026-01-09T15:00:04.434" /><!-- duration: 32ms -->
+      <step title="Writing 25,292,800 bytes to C:\local\Temp\zipdeploy\o5xlkv1w.zip" date="2026-01-09T15:00:34.495" /><!-- duration: 16ms -->
+      <step title="Writing 36,859,904 bytes to C:\local\Temp\zipdeploy\o5xlkv1w.zip" date="2026-01-09T15:01:04.522" /><!-- duration: 0ms -->
+      <step title="Total 46,038,443 bytes written to C:\local\Temp\zipdeploy\o5xlkv1w.zip" date="2026-01-09T15:01:33.702" /><!-- duration: 16ms -->
+    </step><!-- duration: 119331ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2026-01-09T15:01:33.718" /><!-- duration: 0ms -->
+    <step title="Deleting shutdown sentinel file" date="2026-01-09T15:01:33.733" SemaphoreCount="8" /><!-- duration: 0ms -->
+    <step title="Starting FetchDeploy" date="2026-01-09T15:01:33.733" /><!-- duration: 16ms -->
+    <step title="Start deployment in the background" date="2026-01-09T15:01:33.749" /><!-- duration: 95ms -->
+  </step><!-- duration: 119581ms -->
+  <step title="Outgoing response" date="2026-01-09T15:01:33.858" type="response" statusCode="202" statusText="Accepted" Server="Microsoft-IIS/10.0" x-ms-request-id="c8d7eed1-ed6b-11f0-a880-5414f369fc7f" Retry-After="30" Cache-Control="private" X-AspNet-Version="4.0.30319" Location="https://staybot-api.scm.azurewebsites.net/api/deployments/latest?deployer=ZipDeploy&amp;time=2026-01-09_15-01-33Z" /><!-- duration: 0ms -->
+</step><!-- duration: 119629ms -->

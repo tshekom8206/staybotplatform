@@ -1,0 +1,11 @@
+2026-01-05T21:43:45  PID[5360] Information 1/5/2026 9:43:45 PM [[4.8]] [dw1sdwk000MOP] DaasRunner.exe with version 4.8.40625.1 and ProcessId=5360 started
+2026-01-05T21:43:46  PID[5360] Information 1/5/2026 9:43:46 PM [[4.8]] [dw1sdwk000MOP] Checking DaaS bits and updating if required
+2026-01-05T21:43:46  PID[5360] Information 1/5/2026 9:43:46 PM [[4.8]] [dw1sdwk000MOP] [daasrunner.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-05T21:43:46  PID[5360] Information 1/5/2026 9:43:46 PM [[4.8]] [dw1sdwk000MOP] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-05T21:43:47  PID[5360] Information 1/5/2026 9:43:47 PM [[4.8]] [dw1sdwk000MOP] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-05T21:43:47  PID[5360] Information 1/5/2026 9:43:47 PM [[4.8]] [dw1sdwk000MOP] [daasconsole.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-05T21:43:47  PID[5360] Information 1/5/2026 9:43:47 PM [[4.8]] [dw1sdwk000MOP] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-05T21:43:47  PID[5360] Information 1/5/2026 9:43:47 PM [[4.8]] [dw1sdwk000MOP] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-05T21:43:47  PID[5360] Information 1/5/2026 9:43:47 PM [[4.8]] [dw1sdwk000MOP] Done checking DaaS bits for any new updates
+2026-01-05T21:45:07  PID[5360] Information 1/5/2026 9:45:07 PM [[4.8]] [dw1sdwk000MOP] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2026-01-05T21:45:07  PID[5360] Information 1/5/2026 9:45:07 PM [[4.8]] [dw1sdwk000MOP] Storage account is not configured

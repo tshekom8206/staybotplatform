@@ -1,0 +1,96 @@
+<step title="Incoming Request" date="2026-01-07T10:05:57.739" instance="ce49b2" url="/api/publish?type=zip" method="POST" type="request" pid="5884,2,16" Cache-Control="no-cache" Content-Length="21800896" Content-Type="application/octet-stream" Accept="*/*" Accept-Encoding="gzip, deflate" Authorization="Bea..." Host="staybot-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" x-ms-client-request-id="6eb5fe45-ebb0-11f0-865b-5414f369fc7f" X-ARR-LOG-ID="6eb5fe45-ebb0-11f0-865b-5414f369fc7f" CLIENT-IP="41.121.36.43:58015" X-SITE-DEPLOYMENT-ID="staybot-api" WAS-DEFAULT-HOSTNAME="staybot-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip" >
+  <step title="Cleanup Xml Logs" date="2026-01-07T10:05:57.757" /><!-- duration: 28ms -->
+  <step title="OneDeploy" date="2026-01-07T10:05:57.878" >
+    <step title="Starting PushDeployAsync" date="2026-01-07T10:05:57.894" /><!-- duration: 0ms -->
+    <step title="Updating shutdown sentinel last write time" date="2026-01-07T10:05:58.035" SemaphoreCount="7" /><!-- duration: 47ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2026-01-07T10:05:58.115" /><!-- duration: 18ms -->
+    <step title="Saving request content to C:\local\Temp\zipdeploy\o5v5vqfb.zip" date="2026-01-07T10:05:58.144" >
+      <step title="Total 21,800,896 bytes written to C:\local\Temp\zipdeploy\o5v5vqfb.zip" date="2026-01-07T10:06:02.597" /><!-- duration: 0ms -->
+    </step><!-- duration: 4469ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2026-01-07T10:06:02.613" /><!-- duration: 16ms -->
+    <step title="Deleting shutdown sentinel file" date="2026-01-07T10:06:02.628" SemaphoreCount="8" /><!-- duration: 0ms -->
+    <step title="Starting FetchDeploy" date="2026-01-07T10:06:02.644" /><!-- duration: 16ms -->
+    <step title="Attempting to fetch target branch HEAD" date="2026-01-07T10:06:02.660" /><!-- duration: 15ms -->
+    <step title="Updating shutdown sentinel last write time" date="2026-01-07T10:06:02.706" SemaphoreCount="7" /><!-- duration: 0ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2026-01-07T10:06:02.738" /><!-- duration: 0ms -->
+    <step title="Performing fetch based deployment" date="2026-01-07T10:06:02.738" >
+      <step title="Creating temporary deployment" date="2026-01-07T10:06:02.753" /><!-- duration: 62ms -->
+      <step title="Fetching changes." date="2026-01-07T10:06:02.959" /><!-- duration: 0ms -->
+      <step title="Starting LocalZipHandler" date="2026-01-07T10:06:02.972" /><!-- duration: 17ms -->
+      <step title="Starting LocalZipFetch" date="2026-01-07T10:06:03.007" /><!-- duration: 16ms -->
+      <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\o5v5vqfb.zip (20.79 MB) to C:\local\Temp\zipdeploy\extracted" date="2026-01-07T10:06:03.034" /><!-- duration: 16ms -->
+      <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\o5v5vqfb.zip (20.79 MB) to C:\local\Temp\zipdeploy\extracted" date="2026-01-07T10:06:03.128" >
+        <step title="Renaming extractTargetDirectory(C:\local\Temp\zipdeploy\extracted) to tempDirectory(C:\local\Temp\zipdeploy\0exmsxot.yrw)" date="2026-01-07T10:06:03.144" /><!-- duration: 16ms -->
+        <step title="Extracting 112 entries to C:\local\Temp\zipdeploy\extracted directory" date="2026-01-07T10:06:03.193" >
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-Black.ttf ..." date="2026-01-07T10:06:03.378" /><!-- duration: 63ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-BlackItalic.ttf ..." date="2026-01-07T10:06:03.441" /><!-- duration: 63ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-Bold.ttf ..." date="2026-01-07T10:06:03.504" /><!-- duration: 48ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-BoldItalic.ttf ..." date="2026-01-07T10:06:03.566" /><!-- duration: 66ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-ExtraBold.ttf ..." date="2026-01-07T10:06:03.644" /><!-- duration: 50ms -->
+          <step title="Omitting extracting file traces ..." date="2026-01-07T10:06:03.706" /><!-- duration: 94ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\System.Security.Permissions.dll ..." date="2026-01-07T10:06:07.144" /><!-- duration: 33ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\System.Windows.Extensions.dll ..." date="2026-01-07T10:06:07.193" /><!-- duration: 17ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\web.config ..." date="2026-01-07T10:06:07.222" /><!-- duration: 0ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\WebPush.dll ..." date="2026-01-07T10:06:07.238" /><!-- duration: 16ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\zlib1.dll ..." date="2026-01-07T10:06:07.270" /><!-- duration: 18ms -->
+        </step><!-- duration: 4111ms -->
+      </step><!-- duration: 4187ms -->
+      <step title="None repository commit" date="2026-01-07T10:06:07.331" >
+        <step title="Commit id: 74d668504d1845bc93b53d416813ff0a" date="2026-01-07T10:06:07.331" Message="OneDeploy" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 0ms -->
+      </step><!-- duration: 16ms -->
+      <step title="Before sending BuildRequestReceived status to /api/updatedeploystatus" date="2026-01-07T10:06:07.347" /><!-- duration: 0ms -->
+      <step title="DeploymentManager.Deploy(id:74d668504d1845bc93b53d416813ff0a)" date="2026-01-07T10:06:07.363" >
+        <step title="Collecting changeset information" date="2026-01-07T10:06:07.378" /><!-- duration: 97ms -->
+        <step title="Updating submodules" date="2026-01-07T10:06:07.488" >
+          <step title="Updating submodules." date="2026-01-07T10:06:07.599" /><!-- duration: 18ms -->
+        </step><!-- duration: 141ms -->
+        <step title="Preparing deployment for commit id &apos;74d668504d&apos;." date="2026-01-07T10:06:07.738" /><!-- duration: 0ms -->
+        <step title="Determining deployment builder" date="2026-01-07T10:06:07.894" >
+          <step title="Builder is OneDeployBuilder" date="2026-01-07T10:06:07.909" /><!-- duration: 17ms -->
+        </step><!-- duration: 32ms -->
+        <step title="Copying SSH keys" date="2026-01-07T10:06:08.003" /><!-- duration: 0ms -->
+        <step title="Building" date="2026-01-07T10:06:08.019" >
+          <step title="Running build. Project type: OneDeploy" date="2026-01-07T10:06:08.113" /><!-- duration: 16ms -->
+          <step title="Copying the manifest" date="2026-01-07T10:06:08.222" /><!-- duration: 15ms -->
+          <step title="Clean deploying to C:\home\site\wwwroot" date="2026-01-07T10:06:08.378" /><!-- duration: 16ms -->
+          <step title="Generating deployment script." date="2026-01-07T10:06:08.519" /><!-- duration: 0ms -->
+          <step title="Generating deployment script" date="2026-01-07T10:06:08.550" >
+            <step title="Using cached version of the deployment script for command: -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;" date="2026-01-07T10:06:08.628" /><!-- duration: 0ms -->
+            <step title="Using cached version of deployment script (command: &apos;azure -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;&apos;)." date="2026-01-07T10:06:08.659" /><!-- duration: 0ms -->
+          </step><!-- duration: 125ms -->
+          <step title="Running deployment command..." date="2026-01-07T10:06:08.786" /><!-- duration: 0ms -->
+          <step title="Command: &quot;C:\home\site\deployments\tools\deploy.cmd&quot;" date="2026-01-07T10:06:08.831" /><!-- duration: 0ms -->
+          <step title="Executing external process" date="2026-01-07T10:06:08.881" type="process" path="starter.cmd" arguments="&quot;C:\home\site\deployments\tools\deploy.cmd&quot;" >
+            <step title="Handling Basic Web Site deployment." date="2026-01-07T10:06:09.926" /><!-- duration: 16ms -->
+            <step title="Creating app_offline.htm" date="2026-01-07T10:06:15.949" /><!-- duration: 18ms -->
+            <step title="KuduSync.NET from: &apos;C:\local\Temp\zipdeploy\extracted&apos; to: &apos;C:\home\site\wwwroot&apos;" date="2026-01-07T10:06:15.995" /><!-- duration: 16ms -->
+            <step title="Copying file: &apos;Hostr.Api.deps.json&apos;" date="2026-01-07T10:06:16.045" /><!-- duration: 17ms -->
+            <step title="Copying file: &apos;Hostr.Api.dll&apos;" date="2026-01-07T10:06:16.089" /><!-- duration: 31ms -->
+            <step title="Copying file: &apos;Hostr.Api.exe&apos;" date="2026-01-07T10:06:16.152" /><!-- duration: 31ms -->
+            <step title="Copying file: &apos;Hostr.Api.pdb&apos;" date="2026-01-07T10:06:16.214" /><!-- duration: 16ms -->
+            <step title="Copying file: &apos;Hostr.Api.runtimeconfig.json&apos;" date="2026-01-07T10:06:16.263" /><!-- duration: 0ms -->
+            <step title="Deleting app_offline.htm" date="2026-01-07T10:06:16.297" /><!-- duration: 11ms -->
+            <step title="Finished successfully." date="2026-01-07T10:06:16.622" /><!-- duration: 0ms -->
+          </step><!-- duration: 7943ms -->
+          <step title="Build completed succesfully." date="2026-01-07T10:06:16.980" /><!-- duration: 16ms -->
+          <step title="Running post deployment command(s)..." date="2026-01-07T10:06:17.671" /><!-- duration: 17ms -->
+          <step title="Requesting site restart" date="2026-01-07T10:06:18.138" /><!-- duration: 45ms -->
+          <step title="Requesting site restart" date="2026-01-07T10:06:18.199" /><!-- duration: 16ms -->
+          <step title="Requesting site restart. Attempt #1" date="2026-01-07T10:06:19.480" /><!-- duration: 94ms -->
+          <step title="Requesting site restart. Attempt #1" date="2026-01-07T10:06:19.656" /><!-- duration: 16ms -->
+          <step title="Successfully requested a restart. Attempt #1" date="2026-01-07T10:06:20.374" /><!-- duration: 13ms -->
+          <step title="Successfully requested a restart. Attempt #1" date="2026-01-07T10:06:20.402" /><!-- duration: 16ms -->
+          <step title="Deployment successful. DEPLOYMENTINFO: deploymentPath = OneDeploy, deployer = OneDeploy, os = windows, sku = Basic, siteName = staybot-api, siteHostName = staybot-api.azurewebsites.net, deploymentStatus = Success" date="2026-01-07T10:06:20.653" /><!-- duration: 18ms -->
+          <step title="Purge deployment items" date="2026-01-07T10:06:21.652" >
+            <step title="Remove 1b01c6962, Success, received at 1/5/2026 9:58:15 PM" date="2026-01-07T10:06:21.792" /><!-- duration: 17ms -->
+          </step><!-- duration: 176ms -->
+        </step><!-- duration: 13932ms -->
+      </step><!-- duration: 14604ms -->
+      <step title="Cleaning up temp files" date="2026-01-07T10:06:22.327" /><!-- duration: 28ms -->
+      <step title="Skip function trigger and logicapp sync because function is not enabled." date="2026-01-07T10:06:22.590" /><!-- duration: 0ms -->
+    </step><!-- duration: 20042ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2026-01-07T10:06:22.808" /><!-- duration: 16ms -->
+    <step title="Deleting shutdown sentinel file" date="2026-01-07T10:06:22.872" SemaphoreCount="8" /><!-- duration: 17ms -->
+  </step><!-- duration: 25027ms -->
+  <step title="Outgoing response" date="2026-01-07T10:06:23.060" type="response" statusCode="200" statusText="OK" Server="Microsoft-IIS/10.0" x-ms-request-id="6eb5fe45-ebb0-11f0-865b-5414f369fc7f" Cache-Control="private" X-AspNet-Version="4.0.30319" /><!-- duration: 156ms -->
+</step><!-- duration: 25631ms -->

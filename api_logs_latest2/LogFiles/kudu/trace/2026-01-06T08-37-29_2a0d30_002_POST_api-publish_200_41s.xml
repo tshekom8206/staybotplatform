@@ -1,0 +1,138 @@
+<step title="Incoming Request" date="2026-01-06T08:37:29.255" instance="2a0d30" url="/api/publish?type=zip" method="POST" type="request" pid="7056,2,12" Cache-Control="no-cache" Content-Length="21800255" Content-Type="application/octet-stream" Accept="*/*" Accept-Encoding="gzip, deflate" Authorization="Bea..." Host="staybot-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" x-ms-client-request-id="e4b4ba23-eada-11f0-9715-5414f369fc7f" X-ARR-LOG-ID="e4b4ba23-eada-11f0-9715-5414f369fc7f" CLIENT-IP="41.121.55.137:7569" X-SITE-DEPLOYMENT-ID="staybot-api" WAS-DEFAULT-HOSTNAME="staybot-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip" >
+  <step title="Cleanup Xml Logs" date="2026-01-06T08:37:29.255" /><!-- duration: 14ms -->
+  <step title="OneDeploy" date="2026-01-06T08:37:31.972" >
+    <step title="Starting PushDeployAsync" date="2026-01-06T08:37:32.087" /><!-- duration: 41ms -->
+    <step title="Updating shutdown sentinel last write time" date="2026-01-06T08:37:32.457" SemaphoreCount="7" /><!-- duration: 19ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2026-01-06T08:37:32.476" /><!-- duration: 11ms -->
+    <step title="Saving request content to C:\local\Temp\zipdeploy\kbwytb5k.zip" date="2026-01-06T08:37:32.505" >
+      <step title="Total 21,800,255 bytes written to C:\local\Temp\zipdeploy\kbwytb5k.zip" date="2026-01-06T08:37:39.557" /><!-- duration: 0ms -->
+    </step><!-- duration: 7067ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2026-01-06T08:37:39.588" /><!-- duration: 16ms -->
+    <step title="Deleting shutdown sentinel file" date="2026-01-06T08:37:39.604" SemaphoreCount="8" /><!-- duration: 16ms -->
+    <step title="Starting FetchDeploy" date="2026-01-06T08:37:39.635" /><!-- duration: 17ms -->
+    <step title="Attempting to fetch target branch HEAD" date="2026-01-06T08:37:39.666" /><!-- duration: 0ms -->
+    <step title="Updating shutdown sentinel last write time" date="2026-01-06T08:37:39.697" SemaphoreCount="7" /><!-- duration: 16ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2026-01-06T08:37:39.713" /><!-- duration: 16ms -->
+    <step title="Performing fetch based deployment" date="2026-01-06T08:37:39.777" >
+      <step title="Creating temporary deployment" date="2026-01-06T08:37:39.791" /><!-- duration: 207ms -->
+      <step title="Fetching changes." date="2026-01-06T08:37:40.338" /><!-- duration: 0ms -->
+      <step title="Starting LocalZipHandler" date="2026-01-06T08:37:40.369" /><!-- duration: 17ms -->
+      <step title="Starting LocalZipFetch" date="2026-01-06T08:37:40.416" /><!-- duration: 0ms -->
+      <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\kbwytb5k.zip (20.79 MB) to C:\local\Temp\zipdeploy\extracted" date="2026-01-06T08:37:40.447" /><!-- duration: 16ms -->
+      <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\kbwytb5k.zip (20.79 MB) to C:\local\Temp\zipdeploy\extracted" date="2026-01-06T08:37:40.483" >
+        <step title="Extracting 112 entries to C:\local\Temp\zipdeploy\extracted directory" date="2026-01-06T08:37:40.619" >
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-Black.ttf ..." date="2026-01-06T08:37:40.655" /><!-- duration: 120ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-BlackItalic.ttf ..." date="2026-01-06T08:37:40.791" /><!-- duration: 62ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-Bold.ttf ..." date="2026-01-06T08:37:40.854" /><!-- duration: 64ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-BoldItalic.ttf ..." date="2026-01-06T08:37:40.918" /><!-- duration: 47ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-ExtraBold.ttf ..." date="2026-01-06T08:37:40.979" /><!-- duration: 48ms -->
+          <step title="Omitting extracting file traces ..." date="2026-01-06T08:37:41.326" /><!-- duration: 199ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\System.Security.Permissions.dll ..." date="2026-01-06T08:37:44.479" /><!-- duration: 16ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\System.Windows.Extensions.dll ..." date="2026-01-06T08:37:44.510" /><!-- duration: 18ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\web.config ..." date="2026-01-06T08:37:44.557" /><!-- duration: 49ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\WebPush.dll ..." date="2026-01-06T08:37:44.682" /><!-- duration: 19ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\zlib1.dll ..." date="2026-01-06T08:37:44.713" /><!-- duration: 17ms -->
+        </step><!-- duration: 4141ms -->
+      </step><!-- duration: 4296ms -->
+      <step title="None repository commit" date="2026-01-06T08:37:44.791" >
+        <step title="Commit id: b6db1f72d7cd4c7999d962d945e2bb00" date="2026-01-06T08:37:44.791" Message="OneDeploy" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 16ms -->
+      </step><!-- duration: 16ms -->
+      <step title="Before sending BuildRequestReceived status to /api/updatedeploystatus" date="2026-01-06T08:37:44.807" /><!-- duration: 0ms -->
+      <step title="DeploymentManager.Deploy(id:b6db1f72d7cd4c7999d962d945e2bb00)" date="2026-01-06T08:37:44.838" >
+        <step title="Collecting changeset information" date="2026-01-06T08:37:44.875" /><!-- duration: 75ms -->
+        <step title="Updating submodules" date="2026-01-06T08:37:44.963" >
+          <step title="Updating submodules." date="2026-01-06T08:37:45.107" /><!-- duration: 13ms -->
+        </step><!-- duration: 156ms -->
+        <step title="Preparing deployment for commit id &apos;b6db1f72d7&apos;." date="2026-01-06T08:37:45.229" /><!-- duration: 0ms -->
+        <step title="Determining deployment builder" date="2026-01-06T08:37:45.338" >
+          <step title="Builder is OneDeployBuilder" date="2026-01-06T08:37:45.354" /><!-- duration: 19ms -->
+        </step><!-- duration: 35ms -->
+        <step title="Copying SSH keys" date="2026-01-06T08:37:45.432" /><!-- duration: 83ms -->
+        <step title="Building" date="2026-01-06T08:37:45.525" >
+          <step title="Running build. Project type: OneDeploy" date="2026-01-06T08:37:45.573" /><!-- duration: 19ms -->
+          <step title="Copying the manifest" date="2026-01-06T08:37:45.698" /><!-- duration: 0ms -->
+          <step title="Clean deploying to C:\home\site\wwwroot" date="2026-01-06T08:37:45.854" /><!-- duration: 0ms -->
+          <step title="Generating deployment script." date="2026-01-06T08:37:45.994" /><!-- duration: 18ms -->
+          <step title="Generating deployment script" date="2026-01-06T08:37:46.030" >
+            <step title="Using cached version of the deployment script for command: -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;" date="2026-01-06T08:37:46.105" /><!-- duration: 0ms -->
+            <step title="Using cached version of deployment script (command: &apos;azure -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;&apos;)." date="2026-01-06T08:37:46.135" /><!-- duration: 18ms -->
+          </step><!-- duration: 136ms -->
+          <step title="Running deployment command..." date="2026-01-06T08:37:46.369" /><!-- duration: 0ms -->
+          <step title="Command: &quot;C:\home\site\deployments\tools\deploy.cmd&quot;" date="2026-01-06T08:37:46.480" /><!-- duration: 0ms -->
+          <step title="Executing external process" date="2026-01-06T08:37:46.528" type="process" path="starter.cmd" arguments="&quot;C:\home\site\deployments\tools\deploy.cmd&quot;" >
+            <step title="Handling Basic Web Site deployment." date="2026-01-06T08:37:47.561" /><!-- duration: 12ms -->
+            <step title="Creating app_offline.htm" date="2026-01-06T08:37:50.542" /><!-- duration: 0ms -->
+            <step title="KuduSync.NET from: &apos;C:\local\Temp\zipdeploy\extracted&apos; to: &apos;C:\home\site\wwwroot&apos;" date="2026-01-06T08:37:50.574" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;aspnetcorev2_inprocess.dll&apos;" date="2026-01-06T08:37:50.609" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;clretwrc.dll&apos;" date="2026-01-06T08:37:50.638" /><!-- duration: 15ms -->
+            <step title="Deleting file: &apos;clrgc.dll&apos;" date="2026-01-06T08:37:50.667" /><!-- duration: 18ms -->
+            <step title="Deleting file: &apos;clrjit.dll&apos;" date="2026-01-06T08:37:50.699" /><!-- duration: 16ms -->
+            <step title="Deleting file: &apos;coreclr.dll&apos;" date="2026-01-06T08:37:50.734" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;createdump.exe&apos;" date="2026-01-06T08:37:50.762" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;hostfxr.dll&apos;" date="2026-01-06T08:37:50.792" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;hostpolicy.dll&apos;" date="2026-01-06T08:37:50.824" /><!-- duration: 16ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Antiforgery.dll&apos;" date="2026-01-06T08:37:50.871" /><!-- duration: 17ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Authentication.Abstractions.dll&apos;" date="2026-01-06T08:37:50.906" /><!-- duration: 11ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Authentication.BearerToken.dll&apos;" date="2026-01-06T08:37:50.935" /><!-- duration: 14ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Authentication.Cookies.dll&apos;" date="2026-01-06T08:37:50.983" /><!-- duration: 29ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Authentication.Core.dll&apos;" date="2026-01-06T08:37:51.042" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Authentication.dll&apos;" date="2026-01-06T08:37:51.078" /><!-- duration: 11ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Authentication.OAuth.dll&apos;" date="2026-01-06T08:37:51.107" /><!-- duration: 13ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Authorization.dll&apos;" date="2026-01-06T08:37:51.136" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Authorization.Policy.dll&apos;" date="2026-01-06T08:37:51.167" /><!-- duration: 18ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Components.Authorization.dll&apos;" date="2026-01-06T08:37:51.204" /><!-- duration: 10ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Components.dll&apos;" date="2026-01-06T08:37:51.233" /><!-- duration: 13ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Components.Endpoints.dll&apos;" date="2026-01-06T08:37:51.261" /><!-- duration: 19ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Components.Forms.dll&apos;" date="2026-01-06T08:37:51.308" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Components.Server.dll&apos;" date="2026-01-06T08:37:51.339" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Components.Web.dll&apos;" date="2026-01-06T08:37:51.371" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Connections.Abstractions.dll&apos;" date="2026-01-06T08:37:51.406" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.CookiePolicy.dll&apos;" date="2026-01-06T08:37:51.433" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Cors.dll&apos;" date="2026-01-06T08:37:51.480" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Cryptography.Internal.dll&apos;" date="2026-01-06T08:37:51.511" /><!-- duration: 16ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Cryptography.KeyDerivation.dll&apos;" date="2026-01-06T08:37:51.545" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.DataProtection.Abstractions.dll&apos;" date="2026-01-06T08:37:51.574" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.DataProtection.dll&apos;" date="2026-01-06T08:37:51.605" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.DataProtection.Extensions.dll&apos;" date="2026-01-06T08:37:51.641" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Diagnostics.Abstractions.dll&apos;" date="2026-01-06T08:37:51.669" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Diagnostics.dll&apos;" date="2026-01-06T08:37:51.699" /><!-- duration: 17ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Diagnostics.HealthChecks.dll&apos;" date="2026-01-06T08:37:51.735" /><!-- duration: 10ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.dll&apos;" date="2026-01-06T08:37:51.777" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.HostFiltering.dll&apos;" date="2026-01-06T08:37:52.497" /><!-- duration: 18ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Hosting.Abstractions.dll&apos;" date="2026-01-06T08:37:52.559" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Hosting.dll&apos;" date="2026-01-06T08:37:52.576" /><!-- duration: 29ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Hosting.Server.Abstractions.dll&apos;" date="2026-01-06T08:37:52.624" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Html.Abstractions.dll&apos;" date="2026-01-06T08:37:52.652" /><!-- duration: 18ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Http.Abstractions.dll&apos;" date="2026-01-06T08:37:52.683" /><!-- duration: 16ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Http.Connections.Common.dll&apos;" date="2026-01-06T08:37:52.717" /><!-- duration: 13ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Http.Connections.dll&apos;" date="2026-01-06T08:37:52.746" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Http.dll&apos;" date="2026-01-06T08:37:52.793" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Http.Extensions.dll&apos;" date="2026-01-06T08:37:52.841" /><!-- duration: 0ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Http.Features.dll&apos;" date="2026-01-06T08:37:52.871" /><!-- duration: 18ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.Http.Results.dll&apos;" date="2026-01-06T08:37:52.907" /><!-- duration: 10ms -->
+            <step title="Deleting file: &apos;Microsoft.AspNetCore.HttpLogging.dll&apos;" date="2026-01-06T08:37:52.935" /><!-- duration: 19ms -->
+            <step title="Omitting next output lines..." date="2026-01-06T08:37:52.984" /><!-- duration: 0ms -->
+            <step title="Finished successfully." date="2026-01-06T08:38:05.168" /><!-- duration: 18ms -->
+          </step><!-- duration: 18705ms -->
+          <step title="Build completed succesfully." date="2026-01-06T08:38:05.371" /><!-- duration: 0ms -->
+          <step title="Running post deployment command(s)..." date="2026-01-06T08:38:05.433" /><!-- duration: 16ms -->
+          <step title="Requesting site restart" date="2026-01-06T08:38:05.605" /><!-- duration: 0ms -->
+          <step title="Requesting site restart" date="2026-01-06T08:38:05.623" /><!-- duration: 19ms -->
+          <step title="Requesting site restart. Attempt #1" date="2026-01-06T08:38:05.715" /><!-- duration: 16ms -->
+          <step title="Requesting site restart. Attempt #1" date="2026-01-06T08:38:05.746" /><!-- duration: 0ms -->
+          <step title="Successfully requested a restart. Attempt #1" date="2026-01-06T08:38:08.965" /><!-- duration: 16ms -->
+          <step title="Successfully requested a restart. Attempt #1" date="2026-01-06T08:38:09.000" /><!-- duration: 0ms -->
+          <step title="Deployment successful. DEPLOYMENTINFO: deploymentPath = OneDeploy, deployer = OneDeploy, os = windows, sku = Basic, siteName = staybot-api, siteHostName = staybot-api.azurewebsites.net, deploymentStatus = Success" date="2026-01-06T08:38:09.122" /><!-- duration: 18ms -->
+          <step title="Purge deployment items" date="2026-01-06T08:38:09.636" >
+            <step title="Remove 6697306bd, Success, received at 1/5/2026 8:32:28 PM" date="2026-01-06T08:38:09.855" /><!-- duration: 0ms -->
+          </step><!-- duration: 234ms -->
+        </step><!-- duration: 24408ms -->
+      </step><!-- duration: 25095ms -->
+      <step title="Cleaning up temp files" date="2026-01-06T08:38:09.954" /><!-- duration: 10ms -->
+      <step title="Skip function trigger and logicapp sync because function is not enabled." date="2026-01-06T08:38:10.012" /><!-- duration: 0ms -->
+    </step><!-- duration: 30282ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2026-01-06T08:38:10.094" /><!-- duration: 0ms -->
+    <step title="Deleting shutdown sentinel file" date="2026-01-06T08:38:10.136" SemaphoreCount="8" /><!-- duration: 0ms -->
+  </step><!-- duration: 38181ms -->
+  <step title="Outgoing response" date="2026-01-06T08:38:10.231" type="response" statusCode="200" statusText="OK" Server="Microsoft-IIS/10.0" x-ms-request-id="e4b4ba23-eada-11f0-9715-5414f369fc7f" Cache-Control="private" X-AspNet-Version="4.0.30319" /><!-- duration: 31ms -->
+</step><!-- duration: 41007ms -->

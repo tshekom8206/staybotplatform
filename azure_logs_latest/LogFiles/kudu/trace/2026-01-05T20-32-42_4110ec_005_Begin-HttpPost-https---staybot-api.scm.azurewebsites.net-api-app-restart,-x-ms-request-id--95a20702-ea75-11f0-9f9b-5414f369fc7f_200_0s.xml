@@ -1,0 +1,3 @@
+<step title="Begin HttpPost https://staybot-api.scm.azurewebsites.net/api/app/restart, x-ms-request-id: 95a20702-ea75-11f0-9f9b-5414f369fc7f" date="2026-01-05T20:32:42.324" instance="4110ec" >
+  <step title="Cleanup Xml Logs" date="2026-01-05T20:32:42.324" /><!-- duration: 16ms -->
+</step><!-- duration: 16ms -->

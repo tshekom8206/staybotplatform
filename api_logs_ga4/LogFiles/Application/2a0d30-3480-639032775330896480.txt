@@ -1,0 +1,11 @@
+2026-01-06T06:25:30  PID[3480] Information 1/6/2026 6:25:29 AM [[4.8]] [dw0sdwk000J2H] DaasRunner.exe with version 4.8.40625.1 and ProcessId=3480 started
+2026-01-06T06:25:33  PID[3480] Information 1/6/2026 6:25:33 AM [[4.8]] [dw0sdwk000J2H] Checking DaaS bits and updating if required
+2026-01-06T06:25:33  PID[3480] Information 1/6/2026 6:25:33 AM [[4.8]] [dw0sdwk000J2H] [daasrunner.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-06T06:25:33  PID[3480] Information 1/6/2026 6:25:33 AM [[4.8]] [dw0sdwk000J2H] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-06T06:25:33  PID[3480] Information 1/6/2026 6:25:33 AM [[4.8]] [dw0sdwk000J2H] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-06T06:25:33  PID[3480] Information 1/6/2026 6:25:33 AM [[4.8]] [dw0sdwk000J2H] [daasconsole.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-06T06:25:33  PID[3480] Information 1/6/2026 6:25:33 AM [[4.8]] [dw0sdwk000J2H] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-06T06:25:33  PID[3480] Information 1/6/2026 6:25:33 AM [[4.8]] [dw0sdwk000J2H] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-06T06:25:33  PID[3480] Information 1/6/2026 6:25:33 AM [[4.8]] [dw0sdwk000J2H] Done checking DaaS bits for any new updates
+2026-01-06T06:26:53  PID[3480] Information 1/6/2026 6:26:53 AM [[4.8]] [dw0sdwk000J2H] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2026-01-06T06:26:53  PID[3480] Information 1/6/2026 6:26:53 AM [[4.8]] [dw0sdwk000J2H] Storage account is not configured

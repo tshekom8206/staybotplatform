@@ -1,0 +1,3 @@
+<step title="Incoming Request" date="2025-12-23T22:31:16.259" instance="3ffd02" url="/dump" method="GET" type="request" pid="5100,2,12" Accept-Encoding="identity" Authorization="Bea..." Host="staybot-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" x-ms-client-request-id="143d8650-e04f-11f0-800c-5414f369fc7f" X-ARR-LOG-ID="143d8650-e04f-11f0-800c-5414f369fc7f" CLIENT-IP="41.121.27.46:60232" X-SITE-DEPLOYMENT-ID="staybot-api" WAS-DEFAULT-HOSTNAME="staybot-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/dump" >
+  <step title="Cleanup Xml Logs" date="2025-12-23T22:31:16.274" /><!-- duration: 16ms -->
+  <step title="ZipStreamContent.OnZip" date="2025-12-23T22:31:16.358" 

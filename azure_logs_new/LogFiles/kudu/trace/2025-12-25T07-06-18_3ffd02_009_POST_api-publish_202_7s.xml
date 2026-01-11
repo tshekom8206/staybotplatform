@@ -1,0 +1,16 @@
+<step title="Incoming Request" date="2025-12-25T07:06:18.377" instance="3ffd02" url="/api/publish?type=zip&amp;async=True" method="POST" type="request" pid="8064,2,13" Cache-Control="no-cache" Content-Length="45699055" Content-Type="application/octet-stream" Accept="*/*" Accept-Encoding="gzip, deflate" Authorization="Bea..." Host="staybot-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" x-ms-client-request-id="307b5d7d-e160-11f0-b723-5414f369fc7f" X-ARR-LOG-ID="307b5d7d-e160-11f0-b723-5414f369fc7f" CLIENT-IP="41.121.49.179:44018" X-SITE-DEPLOYMENT-ID="staybot-api" WAS-DEFAULT-HOSTNAME="staybot-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip&amp;async=True" >
+  <step title="Cleanup Xml Logs" date="2025-12-25T07:06:18.388" /><!-- duration: 16ms -->
+  <step title="OneDeploy" date="2025-12-25T07:06:18.419" >
+    <step title="Starting PushDeployAsync" date="2025-12-25T07:06:18.435" /><!-- duration: 0ms -->
+    <step title="Updating shutdown sentinel last write time" date="2025-12-25T07:06:18.451" SemaphoreCount="7" /><!-- duration: 0ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2025-12-25T07:06:18.466" /><!-- duration: 0ms -->
+    <step title="Saving request content to C:\local\Temp\zipdeploy\yoo2c3b3.zip" date="2025-12-25T07:06:18.466" >
+      <step title="Total 45,699,055 bytes written to C:\local\Temp\zipdeploy\yoo2c3b3.zip" date="2025-12-25T07:06:25.513" /><!-- duration: 0ms -->
+    </step><!-- duration: 7047ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2025-12-25T07:06:25.529" /><!-- duration: 0ms -->
+    <step title="Deleting shutdown sentinel file" date="2025-12-25T07:06:25.544" SemaphoreCount="8" /><!-- duration: 0ms -->
+    <step title="Starting FetchDeploy" date="2025-12-25T07:06:25.560" /><!-- duration: 0ms -->
+    <step title="Start deployment in the background" date="2025-12-25T07:06:25.560" /><!-- duration: 190ms -->
+  </step><!-- duration: 7344ms -->
+  <step title="Outgoing response" date="2025-12-25T07:06:25.860" type="response" statusCode="202" statusText="Accepted" Server="Microsoft-IIS/10.0" x-ms-request-id="307b5d7d-e160-11f0-b723-5414f369fc7f" Retry-After="30" Cache-Control="private" X-AspNet-Version="4.0.30319" Location="https://staybot-api.scm.azurewebsites.net/api/deployments/latest?deployer=OneDeploy&amp;time=2025-12-25_07-06-25Z" /><!-- duration: 12ms -->
+</step><!-- duration: 7496ms -->

@@ -1,0 +1,11 @@
+2026-01-09T18:37:51  PID[6168] Information 1/9/2026 6:37:49 PM [[4.8]] [dw1sdwk000MER] DaasRunner.exe with version 4.8.40625.1 and ProcessId=6168 started
+2026-01-09T18:37:53  PID[6168] Information 1/9/2026 6:37:53 PM [[4.8]] [dw1sdwk000MER] Checking DaaS bits and updating if required
+2026-01-09T18:37:54  PID[6168] Information 1/9/2026 6:37:54 PM [[4.8]] [dw1sdwk000MER] [daasrunner.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-09T18:37:54  PID[6168] Information 1/9/2026 6:37:54 PM [[4.8]] [dw1sdwk000MER] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-09T18:37:54  PID[6168] Information 1/9/2026 6:37:54 PM [[4.8]] [dw1sdwk000MER] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-09T18:37:54  PID[6168] Information 1/9/2026 6:37:54 PM [[4.8]] [dw1sdwk000MER] [daasconsole.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-09T18:37:54  PID[6168] Information 1/9/2026 6:37:54 PM [[4.8]] [dw1sdwk000MER] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-09T18:37:55  PID[6168] Information 1/9/2026 6:37:55 PM [[4.8]] [dw1sdwk000MER] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-09T18:37:55  PID[6168] Information 1/9/2026 6:37:55 PM [[4.8]] [dw1sdwk000MER] Done checking DaaS bits for any new updates
+2026-01-09T18:39:15  PID[6168] Information 1/9/2026 6:39:15 PM [[4.8]] [dw1sdwk000MER] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2026-01-09T18:39:15  PID[6168] Information 1/9/2026 6:39:15 PM [[4.8]] [dw1sdwk000MER] Storage account is not configured

@@ -1,0 +1,16 @@
+<step title="Incoming Request" date="2025-10-15T11:45:46.149" instance="560c43" url="/api/siteextensions/Microsoft.AspNetCore.AzureAppServices.SiteExtension" method="PUT" type="request" pid="5352,2,28" Content-Length="0" Content-Type="application/json; charset=utf-8" Content-Encoding="utf-8" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cookie="ARRAffinity=560c4336c646bab1a2e95ea0b2617924131cab5b64495c593a3e757d98944456; ARRAffinitySameSite=560c4336c646bab1a2e95ea0b2617924131cab5b64495c593a3e757d98944456" Host="staybot-api.scm.azurewebsites.net" User-Agent="Visual-Studio/17.14.17+36603.0 WebToolsExtension/17.14.128.55757" X-ARR-LOG-ID="101ebb43-07d1-48eb-b1c6-9109846013fa" CLIENT-IP="197.221.123.109:55684" X-SITE-DEPLOYMENT-ID="staybot-api" WAS-DEFAULT-HOSTNAME="staybot-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/siteextensions/Microsoft.AspNetCore.AzureAppServices.SiteExtension" >
+  <step title="Cleanup Xml Logs" date="2025-10-15T11:45:46.162" /><!-- duration: 0ms -->
+  <step title="Installing Microsoft.AspNetCore.AzureAppServices.SiteExtension, version:  from feed: , packageUri: " date="2025-10-15T11:45:47.992" /><!-- duration: 0ms -->
+  <step title="Installing &apos;Microsoft.AspNetCore.AzureAppServices.SiteExtension&apos; version &apos;&apos; from &apos;&apos;" date="2025-10-15T11:45:48.680" >
+    <step title="Site Extension Microsoft.AspNetCore.AzureAppServices.SiteExtension local version is 10.0.0-rc-2-25502-107" date="2025-10-15T11:45:48.852" /><!-- duration: 16ms -->
+    <step title="Site Extension Microsoft.AspNetCore.AzureAppServices.SiteExtension remote version is 10.0.0-rc-2-25502-107" date="2025-10-15T11:45:54.340" /><!-- duration: 16ms -->
+    <step title="Site Extension with id Microsoft.AspNetCore.AzureAppServices.SiteExtension is already installed" date="2025-10-15T11:45:54.392" /><!-- duration: 0ms -->
+    <step title="Now querying from local repo for package &apos;Microsoft.AspNetCore.AzureAppServices.SiteExtension&apos;." date="2025-10-15T11:45:54.420" >
+      <step title="Search packages locally with filter: Microsoft.AspNetCore.AzureAppServices.SiteExtension" date="2025-10-15T11:45:54.438" /><!-- duration: 326ms -->
+      <step title="Adding local metadata to site extensions" date="2025-10-15T11:45:54.778" /><!-- duration: 235ms -->
+    </step><!-- duration: 612ms -->
+    <step title="Package Microsoft.AspNetCore.AzureAppServices.SiteExtension with version  from  with installation arguments &apos;&apos; already installed." date="2025-10-15T11:45:55.090" /><!-- duration: 0ms -->
+    <step title="Update arm settings for Microsoft.AspNetCore.AzureAppServices.SiteExtension installation. Status: OK" date="2025-10-15T11:45:55.169" /><!-- duration: 344ms -->
+  </step><!-- duration: 6884ms -->
+  <step title="Outgoing response" date="2025-10-15T11:45:55.781" type="response" statusCode="200" statusText="OK" Server="Microsoft-IIS/10.0" x-ms-request-id="101ebb43-07d1-48eb-b1c6-9109846013fa" Cache-Control="private" X-AspNet-Version="4.0.30319" Content-Type="application/json; charset=utf-8" /><!-- duration: 0ms -->
+</step><!-- duration: 9645ms -->

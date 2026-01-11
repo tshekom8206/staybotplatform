@@ -41,7 +41,11 @@
       "Bash(timeout /t 15 /nobreak)",
       "Bash(dotnet script:*)",
       "Bash(PGPASSWORD='5tayB0t2025Prod' psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot -c \"SELECT \"\"Id\"\", \"\"TaskType\"\", \"\"Description\"\", \"\"CreatedAt\"\" FROM \"\"StaffTasks\"\" WHERE \"\"Description\"\" ILIKE ''%hair%'' OR \"\"Description\"\" ILIKE ''%dryer%'' ORDER BY \"\"Id\"\" DESC LIMIT 5;\")",
-      "Bash(PGPASSWORD='5tayB0t2025Prod' psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot -c \"UPDATE \"\"BusinessInfo\"\" SET \"\"Content\"\" = ''{\"\"network\"\": \"\"PanoramaView_Guest\"\", \"\"password\"\": \"\"Welcome2024\"\"}'' WHERE \"\"Id\"\" = 83 RETURNING \"\"Content\"\";\")"
+      "Bash(PGPASSWORD='5tayB0t2025Prod' psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot -c \"UPDATE \"\"BusinessInfo\"\" SET \"\"Content\"\" = ''{\"\"network\"\": \"\"PanoramaView_Guest\"\", \"\"password\"\": \"\"Welcome2024\"\"}'' WHERE \"\"Id\"\" = 83 RETURNING \"\"Content\"\";\")",
+      "Bash(npm install:*)",
+      "Bash(timeout /t 8 /nobreak)",
+      "Bash(PGPASSWORD='staybotsecure2025' PGSSLMODE=require psql:*)",
+      "Bash(PGPASSWORD='staybotsecure2025' PGSSLMODE=require psql -h staybot-prod-psql.postgres.database.azure.com -U staybot_admin -d staybot -c \"SELECT \"\"Id\"\", \"\"Name\"\", \"\"Slug\"\", \"\"Status\"\" FROM \"\"Tenants\"\";\")"
     ],
     "deny": [],
     "ask": []

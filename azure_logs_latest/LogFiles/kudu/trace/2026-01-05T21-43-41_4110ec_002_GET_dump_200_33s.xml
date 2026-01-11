@@ -1,0 +1,212 @@
+<step title="Incoming Request" date="2026-01-05T21:43:41.004" instance="4110ec" url="/dump" method="GET" type="request" pid="3168,2,7" Connection="Keep-Alive" Accept-Encoding="identity" Authorization="Bea..." Host="staybot-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" x-ms-client-request-id="8ba47197-ea7f-11f0-9129-5414f369fc7f" X-ARR-LOG-ID="8ba47197-ea7f-11f0-9129-5414f369fc7f" CLIENT-IP="41.121.55.137:6599" X-SITE-DEPLOYMENT-ID="staybot-api" WAS-DEFAULT-HOSTNAME="staybot-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/dump" X-MS-COLDSTART="1" >
+  <step title="ZipStreamContent.OnZip" date="2026-01-05T21:43:44.365" >
+    <step title="Error occurred" date="2026-01-05T21:43:47.519" type="error" text="C:\home\LogFiles\Application\684b49-6068-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\684b49-6068-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\684b49-6068-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:47.534" type="error" text="C:\home\LogFiles\Application\684b49-6136-639025376860421318.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\684b49-6136-639025376860421318.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\684b49-6136-639025376860421318.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:47.553" type="error" text="C:\home\LogFiles\Application\684b49-6136-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\684b49-6136-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\684b49-6136-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:47.566" type="error" text="C:\home\LogFiles\Application\684b49-6556-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\684b49-6556-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\684b49-6556-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:47.628" type="error" text="C:\home\LogFiles\Application\930e67-3016-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\930e67-3016-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\930e67-3016-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 21ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:47.659" type="error" text="C:\home\LogFiles\Application\930e67-3780-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\930e67-3780-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\930e67-3780-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 19ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:47.691" type="error" text="C:\home\LogFiles\Application\930e67-940-logging-errors.txt, System.IO.IOException: The process cannot access the file &apos;C:\home\LogFiles\Application\930e67-940-logging-errors.txt&apos; because it is being used by another process.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 17ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.086" type="error" text="C:\home\LogFiles\Application\cedd25-2356-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\cedd25-2356-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\cedd25-2356-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.116" type="error" text="C:\home\LogFiles\Application\cedd25-7940-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\cedd25-7940-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\cedd25-7940-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 12ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.147" type="error" text="C:\home\LogFiles\Application\dda7cc-3856-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\dda7cc-3856-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\dda7cc-3856-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.191" type="error" text="C:\home\LogFiles\Application\dda7cc-5100-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\dda7cc-5100-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\dda7cc-5100-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 20ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.210" type="error" text="C:\home\LogFiles\Application\dda7cc-5832-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\dda7cc-5832-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\dda7cc-5832-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 12ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.222" type="error" text="C:\home\LogFiles\Application\dda7cc-5940-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\dda7cc-5940-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\dda7cc-5940-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.238" type="error" text="C:\home\LogFiles\Application\dda7cc-6500-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\dda7cc-6500-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\dda7cc-6500-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.238" type="error" text="C:\home\LogFiles\Application\dda7cc-6932-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\dda7cc-6932-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\dda7cc-6932-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 15ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.253" type="error" text="C:\home\LogFiles\Application\dda7cc-6948-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\dda7cc-6948-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\dda7cc-6948-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.253" type="error" text="C:\home\LogFiles\Application\dda7cc-7244-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\dda7cc-7244-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\dda7cc-7244-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 16ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.269" type="error" text="C:\home\LogFiles\Application\dda7cc-8196-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\dda7cc-8196-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\dda7cc-8196-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.286" type="error" text="C:\home\LogFiles\Application\eef76b-2244-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\eef76b-2244-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\eef76b-2244-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 49ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.350" type="error" text="C:\home\LogFiles\Application\eef76b-5848-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\eef76b-5848-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\eef76b-5848-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.366" type="error" text="C:\home\LogFiles\Application\f0cc5f-3892-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\f0cc5f-3892-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\f0cc5f-3892-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.366" type="error" text="C:\home\LogFiles\Application\f0cc5f-4752-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\f0cc5f-4752-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\f0cc5f-4752-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 16ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.382" type="error" text="C:\home\LogFiles\Application\f0cc5f-5260-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\f0cc5f-5260-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\f0cc5f-5260-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.397" type="error" text="C:\home\LogFiles\Application\f0cc5f-7992-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\f0cc5f-7992-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\f0cc5f-7992-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.397" type="error" text="C:\home\LogFiles\Application\f650ce-4884-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\f650ce-4884-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\f650ce-4884-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 47ms -->
+    <step title="Error occurred" date="2026-01-05T21:43:48.460" type="error" text="C:\home\LogFiles\Application\f650ce-7024-logging-errors.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\Application\f650ce-7024-logging-errors.txt&apos;.
+File name: &apos;C:\home\LogFiles\Application\f650ce-7024-logging-errors.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
+  </step><!-- duration: 29277ms -->
+  <step title="Outgoing response" date="2026-01-05T21:44:13.808" type="response" statusCode="200" statusText="OK" Server="Microsoft-IIS/10.0" x-ms-request-id="8ba47197-ea7f-11f0-9129-5414f369fc7f" Content-Disposition="attachment; filename=dump-01-05-21-43-44.zip" Cache-Control="no-cache" X-AspNet-Version="4.0.30319" Content-Type="application/zip" Pragma="no-cache" Expires="-1" /><!-- duration: 31ms -->
+</step><!-- duration: 32855ms -->

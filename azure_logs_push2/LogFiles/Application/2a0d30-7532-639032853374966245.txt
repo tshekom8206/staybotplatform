@@ -1,0 +1,15 @@
+2026-01-06T08:35:35  PID[7532] Information 1/6/2026 8:35:35 AM [[4.8]] [dw0sdwk000J2H] DaasRunner.exe with version 4.8.40625.1 and ProcessId=7532 started
+2026-01-06T08:35:37  PID[7532] Information 1/6/2026 8:35:37 AM [[4.8]] [dw0sdwk000J2H] Checking DaaS bits and updating if required
+2026-01-06T08:35:38  PID[7532] Information 1/6/2026 8:35:38 AM [[4.8]] [dw0sdwk000J2H] [daasrunner.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-06T08:35:38  PID[7532] Information 1/6/2026 8:35:38 AM [[4.8]] [dw0sdwk000J2H] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-06T08:35:38  PID[7532] Information 1/6/2026 8:35:38 AM [[4.8]] [dw0sdwk000J2H] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-06T08:35:38  PID[7532] Information 1/6/2026 8:35:38 AM [[4.8]] [dw0sdwk000J2H] [daasconsole.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-06T08:35:38  PID[7532] Information 1/6/2026 8:35:38 AM [[4.8]] [dw0sdwk000J2H] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-06T08:35:38  PID[7532] Information 1/6/2026 8:35:38 AM [[4.8]] [dw0sdwk000J2H] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-06T08:35:38  PID[7532] Information 1/6/2026 8:35:38 AM [[4.8]] [dw0sdwk000J2H] Done checking DaaS bits for any new updates
+2026-01-06T08:36:59  PID[7532] Information 1/6/2026 8:36:59 AM [[4.8]] [dw0sdwk000J2H] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2026-01-06T08:36:59  PID[7532] Information 1/6/2026 8:36:59 AM [[4.8]] [dw0sdwk000J2H] Storage account is not configured
+2026-01-06T12:36:59  PID[7532] Information 1/6/2026 12:36:59 PM [[4.8]] [dw0sdwk000J2H] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2026-01-06T12:36:59  PID[7532] Information 1/6/2026 12:36:59 PM [[4.8]] [dw0sdwk000J2H] Storage account is not configured
+2026-01-06T16:36:59  PID[7532] Information 1/6/2026 4:36:59 PM [[4.8]] [dw0sdwk000J2H] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2026-01-06T16:36:59  PID[7532] Information 1/6/2026 4:36:59 PM [[4.8]] [dw0sdwk000J2H] Storage account is not configured

@@ -1,0 +1,69 @@
+<step title="BackgroundTrace" date="2025-10-15T11:54:12.238" instance="560c43" url="/api/zipdeploy" method="POST" >
+  <step title="Updating shutdown sentinel last write time" date="2025-10-15T11:54:12.273" SemaphoreCount="7" /><!-- duration: 0ms -->
+  <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2025-10-15T11:54:12.285" /><!-- duration: 0ms -->
+  <step title="Creating temporary deployment" date="2025-10-15T11:54:12.301" /><!-- duration: 47ms -->
+  <step title="Performing fetch based deployment" date="2025-10-15T11:54:12.365" >
+    <step title="Fetching changes." date="2025-10-15T11:54:12.457" /><!-- duration: 16ms -->
+    <step title="Starting LocalZipHandler" date="2025-10-15T11:54:12.488" /><!-- duration: 0ms -->
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\lm01ttne.zip (19.32 MB) to C:\local\Temp\zipdeploy\extracted" date="2025-10-15T11:54:12.598" /><!-- duration: 0ms -->
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\lm01ttne.zip (19.32 MB) to C:\local\Temp\zipdeploy\extracted" date="2025-10-15T11:54:12.613" >
+      <step title="Renaming extractTargetDirectory(C:\local\Temp\zipdeploy\extracted) to tempDirectory(C:\local\Temp\zipdeploy\pyueimhi.uat)" date="2025-10-15T11:54:12.632" /><!-- duration: 13ms -->
+      <step title="Extracting 96 entries to C:\local\Temp\zipdeploy\extracted directory" date="2025-10-15T11:54:12.865" >
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\appsettings.Development.json ..." date="2025-10-15T11:54:12.973" /><!-- duration: 34ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\appsettings.json ..." date="2025-10-15T11:54:13.020" /><!-- duration: 16ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\appsettings.Production.json ..." date="2025-10-15T11:54:13.098" /><!-- duration: 15ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\Azure.AI.OpenAI.dll ..." date="2025-10-15T11:54:13.130" /><!-- duration: 47ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\Azure.Core.dll ..." date="2025-10-15T11:54:13.207" /><!-- duration: 31ms -->
+        <step title="Omitting extracting file traces ..." date="2025-10-15T11:54:13.254" /><!-- duration: 110ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-SemiBold.ttf ..." date="2025-10-15T11:54:15.832" /><!-- duration: 109ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-SemiBoldItalic.ttf ..." date="2025-10-15T11:54:16.007" /><!-- duration: 107ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-Thin.ttf ..." date="2025-10-15T11:54:16.132" /><!-- duration: 48ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-ThinItalic.ttf ..." date="2025-10-15T11:54:16.208" /><!-- duration: 30ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\OFL.txt ..." date="2025-10-15T11:54:16.257" /><!-- duration: 12ms -->
+      </step><!-- duration: 3405ms -->
+    </step><!-- duration: 3672ms -->
+    <step title="Before sending BuildRequestReceived status to /api/updatedeploystatus" date="2025-10-15T11:54:16.285" /><!-- duration: 16ms -->
+    <step title="DeploymentManager.Deploy(id:fbe12c5b87e049c1ba2fc344db33e47f)" date="2025-10-15T11:54:16.301" >
+      <step title="Collecting changeset information" date="2025-10-15T11:54:16.317" /><!-- duration: 47ms -->
+      <step title="Updating submodules" date="2025-10-15T11:54:16.398" >
+        <step title="Updating submodules." date="2025-10-15T11:54:16.488" /><!-- duration: 65ms -->
+      </step><!-- duration: 155ms -->
+      <step title="Preparing deployment for commit id &apos;fbe12c5b87&apos;." date="2025-10-15T11:54:16.629" /><!-- duration: 16ms -->
+      <step title="Determining deployment builder" date="2025-10-15T11:54:16.695" >
+        <step title="Builder is BasicBuilder" date="2025-10-15T11:54:16.710" /><!-- duration: 0ms -->
+      </step><!-- duration: 31ms -->
+      <step title="Copying SSH keys" date="2025-10-15T11:54:16.760" /><!-- duration: 0ms -->
+      <step title="Building" date="2025-10-15T11:54:16.773" >
+        <step title="Generating deployment script." date="2025-10-15T11:54:16.835" /><!-- duration: 16ms -->
+        <step title="Generating deployment script" date="2025-10-15T11:54:16.851" >
+          <step title="Using cached version of the deployment script for command: -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;" date="2025-10-15T11:54:16.898" /><!-- duration: 0ms -->
+          <step title="Using cached version of deployment script (command: &apos;azure -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;&apos;)." date="2025-10-15T11:54:16.913" /><!-- duration: 16ms -->
+        </step><!-- duration: 78ms -->
+        <step title="Running deployment command..." date="2025-10-15T11:54:17.103" /><!-- duration: 13ms -->
+        <step title="Command: &quot;C:\home\site\deployments\tools\deploy.cmd&quot;" date="2025-10-15T11:54:17.148" /><!-- duration: 16ms -->
+        <step title="Executing external process" date="2025-10-15T11:54:17.179" type="process" path="starter.cmd" arguments="&quot;C:\home\site\deployments\tools\deploy.cmd&quot;" >
+          <step title="Handling Basic Web Site deployment." date="2025-10-15T11:54:17.991" /><!-- duration: 16ms -->
+          <step title="Creating app_offline.htm" date="2025-10-15T11:54:19.195" /><!-- duration: 16ms -->
+          <step title="KuduSync.NET from: &apos;C:\local\Temp\zipdeploy\extracted&apos; to: &apos;C:\home\site\wwwroot&apos;" date="2025-10-15T11:54:19.244" /><!-- duration: 13ms -->
+          <step title="Copying file: &apos;Hostr.Api.deps.json&apos;" date="2025-10-15T11:54:19.291" /><!-- duration: 17ms -->
+          <step title="Copying file: &apos;Hostr.Api.dll&apos;" date="2025-10-15T11:54:19.335" /><!-- duration: 16ms -->
+          <step title="Copying file: &apos;Hostr.Api.exe&apos;" date="2025-10-15T11:54:19.386" /><!-- duration: 13ms -->
+          <step title="Copying file: &apos;Hostr.Api.pdb&apos;" date="2025-10-15T11:54:19.413" /><!-- duration: 0ms -->
+          <step title="Deleting app_offline.htm" date="2025-10-15T11:54:19.429" /><!-- duration: 16ms -->
+          <step title="Finished successfully." date="2025-10-15T11:54:19.445" /><!-- duration: 16ms -->
+        </step><!-- duration: 2281ms -->
+        <step title="Running post deployment command(s)..." date="2025-10-15T11:54:19.538" /><!-- duration: 0ms -->
+        <step title="Triggering recycle (preview mode disabled)." date="2025-10-15T11:54:19.632" /><!-- duration: 16ms -->
+        <step title="Ignoring FS watcher based recycle request as this is a classic Windows app." date="2025-10-15T11:54:19.648" /><!-- duration: 16ms -->
+        <step title="Deployment successful. DEPLOYMENTINFO: deploymentPath = ZipDeploy. Extract zip. , deployer = ZipDeploy, os = windows, sku = Basic, siteName = staybot-api, siteHostName = staybot-api.azurewebsites.net, deploymentStatus = Success" date="2025-10-15T11:54:19.741" /><!-- duration: 0ms -->
+        <step title="Purge deployment items" date="2025-10-15T11:54:19.913" >
+          <step title="Remove e66a34ea7, Success, received at 10/5/2025 10:02:31 AM" date="2025-10-15T11:54:20.013" /><!-- duration: 0ms -->
+        </step><!-- duration: 116ms -->
+      </step><!-- duration: 3303ms -->
+    </step><!-- duration: 3791ms -->
+    <step title="Cleaning up temp files" date="2025-10-15T11:54:20.091" /><!-- duration: 16ms -->
+    <step title="Skip function trigger and logicapp sync because function is not enabled." date="2025-10-15T11:54:20.123" /><!-- duration: 16ms -->
+  </step><!-- duration: 7804ms -->
+  <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2025-10-15T11:54:20.185" /><!-- duration: 16ms -->
+  <step title="Deleting shutdown sentinel file" date="2025-10-15T11:54:20.219" SemaphoreCount="8" /><!-- duration: 28ms -->
+</step><!-- duration: 8009ms -->

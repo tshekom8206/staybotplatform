@@ -1,0 +1,6 @@
+<exception>System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\kudu\trace\2025-12-23T11-48-56_20aa02_026_POST_api-publish_pending.xml&apos;.
+File name: &apos;C:\home\LogFiles\kudu\trace\2025-12-23T11-48-56_20aa02_026_POST_api-publish_pending.xml&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.File.InternalMove(String sourceFileName, String destFileName, Boolean checkHost)
+   at System.IO.Abstractions.FileWrapper.Move(String sourceFileName, String destFileName)
+   at Kudu.Core.Tracing.XmlTracer.WriteEndTrace()</exception>

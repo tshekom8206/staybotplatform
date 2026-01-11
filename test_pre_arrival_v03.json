@@ -1,0 +1,30 @@
+{
+  "messaging_product": "whatsapp",
+  "to": "27783776207",
+  "type": "template",
+  "template": {
+    "name": "pre_arrival_welcome_v03",
+    "language": {
+      "code": "en"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {"type": "text", "text": "Tsheko"},
+          {"type": "text", "text": "Dakarai B&B"},
+          {"type": "text", "text": "101"},
+          {"type": "text", "text": "Friday, March 15 at 2:00 PM"}
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "url",
+        "index": "0",
+        "parameters": [
+          {"type": "text", "text": "eyJ0IjoiZGFrYXJhaSIsInAiOiJwcmVwYXJlIn0="}
+        ]
+      }
+    ]
+  }
+}

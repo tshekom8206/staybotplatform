@@ -1,0 +1,116 @@
+<step title="BackgroundTrace" date="2025-12-23T11:13:31.188" instance="20aa02" url="/api/publish" method="POST" >
+  <step title="Cleanup Xml Logs" date="2025-12-23T11:13:31.188" /><!-- duration: 16ms -->
+  <step title="Updating shutdown sentinel last write time" date="2025-12-23T11:13:31.251" SemaphoreCount="7" /><!-- duration: 0ms -->
+  <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2025-12-23T11:13:31.251" /><!-- duration: 0ms -->
+  <step title="Creating temporary deployment" date="2025-12-23T11:13:31.266" /><!-- duration: 125ms -->
+  <step title="Performing fetch based deployment" date="2025-12-23T11:13:31.438" >
+    <step title="Fetching changes." date="2025-12-23T11:13:31.767" /><!-- duration: 31ms -->
+    <step title="Starting LocalZipHandler" date="2025-12-23T11:13:31.829" /><!-- duration: 0ms -->
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\icnbqrzb.zip (43.06 MB) to C:\local\Temp\zipdeploy\extracted" date="2025-12-23T11:13:31.877" /><!-- duration: 14ms -->
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\icnbqrzb.zip (43.06 MB) to C:\local\Temp\zipdeploy\extracted" date="2025-12-23T11:13:31.891" >
+      <step title="Extracting 337 entries to C:\local\Temp\zipdeploy\extracted directory" date="2025-12-23T11:13:32.018" >
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-Black.ttf ..." date="2025-12-23T11:13:32.018" /><!-- duration: 92ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-BlackItalic.ttf ..." date="2025-12-23T11:13:32.128" /><!-- duration: 50ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-Bold.ttf ..." date="2025-12-23T11:13:32.188" /><!-- duration: 49ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-BoldItalic.ttf ..." date="2025-12-23T11:13:32.237" /><!-- duration: 61ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\LatoFont\Lato-ExtraBold.ttf ..." date="2025-12-23T11:13:32.298" /><!-- duration: 49ms -->
+        <step title="Omitting extracting file traces ..." date="2025-12-23T11:13:32.347" /><!-- duration: 50ms -->
+      </step><!-- duration: 6346ms -->
+    </step><!-- duration: 6484ms -->
+    <step title="Before sending BuildRequestReceived status to /api/updatedeploystatus" date="2025-12-23T11:13:38.444" /><!-- duration: 10ms -->
+    <step title="DeploymentManager.Deploy(id:b79c4e4e65184b46b90bd67c4224a90d)" date="2025-12-23T11:13:38.474" >
+      <step title="Collecting changeset information" date="2025-12-23T11:13:38.485" /><!-- duration: 111ms -->
+      <step title="Updating submodules" date="2025-12-23T11:13:38.616" >
+        <step title="Updating submodules." date="2025-12-23T11:13:38.688" /><!-- duration: 19ms -->
+      </step><!-- duration: 91ms -->
+      <step title="Preparing deployment for commit id &apos;b79c4e4e65&apos;." date="2025-12-23T11:13:38.798" /><!-- duration: 19ms -->
+      <step title="Determining deployment builder" date="2025-12-23T11:13:38.896" >
+        <step title="Builder is OneDeployBuilder" date="2025-12-23T11:13:38.907" /><!-- duration: 0ms -->
+      </step><!-- duration: 30ms -->
+      <step title="Copying SSH keys" date="2025-12-23T11:13:38.956" /><!-- duration: 0ms -->
+      <step title="Building" date="2025-12-23T11:13:38.970" >
+        <step title="Running build. Project type: OneDeploy" date="2025-12-23T11:13:39.016" /><!-- duration: 0ms -->
+        <step title="Copying the manifest" date="2025-12-23T11:13:39.110" /><!-- duration: 17ms -->
+        <step title="Clean deploying to C:\home\site\wwwroot" date="2025-12-23T11:13:39.188" /><!-- duration: 16ms -->
+        <step title="Generating deployment script." date="2025-12-23T11:13:39.266" /><!-- duration: 0ms -->
+        <step title="Generating deployment script" date="2025-12-23T11:13:39.286" >
+          <step title="Using cached version of the deployment script for command: -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;" date="2025-12-23T11:13:39.346" /><!-- duration: 20ms -->
+          <step title="Using cached version of deployment script (command: &apos;azure -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;&apos;)." date="2025-12-23T11:13:39.376" /><!-- duration: 0ms -->
+        </step><!-- duration: 90ms -->
+        <step title="Running deployment command..." date="2025-12-23T11:13:39.426" /><!-- duration: 12ms -->
+        <step title="Command: &quot;C:\home\site\deployments\tools\deploy.cmd&quot;" date="2025-12-23T11:13:39.438" /><!-- duration: 0ms -->
+        <step title="Executing external process" date="2025-12-23T11:13:39.456" type="process" path="starter.cmd" arguments="&quot;C:\home\site\deployments\tools\deploy.cmd&quot;" >
+          <step title="Handling Basic Web Site deployment." date="2025-12-23T11:13:40.159" /><!-- duration: 20ms -->
+          <step title="Creating app_offline.htm" date="2025-12-23T11:13:42.693" /><!-- duration: 0ms -->
+          <step title="KuduSync.NET from: &apos;C:\local\Temp\zipdeploy\extracted&apos; to: &apos;C:\home\site\wwwroot&apos;" date="2025-12-23T11:13:42.704" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;Hostr.Api.dll&apos;" date="2025-12-23T11:13:42.735" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;Hostr.Api.exe&apos;" date="2025-12-23T11:13:42.752" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;Hostr.Api.pdb&apos;" date="2025-12-23T11:13:42.772" /><!-- duration: 10ms -->
+          <step title="Copying file: &apos;publish\publish\appsettings.Development.json&apos;" date="2025-12-23T11:13:42.782" /><!-- duration: 20ms -->
+          <step title="Copying file: &apos;publish\publish\appsettings.json&apos;" date="2025-12-23T11:13:42.862" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\appsettings.Production.json&apos;" date="2025-12-23T11:13:42.942" /><!-- duration: 12ms -->
+          <step title="Copying file: &apos;publish\publish\Hostr.Api.deps.json&apos;" date="2025-12-23T11:13:43.002" /><!-- duration: 30ms -->
+          <step title="Copying file: &apos;publish\publish\Hostr.Api.runtimeconfig.json&apos;" date="2025-12-23T11:13:43.063" /><!-- duration: 19ms -->
+          <step title="Copying file: &apos;publish\publish\Hostr.Api.staticwebassets.endpoints.json&apos;" date="2025-12-23T11:13:43.095" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\appsettings.Development.json&apos;" date="2025-12-23T11:13:43.143" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\appsettings.json&apos;" date="2025-12-23T11:13:43.173" /><!-- duration: 20ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\Hostr.Api.deps.json&apos;" date="2025-12-23T11:13:43.204" /><!-- duration: 18ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\Hostr.Api.runtimeconfig.json&apos;" date="2025-12-23T11:13:43.272" /><!-- duration: 11ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\Hostr.Api.staticwebassets.endpoints.json&apos;" date="2025-12-23T11:13:43.282" /><!-- duration: 19ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\appsettings.Development.json&apos;" date="2025-12-23T11:13:43.331" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\appsettings.json&apos;" date="2025-12-23T11:13:43.361" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\Hostr.Api.deps.json&apos;" date="2025-12-23T11:13:43.391" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\Hostr.Api.runtimeconfig.json&apos;" date="2025-12-23T11:13:43.411" /><!-- duration: 11ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\Hostr.Api.staticwebassets.endpoints.json&apos;" date="2025-12-23T11:13:43.441" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\appsettings.Development.json&apos;" date="2025-12-23T11:13:43.471" /><!-- duration: 20ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\appsettings.json&apos;" date="2025-12-23T11:13:43.522" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\Hostr.Api.deps.json&apos;" date="2025-12-23T11:13:43.552" /><!-- duration: 30ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\Hostr.Api.runtimeconfig.json&apos;" date="2025-12-23T11:13:43.673" /><!-- duration: 48ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\Hostr.Api.staticwebassets.endpoints.json&apos;" date="2025-12-23T11:13:43.813" /><!-- duration: 18ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\appsettings.Development.json&apos;" date="2025-12-23T11:13:43.861" /><!-- duration: 30ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\appsettings.json&apos;" date="2025-12-23T11:13:43.923" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\Hostr.Api.deps.json&apos;" date="2025-12-23T11:13:43.954" /><!-- duration: 18ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\Hostr.Api.runtimeconfig.json&apos;" date="2025-12-23T11:13:43.972" /><!-- duration: 14ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\Hostr.Api.staticwebassets.endpoints.json&apos;" date="2025-12-23T11:13:44.032" /><!-- duration: 20ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\appsettings.Development.json&apos;" date="2025-12-23T11:13:44.132" /><!-- duration: 30ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\appsettings.json&apos;" date="2025-12-23T11:13:44.271" /><!-- duration: 60ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\Hostr.Api.deps.json&apos;" date="2025-12-23T11:13:44.361" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\Hostr.Api.runtimeconfig.json&apos;" date="2025-12-23T11:13:44.381" /><!-- duration: 10ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\Hostr.Api.staticwebassets.endpoints.json&apos;" date="2025-12-23T11:13:44.411" /><!-- duration: 12ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\appsettings.Development.json&apos;" date="2025-12-23T11:13:44.423" /><!-- duration: 18ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\appsettings.json&apos;" date="2025-12-23T11:13:44.454" /><!-- duration: 17ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\Hostr.Api.deps.json&apos;" date="2025-12-23T11:13:44.501" /><!-- duration: 20ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\Hostr.Api.runtimeconfig.json&apos;" date="2025-12-23T11:13:44.601" /><!-- duration: 10ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\Hostr.Api.staticwebassets.endpoints.json&apos;" date="2025-12-23T11:13:44.630" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\publish\appsettings.Development.json&apos;" date="2025-12-23T11:13:44.690" /><!-- duration: 61ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\publish\appsettings.json&apos;" date="2025-12-23T11:13:44.782" /><!-- duration: 18ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\publish\Hostr.Api.deps.json&apos;" date="2025-12-23T11:13:44.813" /><!-- duration: 17ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\publish\Hostr.Api.runtimeconfig.json&apos;" date="2025-12-23T11:13:44.850" /><!-- duration: 10ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\publish\Hostr.Api.staticwebassets.endpoints.json&apos;" date="2025-12-23T11:13:44.892" /><!-- duration: 19ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\publish\publish\appsettings.Development.json&apos;" date="2025-12-23T11:13:44.941" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\publish\publish\appsettings.json&apos;" date="2025-12-23T11:13:44.971" /><!-- duration: 0ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\publish\publish\Hostr.Api.deps.json&apos;" date="2025-12-23T11:13:45.001" /><!-- duration: 20ms -->
+          <step title="Copying file: &apos;publish\publish\publish-win\publish\publish\publish\publish\publish\publish\publish\Hostr.Api.runtimeconfig.json&apos;" date="2025-12-23T11:13:45.050" /><!-- duration: 0ms -->
+          <step title="Omitting next output lines..." date="2025-12-23T11:13:45.063" /><!-- duration: 17ms -->
+          <step title="Finished successfully." date="2025-12-23T11:13:48.566" /><!-- duration: 13ms -->
+        </step><!-- duration: 9170ms -->
+        <step title="Build completed succesfully." date="2025-12-23T11:13:48.725" /><!-- duration: 11ms -->
+        <step title="Running post deployment command(s)..." date="2025-12-23T11:13:49.188" /><!-- duration: 16ms -->
+        <step title="Requesting site restart" date="2025-12-23T11:13:49.565" /><!-- duration: 30ms -->
+        <step title="Requesting site restart" date="2025-12-23T11:13:49.615" /><!-- duration: 42ms -->
+        <step title="Requesting site restart. Attempt #1" date="2025-12-23T11:13:49.835" /><!-- duration: 10ms -->
+        <step title="Requesting site restart. Attempt #1" date="2025-12-23T11:13:49.845" /><!-- duration: 0ms -->
+        <step title="Successfully requested a restart. Attempt #1" date="2025-12-23T11:13:52.349" /><!-- duration: 11ms -->
+        <step title="Successfully requested a restart. Attempt #1" date="2025-12-23T11:13:52.379" /><!-- duration: 12ms -->
+        <step title="Deployment successful. DEPLOYMENTINFO: deploymentPath = OneDeploy, deployer = OneDeploy, os = windows, sku = Basic, siteName = staybot-api, siteHostName = staybot-api.azurewebsites.net, deploymentStatus = Success" date="2025-12-23T11:13:52.518" /><!-- duration: 30ms -->
+        <step title="Purge deployment items" date="2025-12-23T11:13:52.798" >
+          <step title="Remove f574b15fe, Success, received at 12/1/2025 8:31:19 PM" date="2025-12-23T11:13:52.970" /><!-- duration: 18ms -->
+        </step><!-- duration: 203ms -->
+      </step><!-- duration: 14098ms -->
+    </step><!-- duration: 14654ms -->
+    <step title="Cleaning up temp files" date="2025-12-23T11:13:53.148" /><!-- duration: 30ms -->
+    <step title="Skip function trigger and logicapp sync because function is not enabled." date="2025-12-23T11:13:53.220" /><!-- duration: 0ms -->
+  </step><!-- duration: 21860ms -->
+  <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2025-12-23T11:13:53.318" /><!-- duration: 0ms -->
+  <step title="Deleting shutdown sentinel file" date="2025-12-23T11:13:53.329" SemaphoreCount="8" /><!-- duration: 19ms -->
+</step><!-- duration: 22160ms -->

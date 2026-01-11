@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StayBot User Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        header .meta {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        nav {
+            background: #2d3748;
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 1.5rem;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+        nav a:hover {
+            color: #667eea;
+        }
+        main {
+            padding: 2rem;
+        }
+        h2 {
+            color: #667eea;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+        h3 {
+            color: #764ba2;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        h4 {
+            color: #4a5568;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        p, li {
+            margin-bottom: 0.75rem;
+        }
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+        code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e53e3e;
+        }
+        pre {
+            background: #2d3748;
+            color: #f7fafc;
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .image-grid img {
+            width: 100%;
+        }
+        blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #4a5568;
+            font-style: italic;
+        }
+        .section {
+            margin-bottom: 2rem;
+        }
+        .steps {
+            background: #f7fafc;
+            padding: 1rem;
+            border-left: 4px solid #48bb78;
+            margin: 1rem 0;
+        }
+        .steps li {
+            margin-bottom: 0.5rem;
+        }
+        strong {
+            color: #2d3748;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #e2e8f0;
+            margin: 2rem 0;
+        }
+        footer {
+            background: #2d3748;
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        .toc {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>StayBot User Guide</h1>
+            <div class="meta">
+                <p>Version: Draft | Property: Tenant 1 (Demo)</p>
+            </div>
+        </header>
+
+        <nav>
+            <a href="#intro">Introduction</a>
+            <a href="#role-based">Quick Start by Role</a>
+            <a href="#login">Login</a>
+            <a href="#config">Configuration</a>
+            <a href="#tasks">Tasks</a>
+            <a href="#reports">Reports</a>
+            <a href="#common-tasks">Examples</a>
+        </nav>
+
+        <main>
+            <section class="section">
+                <h2>Branding</h2>
+                <ul>
+                    <li>Logo: <code>docs/images/staybot-logo.png</code> (add if needed)</li>
+                    <li>Primary color: aligned to StayBot website</li>
+                </ul>
+            </section>
+
+            <section id="intro" class="section">
+                <h2>1. Introduction</h2>
+                <ul>
+                    <li><strong>Purpose</strong>: How to operate StayBot for hotel operations, communication, and guest services.</li>
+                    <li><strong>Audience</strong>: Admins and operations staff.</li>
+                    <li><strong>Prerequisites</strong>: Login URL, user account, role permissions.</li>
+                </ul>
+
+                <h3>Quick Tips for New Users</h3>
+                <div class="steps">
+                    <ul>
+                        <li><strong>Navigation is Easy</strong>: Everything you need is in the sidebar on the left. Click any section to open it.</li>
+                        <li><strong>Search is Your Friend</strong>: Use the search bar at the top to quickly find guests, tasks, or conversations.</li>
+                        <li><strong>Don't Worry About Mistakes</strong>: Most actions can be undone or edited. If you're unsure, ask your supervisor.</li>
+                        <li><strong>Conversations First</strong>: When a guest messages, always check "Conversations → Active" to respond.</li>
+                        <li><strong>Create Tasks for Everything</strong>: If something needs to be done (cleaning, repairs, deliveries), create a task so nothing gets forgotten.</li>
+                        <li><strong>Use Templates</strong>: For common messages (welcome, checkout, pool hours), use templates instead of typing the same thing over and over.</li>
+                        <li><strong>Check Your Dashboard Daily</strong>: The main dashboard shows important numbers like pending tasks and guest satisfaction.</li>
+                        <li><strong>Export Reports</strong>: If your manager asks for data, look for the "Export" button on any report page.</li>
+                    </ul>
+                </div>
+
+                <h3>Understanding Guest-Facing vs Staff-Facing Features</h3>
+                <div class="steps">
+                    <p><strong>Important:</strong> StayBot has two sides - what guests see and what you (staff) see.</p>
+                    
+                    <h4>What Guests See (Guest-Facing):</h4>
+                    <ul>
+                        <li><strong>WhatsApp/Messaging Interface</strong>: Guests message you through WhatsApp or other chat apps</li>
+                        <li><strong>Service Menu</strong>: Guests can browse and request services (room service, housekeeping, concierge)</li>
+                        <li><strong>FAQs</strong>: Automated answers to common questions (pool hours, WiFi password, checkout time)</li>
+                        <li><strong>Welcome Messages</strong>: Automated greetings when they check in</li>
+                        <li><strong>Broadcast Messages</strong>: Announcements you send to multiple guests</li>
+                    </ul>
+                    <p><em>Guests never see your staff dashboard, tasks, or internal notes.</em></p>
+
+                    <h4>What Staff See (Staff-Facing - This System):</h4>
+                    <ul>
+                        <li><strong>Conversations Dashboard</strong>: All guest messages in one place</li>
+                        <li><strong>Task Management</strong>: Internal tasks for housekeeping, maintenance, front desk</li>
+                        <li><strong>Guest Profiles</strong>: Booking details, history, preferences</li>
+                        <li><strong>Analytics & Reports</strong>: Performance metrics, satisfaction scores</li>
+                        <li><strong>Configuration</strong>: System settings, services, templates, staff management</li>
+                        <li><strong>Business Rules</strong>: Automation and workflow settings</li>
+                    </ul>
+                    <p><em>This is your "behind-the-scenes" control panel. Guests only see their chat interface.</em></p>
+
+                    <h4>How They Connect:</h4>
+                    <ul>
+                        <li>When a guest messages you → It appears in <strong>Conversations → Active</strong></li>
+                        <li>When you reply → Guest receives it in their WhatsApp/chat app</li>
+                        <li>When you create a task → Only staff see it (guests don't know about internal tasks)</li>
+                        <li>When you send a broadcast → Guests receive it as a regular message</li>
+                    </ul>
+                </div>
+
+                <h3>Visual Glossary: Icons & Buttons</h3>
+                <div class="steps">
+                    <p>Common icons you'll see throughout StayBot:</p>
+                    
+                    <h4>Action Buttons:</h4>
+                    <ul>
+                        <li><strong>➕ Plus / "Add" / "Create"</strong>: Add new item (task, service, staff member, etc.)</li>
+                        <li><strong>✏️ Pencil / "Edit"</strong>: Modify existing information</li>
+                        <li><strong>🗑️ Trash / "Delete"</strong>: Remove item (usually asks for confirmation)</li>
+                        <li><strong>👁️ Eye / "View"</strong>: See details without editing</li>
+                        <li><strong>💾 Disk / "Save"</strong>: Save your changes</li>
+                        <li><strong>❌ X / "Cancel"</strong>: Close without saving</li>
+                        <li><strong>🔍 Magnifying Glass / "Search"</strong>: Find specific items</li>
+                        <li><strong>🔄 Circular Arrows / "Refresh"</strong>: Reload the page/data</li>
+                        <li><strong>📤 Upload / "Export"</strong>: Download data as Excel/PDF</li>
+                        <li><strong>🖨️ Printer / "Print"</strong>: Print current page</li>
+                        <li><strong>⚙️ Gear / "Settings"</strong>: Configuration options</li>
+                        <li><strong>📋 Clipboard / "Copy"</strong>: Copy information</li>
+                    </ul>
+
+                    <h4>Status Indicators:</h4>
+                    <ul>
+                        <li><strong>🟢 Green Dot/Badge</strong>: Active, Online, Completed, Success</li>
+                        <li><strong>🔴 Red Dot/Badge</strong>: Urgent, Error, Failed, Offline</li>
+                        <li><strong>🟡 Yellow Dot/Badge</strong>: Pending, Warning, In Progress</li>
+                        <li><strong>🔵 Blue Dot/Badge</strong>: New, Unread, Information</li>
+                        <li><strong>⚪ Gray Dot/Badge</strong>: Inactive, Disabled, Archived</li>
+                        <li><strong>🔔 Bell with Number</strong>: Unread notifications (number shows count)</li>
+                        <li><strong>💬 Chat Bubble with Number</strong>: New messages (number shows count)</li>
+                    </ul>
+
+                    <h4>Priority Markers:</h4>
+                    <ul>
+                        <li><strong>🔴 Red Flag / "High"</strong>: Urgent - handle immediately</li>
+                        <li><strong>🟡 Yellow Flag / "Medium"</strong>: Important - handle today</li>
+                        <li><strong>🟢 Green Flag / "Low"</strong>: Routine - handle when possible</li>
+                        <li><strong>⭐ Star</strong>: Favorite, Important, VIP guest</li>
+                        <li><strong>📌 Pin</strong>: Pinned to top of list</li>
+                    </ul>
+
+                    <h4>Navigation Icons:</h4>
+                    <ul>
+                        <li><strong>☰ Three Lines / "Menu"</strong>: Open/close sidebar</li>
+                        <li><strong>← Back Arrow</strong>: Go to previous page</li>
+                        <li><strong>→ Forward Arrow</strong>: Go to next page</li>
+                        <li><strong>⌄ Down Arrow / "Dropdown"</strong>: Click to see more options</li>
+                        <li><strong>⋮ Three Dots / "More"</strong>: Additional actions menu</li>
+                    </ul>
+
+                    <h4>Form Field Indicators:</h4>
+                    <ul>
+                        <li><strong>* Red Asterisk</strong>: Required field - must fill in</li>
+                        <li><strong>ℹ️ Info Circle</strong>: Hover for helpful information</li>
+                        <li><strong>❓ Question Mark</strong>: Click for help/explanation</li>
+                        <li><strong>✓ Checkmark</strong>: Valid input, completed</li>
+                        <li><strong>⚠️ Warning Triangle</strong>: Check this field, possible issue</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="role-based" class="section">
+                <h2>1A. Role-Based Quick Start</h2>
+                <p><strong>Find your role below and jump to the sections you'll use most:</strong></p>
+
+                <h3>🏨 Front Desk Staff / Reception</h3>
+                <div class="steps">
+                    <p><strong>Your Main Tasks:</strong> Answer guest questions, handle check-ins/check-outs, respond to messages</p>
+                    <p><strong>Start Here Each Day:</strong></p>
+                    <ol>
+                        <li>Check <strong>Dashboard</strong> for today's overview</li>
+                        <li>Review <strong>Guests → Check-ins</strong> to see arrivals</li>
+                        <li>Monitor <strong>Conversations → Active</strong> for guest messages</li>
+                        <li>Check <strong>Tasks → Front Desk</strong> for your assignments</li>
+                    </ol>
+                    <p><strong>Key Sections You'll Use:</strong></p>
+                    <ul>
+                        <li><strong>Conversations</strong> (Section 4) - Respond to guests</li>
+                        <li><strong>Guests</strong> (Section 5) - View bookings and check-ins</li>
+                        <li><strong>Broadcast</strong> (Section 7) - Send welcome messages</li>
+                        <li><strong>Tasks</strong> (Section 6) - Your daily to-dos</li>
+                    </ul>
+                    <p><strong>Common Scenarios:</strong> See Examples 15.1, 15.2, 15.5, 15.6</p>
+                </div>
+
+                <h3>🧹 Housekeeping Staff / Manager</h3>
+                <div class="steps">
+                    <p><strong>Your Main Tasks:</strong> Room cleaning, maintenance requests, inventory management</p>
+                    <p><strong>Start Here Each Day:</strong></p>
+                    <ol>
+                        <li>Check <strong>Tasks → Housekeeping</strong> for today's rooms</li>
+                        <li>Review <strong>Guests → Check-outs</strong> to prioritize rooms</li>
+                        <li>Monitor <strong>Conversations → Active</strong> for towel/amenity requests</li>
+                        <li>Update task status as you complete rooms</li>
+                    </ol>
+                    <p><strong>Key Sections You'll Use:</strong></p>
+                    <ul>
+                        <li><strong>Tasks → Housekeeping</strong> (Section 6.3) - Your room assignments</li>
+                        <li><strong>Tasks → All</strong> (Section 6.1) - Create new tasks</li>
+                        <li><strong>Conversations</strong> (Section 4) - Guest requests</li>
+                        <li><strong>Guests</strong> (Section 5) - Room occupancy status</li>
+                    </ul>
+                    <p><strong>Common Scenarios:</strong> See Examples 15.1, 15.3</p>
+                </div>
+
+                <h3>🔧 Maintenance Team</h3>
+                <div class="steps">
+                    <p><strong>Your Main Tasks:</strong> Fix broken equipment, respond to urgent issues, preventive maintenance</p>
+                    <p><strong>Start Here Each Day:</strong></p>
+                    <ol>
+                        <li>Check <strong>Tasks → Maintenance</strong> for urgent repairs</li>
+                        <li>Look for <strong>High Priority</strong> (red flag) tasks first</li>
+                        <li>Update task status when you start and finish work</li>
+                        <li>Create new tasks for issues you discover</li>
+                    </ol>
+                    <p><strong>Key Sections You'll Use:</strong></p>
+                    <ul>
+                        <li><strong>Tasks → Maintenance</strong> (Section 6.4) - Your repair assignments</li>
+                        <li><strong>Tasks → All</strong> (Section 6.1) - View all property issues</li>
+                        <li><strong>Conversations</strong> (Section 4) - Guest-reported problems</li>
+                    </ul>
+                    <p><strong>Common Scenarios:</strong> See Example 15.3</p>
+                </div>
+
+                <h3>👔 Manager / Supervisor</h3>
+                <div class="steps">
+                    <p><strong>Your Main Tasks:</strong> Oversee operations, review reports, manage staff, handle escalations</p>
+                    <p><strong>Start Here Each Day:</strong></p>
+                    <ol>
+                        <li>Review <strong>Dashboard</strong> for key metrics</li>
+                        <li>Check <strong>Reports → Analytics</strong> for performance trends</li>
+                        <li>Monitor <strong>Tasks → All</strong> for overdue items</li>
+                        <li>Review <strong>Conversations → Active</strong> for unresolved issues</li>
+                        <li>Check <strong>Users → Activity</strong> for staff performance</li>
+                    </ol>
+                    <p><strong>Key Sections You'll Use:</strong></p>
+                    <ul>
+                        <li><strong>Dashboard</strong> (Section 2) - Daily overview</li>
+                        <li><strong>Reports & Analytics</strong> (Section 11) - Performance metrics</li>
+                        <li><strong>Tasks → All</strong> (Section 6.1) - Team workload</li>
+                        <li><strong>Users & Staff</strong> (Section 10) - Staff management</li>
+                        <li><strong>Business Rules</strong> (Section 9) - Automation settings</li>
+                        <li><strong>Broadcast</strong> (Section 7) - Guest communications</li>
+                    </ul>
+                    <p><strong>Common Scenarios:</strong> See Examples 15.2, 15.4, 15.7, 15.8</p>
+                </div>
+
+                <h3>⚙️ Administrator / IT</h3>
+                <div class="steps">
+                    <p><strong>Your Main Tasks:</strong> System configuration, user management, integrations, troubleshooting</p>
+                    <p><strong>Start Here Each Day:</strong></p>
+                    <ol>
+                        <li>Check <strong>Users → Activity</strong> for login issues</li>
+                        <li>Review <strong>Business Rules → Audit Log</strong> for system changes</li>
+                        <li>Monitor <strong>Reports → Analytics</strong> for system performance</li>
+                        <li>Update <strong>Configuration</strong> as needed</li>
+                    </ol>
+                    <p><strong>Key Sections You'll Use:</strong></p>
+                    <ul>
+                        <li><strong>Configuration</strong> (Section 3) - All system settings</li>
+                        <li><strong>Users & Staff</strong> (Section 10) - User accounts and permissions</li>
+                        <li><strong>Business Rules</strong> (Section 9) - Automation and workflows</li>
+                        <li><strong>Reports</strong> (Section 11) - System usage and performance</li>
+                    </ul>
+                    <p><strong>Common Scenarios:</strong> See Example 15.4, Section 13 (Troubleshooting)</p>
+                </div>
+
+                <h3>💬 Guest Relations / Concierge</h3>
+                <div class="steps">
+                    <p><strong>Your Main Tasks:</strong> Handle guest requests, provide information, coordinate services</p>
+                    <p><strong>Start Here Each Day:</strong></p>
+                    <ol>
+                        <li>Check <strong>Conversations → Active</strong> for guest inquiries</li>
+                        <li>Review <strong>Tasks → My Tasks</strong> for follow-ups</li>
+                        <li>Monitor <strong>Guests → Bookings</strong> for VIP arrivals</li>
+                        <li>Prepare <strong>Broadcast</strong> messages for events/updates</li>
+                    </ol>
+                    <p><strong>Key Sections You'll Use:</strong></p>
+                    <ul>
+                        <li><strong>Conversations</strong> (Section 4) - Guest communications</li>
+                        <li><strong>Broadcast</strong> (Section 7) - Mass communications</li>
+                        <li><strong>Configuration → Services</strong> (Section 3.2) - Available offerings</li>
+                        <li><strong>Configuration → FAQs</strong> (Section 3.3) - Quick answers</li>
+                        <li><strong>Tasks</strong> (Section 6) - Guest requests</li>
+                    </ul>
+                    <p><strong>Common Scenarios:</strong> See Examples 15.1, 15.2, 15.6, 15.8</p>
+                </div>
+            </section>
+
+            <section id="login" class="section">
+                <h2>2. Login & Navigation</h2>
+                <ol>
+                    <li>Open <code>https://demo.staybot.co.za</code></li>
+                    <li>Sign in with your credentials</li>
+                    <li>Explore the sidebar for modules</li>
+                </ol>
+                <img src="screenshots/01_dashboard_or_home.png" alt="Dashboard">
+                <div class="steps">
+                    <strong>Key Elements:</strong>
+                    <ul>
+                        <li><strong>Sidebar Navigation</strong>: Access all modules (Conversations, Guests, Tasks, etc.)</li>
+                        <li><strong>Top Bar</strong>: Search, date range picker, language selector, user menu</li>
+                        <li><strong>KPI Cards</strong>: Active Guests, Pending Tasks, Check-ins, Avg Response Time, Check-outs, Room Occupancy, Completed Tasks, Guest Satisfaction</li>
+                        <li><strong>Quick Actions</strong>: Export Data, Print Report, Connecting status</li>
+                        <li><strong>Date Filters</strong>: Today, Week, Month toggles</li>
+                        <li><strong>Activity Charts</strong>: Daily activity overview with guest interactions and task completions</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="config" class="section">
+                <h2>3. Configuration</h2>
+                
+                <h3>3.1 Hotel Information</h3>
+                <p>Purpose: Property details used across the platform.</p>
+                <img src="screenshots/route_configuration_hotel-info.png" alt="Hotel Info">
+                <div class="steps">
+                    <strong>Key Elements:</strong>
+                    <ul>
+                        <li><strong>Property Name</strong>: Hotel/property identification</li>
+                        <li><strong>Contact Details</strong>: Phone, email, address fields</li>
+                        <li><strong>Operating Hours</strong>: Check-in/check-out times</li>
+                        <li><strong>Save Button</strong>: Apply changes to configuration</li>
+                    </ul>
+                </div>
+
+                <h3>3.2 Services & Amenities</h3>
+                <p>Purpose: Configure available services.</p>
+                <img src="screenshots/route_configuration_services.png" alt="Services">
+                <div class="steps">
+                    <strong>Key Elements:</strong>
+                    <ul>
+                        <li><strong>Service List</strong>: Table showing all available services</li>
+                        <li><strong>Add New Button</strong>: Create new service offerings</li>
+                        <li><strong>Edit/Delete Actions</strong>: Modify or remove services</li>
+                        <li><strong>Status Toggle</strong>: Enable/disable services</li>
+                        <li><strong>Search/Filter</strong>: Find specific services quickly</li>
+                    </ul>
+                </div>
+
+                <h3>3.3 FAQs</h3>
+                <p>Purpose: Manage frequently asked questions.</p>
+                <img src="screenshots/route_configuration_faqs.png" alt="FAQs">
+
+                <h3>3.4 Menu</h3>
+                <p>Purpose: Configure concierge menu items.</p>
+                <img src="screenshots/route_configuration_menu.png" alt="Menu">
+
+                <h3>3.5 Emergency Settings</h3>
+                <p>Purpose: Emergency contact configuration.</p>
+                <img src="screenshots/route_configuration_emergency.png" alt="Emergency">
+
+                <h3>3.6 Templates</h3>
+                <p>Purpose: Message template management.</p>
+                <img src="screenshots/route_configuration_templates.png" alt="Templates">
+            </section>
+
+            <section class="section">
+                <h2>4. Conversations</h2>
+                
+                <h3>4.1 Active Conversations</h3>
+                <p>View and manage active guest conversations.</p>
+                <img src="screenshots/route_conversations_active.png" alt="Active Conversations">
+                <div class="steps">
+                    <strong>Key Elements:</strong>
+                    <ul>
+                        <li><strong>Conversation List</strong>: All active chats with guests</li>
+                        <li><strong>Guest Info</strong>: Name, room number, booking details</li>
+                        <li><strong>Status Indicators</strong>: New, in-progress, waiting</li>
+                        <li><strong>Priority Flags</strong>: Urgent/high priority markers</li>
+                        <li><strong>Agent Assignment</strong>: Who's handling each conversation</li>
+                        <li><strong>Last Message Preview</strong>: Quick view of recent activity</li>
+                        <li><strong>Search Bar</strong>: Find conversations by guest or content</li>
+                    </ul>
+                </div>
+
+                <h3>4.2 Assignments</h3>
+                <p>Assigned conversations by agent.</p>
+                <img src="screenshots/route_conversations_assignments.png" alt="Assignments">
+
+                <h3>4.3 Transfer Queue</h3>
+                <p>Conversations pending transfer.</p>
+                <img src="screenshots/route_conversations_transfers.png" alt="Transfers">
+
+                <h3>4.4 History</h3>
+                <p>Completed conversation history.</p>
+                <img src="screenshots/route_conversations_history.png" alt="History">
+            </section>
+
+            <section class="section">
+                <h2>5. Guests</h2>
+                
+                <h3>5.1 Bookings</h3>
+                <p>View all guest bookings and reservations.</p>
+                <img src="screenshots/route_guests_bookings.png" alt="Bookings">
+                <div class="steps">
+                    <strong>Key Elements:</strong>
+                    <ul>
+                        <li><strong>Booking Table</strong>: Guest name, room, dates, status</li>
+                        <li><strong>Date Filters</strong>: Filter by check-in/check-out dates</li>
+                        <li><strong>Status Filter</strong>: Confirmed, pending, cancelled</li>
+                        <li><strong>Search</strong>: Find by guest name or booking reference</li>
+                        <li><strong>View/Edit Actions</strong>: Access booking details</li>
+                        <li><strong>Export Button</strong>: Download booking reports</li>
+                    </ul>
+                </div>
+
+                <h3>5.2 Check-ins</h3>
+                <p>Today's check-ins and arrivals.</p>
+                <img src="screenshots/route_guests_checkins.png" alt="Check-ins">
+
+                <h3>5.3 Guest History</h3>
+                <p>Historical guest data and interactions.</p>
+                <img src="screenshots/route_guests_history.png" alt="Guest History">
+            </section>
+
+            <section id="tasks" class="section">
+                <h2>6. Tasks</h2>
+                
+                <h3>6.1 All Tasks</h3>
+                <p>View all tasks across departments.</p>
+                <img src="screenshots/route_tasks_all.png" alt="All Tasks">
+                <div class="steps">
+                    <strong>Key Elements:</strong>
+                    <ul>
+                        <li><strong>Task Board/List</strong>: All tasks with status indicators</li>
+                        <li><strong>Create Task Button</strong>: Add new tasks</li>
+                        <li><strong>Task Details</strong>: Title, description, due date, priority</li>
+                        <li><strong>Assignee</strong>: Staff member responsible</li>
+                        <li><strong>Department Filter</strong>: Housekeeping, maintenance, front desk</li>
+                        <li><strong>Status Columns</strong>: To-do, in-progress, completed</li>
+                        <li><strong>Priority Indicators</strong>: High, medium, low markers</li>
+                    </ul>
+                </div>
+
+                <h3>6.2 My Tasks</h3>
+                <p>Tasks assigned to you.</p>
+                <img src="screenshots/route_tasks_my.png" alt="My Tasks">
+
+                <h3>6.3 Housekeeping</h3>
+                <p>Housekeeping department tasks.</p>
+                <img src="screenshots/route_tasks_housekeeping.png" alt="Housekeeping">
+
+                <h3>6.4 Maintenance</h3>
+                <p>Maintenance and repair tasks.</p>
+                <img src="screenshots/route_tasks_maintenance.png" alt="Maintenance">
+
+                <h3>6.5 Front Desk</h3>
+                <p>Front desk operations tasks.</p>
+                <img src="screenshots/route_tasks_frontdesk.png" alt="Front Desk">
+            </section>
+
+            <section class="section">
+                <h2>7. Broadcast</h2>
+                
+                <h3>7.1 Compose</h3>
+                <p>Send broadcast messages to guests.</p>
+                <img src="screenshots/route_broadcast_compose.png" alt="Broadcast Compose">
+                <div class="steps">
+                    <strong>Key Elements:</strong>
+                    <ul>
+                        <li><strong>Message Editor</strong>: Compose your broadcast message</li>
+                        <li><strong>Template Selector</strong>: Use pre-saved templates</li>
+                        <li><strong>Audience Filters</strong>: Select recipients by room, tags, language</li>
+                        <li><strong>Preview</strong>: See how message will appear</li>
+                        <li><strong>Schedule</strong>: Send now or schedule for later</li>
+                        <li><strong>Send Button</strong>: Dispatch message to selected guests</li>
+                    </ul>
+                </div>
+
+                <h3>7.2 Emergency Broadcast</h3>
+                <p>Send urgent emergency notifications.</p>
+                <img src="screenshots/route_broadcast_emergency.png" alt="Emergency Broadcast">
+
+                <h3>7.3 Templates</h3>
+                <p>Manage broadcast message templates.</p>
+                <img src="screenshots/route_broadcast_templates.png" alt="Broadcast Templates">
+
+                <h3>7.4 History</h3>
+                <p>View sent broadcast history.</p>
+                <img src="screenshots/route_broadcast_history.png" alt="Broadcast History">
+            </section>
+
+            <section class="section">
+                <h2>8. Lost & Found</h2>
+                <p>Track and manage lost and found items.</p>
+                <img src="screenshots/route_lost-and-found.png" alt="Lost & Found">
+            </section>
+
+            <section class="section">
+                <h2>9. Business Rules</h2>
+                
+                <h3>9.1 Dashboard</h3>
+                <p>Business rules overview and metrics.</p>
+                <img src="screenshots/route_business-rules_dashboard.png" alt="Business Rules Dashboard">
+                <div class="steps">
+                    <strong>Key Elements:</strong>
+                    <ul>
+                        <li><strong>Active Rules Count</strong>: Number of automation rules running</li>
+                        <li><strong>Performance Metrics</strong>: Success rate, triggers, conversions</li>
+                        <li><strong>Recent Activity</strong>: Latest rule executions</li>
+                        <li><strong>Rule Categories</strong>: Service, upselling, notifications</li>
+                        <li><strong>Quick Actions</strong>: Create, edit, disable rules</li>
+                    </ul>
+                </div>
+
+                <h3>9.2 Service Rules</h3>
+                <p>Configure service automation rules.</p>
+                <img src="screenshots/route_business-rules_services.png" alt="Service Rules">
+
+                <h3>9.3 Upselling</h3>
+                <p>Manage upselling rules and offers.</p>
+                <img src="screenshots/route_business-rules_upselling.png" alt="Upselling">
+
+                <h3>9.4 Audit Log</h3>
+                <p>View business rules audit trail.</p>
+                <img src="screenshots/route_business-rules_audit-log.png" alt="Audit Log">
+            </section>
+
+            <section class="section">
+                <h2>10. Users & Staff</h2>
+                
+                <h3>10.1 Staff Management</h3>
+                <p>Manage staff members and profiles.</p>
+                <img src="screenshots/route_users_staff.png" alt="Staff Management">
+                <div class="steps">
+                    <strong>Key Elements:</strong>
+                    <ul>
+                        <li><strong>Staff Directory</strong>: List of all team members</li>
+                        <li><strong>Add Staff Button</strong>: Create new user accounts</li>
+                        <li><strong>User Details</strong>: Name, email, role, department</li>
+                        <li><strong>Status Indicators</strong>: Active, inactive, online</li>
+                        <li><strong>Role Assignment</strong>: Admin, manager, agent, staff</li>
+                        <li><strong>Edit/Delete Actions</strong>: Modify user accounts</li>
+                        <li><strong>Search/Filter</strong>: Find staff by name or department</li>
+                    </ul>
+                </div>
+
+                <h3>10.2 Agents</h3>
+                <p>View agent status and availability.</p>
+                <img src="screenshots/route_users_agents.png" alt="Agents">
+
+                <h3>10.3 Roles & Permissions</h3>
+                <p>Configure user roles and access control.</p>
+                <img src="screenshots/route_users_roles.png" alt="Roles">
+
+                <h3>10.4 Activity Log</h3>
+                <p>User activity and audit trail.</p>
+                <img src="screenshots/route_users_activity.png" alt="Activity Log">
+            </section>
+
+            <section id="reports" class="section">
+                <h2>11. Reports & Analytics</h2>
+                
+                <h3>11.1 Analytics Dashboard</h3>
+                <p>Overall platform analytics and KPIs.</p>
+                <img src="screenshots/route_reports_analytics.png" alt="Analytics">
+                <div class="steps">
+                    <strong>Key Elements:</strong>
+                    <ul>
+                        <li><strong>KPI Cards</strong>: Key metrics at a glance</li>
+                        <li><strong>Date Range Selector</strong>: Filter by time period</li>
+                        <li><strong>Charts & Graphs</strong>: Visual data representation</li>
+                        <li><strong>Response Time</strong>: Average agent response metrics</li>
+                        <li><strong>Guest Satisfaction</strong>: Rating scores and trends</li>
+                        <li><strong>Task Completion</strong>: Department performance</li>
+                        <li><strong>Export Options</strong>: Download reports as CSV/PDF</li>
+                    </ul>
+                </div>
+
+                <h3>11.2 Task Performance</h3>
+                <p>Task completion metrics and trends.</p>
+                <img src="screenshots/route_reports_tasks.png" alt="Task Performance">
+
+                <h3>11.3 Guest Satisfaction</h3>
+                <p>Guest satisfaction scores and feedback.</p>
+                <img src="screenshots/route_reports_satisfaction.png" alt="Guest Satisfaction">
+
+                <h3>11.4 Service Usage</h3>
+                <p>Service utilization statistics.</p>
+                <img src="screenshots/route_reports_usage.png" alt="Service Usage">
+
+                <h3>11.5 Business Impact</h3>
+                <p>Revenue and business impact analysis.</p>
+                <img src="screenshots/route_analytics_business-impact.png" alt="Business Impact">
+            </section>
+
+
+            <section class="section">
+                <h2>12. Appendix: Onboarding Excel</h2>
+                <ul>
+                    <li>Use <code>Tenant_Onboarding_Questionnaire.xlsx</code></li>
+                    <li>Follow <code>Start Here</code> tab</li>
+                    <li>Required fields highlighted; use dropdowns</li>
+                </ul>
+            </section>
+
+            <section class="section">
+                <h2>13. Common Questions & Troubleshooting</h2>
+                
+                <h3>Frequently Asked Questions</h3>
+                
+                <h4>Q: How do I know if a guest has messaged me?</h4>
+                <p><strong>A:</strong> Look for a notification badge (red number) on the "Conversations" menu item in the sidebar. Click it to see new messages.</p>
+
+                <h4>Q: Can I delete a task by mistake?</h4>
+                <p><strong>A:</strong> Most systems require confirmation before deleting. If you accidentally delete something, contact your supervisor immediately - they may be able to restore it.</p>
+
+                <h4>Q: What's the difference between "Priority: High" and "Priority: Medium"?</h4>
+                <p><strong>A:</strong></p>
+                <ul>
+                    <li><strong>High Priority</strong>: Urgent issues affecting guest comfort or safety (broken AC, no hot water, safety concerns)</li>
+                    <li><strong>Medium Priority</strong>: Important but not urgent (extra towels, room service requests)</li>
+                    <li><strong>Low Priority</strong>: Routine tasks (general cleaning, restocking)</li>
+                </ul>
+
+                <h4>Q: How do I send a message to just one guest?</h4>
+                <p><strong>A:</strong> Go to <strong>Conversations → Active</strong>, find their conversation, and type your message. Don't use Broadcast for single guests.</p>
+
+                <h4>Q: What if I send a broadcast message to the wrong guests?</h4>
+                <p><strong>A:</strong> You cannot unsend messages. Always use the "Preview" button before sending to check how many guests will receive it. If you make a mistake, send a follow-up clarification message.</p>
+
+                <h4>Q: Can guests see my name when I reply?</h4>
+                <p><strong>A:</strong> Yes, your name or role (e.g., "Front Desk Staff") appears with your messages. Always be professional and courteous.</p>
+
+                <h4>Q: How do I know if a task is completed?</h4>
+                <p><strong>A:</strong> In the Tasks section, completed tasks show a green checkmark or move to the "Completed" column. You can also filter to show only completed tasks.</p>
+
+                <h4>Q: What if I forget my password?</h4>
+                <p><strong>A:</strong> Click "Forgot Password" on the login screen, or contact your hotel's IT administrator or supervisor to reset it.</p>
+
+                <h4>Q: Can I use StayBot on my phone?</h4>
+                <p><strong>A:</strong> Yes! Open your phone's web browser and go to the same URL. The system works on mobile devices.</p>
+
+                <h4>Q: How do I print a report?</h4>
+                <p><strong>A:</strong> Go to any report page (Analytics, Tasks, Guests), click the "Export" or "Print" button, choose your format (PDF is best for printing), and then print from your browser.</p>
+
+                <h3>Troubleshooting</h3>
+                
+                <h4>Problem: Page is blank or won't load</h4>
+                <p><strong>Solution:</strong></p>
+                <ul>
+                    <li>Refresh the page (press F5 or click the refresh button)</li>
+                    <li>Check your internet connection</li>
+                    <li>Try logging out and logging back in</li>
+                    <li>Clear your browser cache (ask IT if you don't know how)</li>
+                </ul>
+
+                <h4>Problem: Can't find a conversation or task</h4>
+                <p><strong>Solution:</strong></p>
+                <ul>
+                    <li>Use the search bar at the top of the page</li>
+                    <li>Check if you have filters applied (Status, Date, Department) - clear them to see everything</li>
+                    <li>Look in "History" or "Completed" sections - it might have been resolved</li>
+                </ul>
+
+                <h4>Problem: Button won't click or form won't save</h4>
+                <p><strong>Solution:</strong></p>
+                <ul>
+                    <li>Make sure all required fields (marked with *) are filled in</li>
+                    <li>Check for error messages in red text</li>
+                    <li>Wait a few seconds - the system might be processing</li>
+                    <li>Refresh the page and try again</li>
+                </ul>
+
+                <h4>Problem: Guest says they didn't receive my message</h4>
+                <p><strong>Solution:</strong></p>
+                <ul>
+                    <li>Check <strong>Broadcast → History</strong> to confirm it was sent</li>
+                    <li>Verify you selected the correct audience filters</li>
+                    <li>Guest might need to check their WhatsApp or messaging app</li>
+                    <li>Send a direct message through <strong>Conversations</strong> as a backup</li>
+                </ul>
+
+                <h4>Still Having Problems?</h4>
+                <p>Contact your supervisor or IT support team. Have this information ready:</p>
+                <ul>
+                    <li>What you were trying to do</li>
+                    <li>What happened instead</li>
+                    <li>Any error messages you saw</li>
+                    <li>Your username (not password!)</li>
+                </ul>
+            </section>
+
+            <hr>
+
+            <section class="section">
+                <h2>14. Screen Map and Element Reference</h2>
+                <p>This section describes the common layout elements across StayBot screens and shows where to find primary actions.</p>
+
+                <h3>15.1 Dashboard Overview</h3>
+                <p><em>Image: docs/screenshots/01_dashboard_or_home.png</em></p>
+                <ul>
+                    <li><strong>[Sidebar Navigation]</strong>: Module tree with sections: Main, Hotel Operations, Management, Support. Active item is highlighted.</li>
+                    <li><strong>[Top Bar]</strong>: Search bar, date range, language, user menu.</li>
+                    <li><strong>[Primary Actions]</strong>: Right side buttons such as Export, Print when applicable.</li>
+                    <li><strong>[KPI Cards]</strong>: Active Guests, Pending Tasks, Check-ins, Avg Response Time, Check-outs, Room Occupancy, Completed Tasks, Guest Satisfaction.</li>
+                    <li><strong>[Filters]</strong>: Date range quick toggles Today/Week/Month.</li>
+                    <li><strong>[Content Area]</strong>: Dynamic widgets and tables.</li>
+                </ul>
+
+                <h3>15.2 Conversations</h3>
+                <p><em>Image: docs/screenshots/route_conversations_active.png</em></p>
+                <ul>
+                    <li><strong>[Search Conversations]</strong>: Global search input at top of list.</li>
+                    <li><strong>[Status Filter]</strong>: Status dropdown to the right of search.</li>
+                    <li><strong>[Tabs/Sections]</strong>: Active, Assignments, Transfers, History.</li>
+                    <li><strong>[Table/List]</strong>: Columns for Guest, Room, Status, Priority, Last Message, Agent.</li>
+                    <li><strong>[Row Actions]</strong>: Edit/View buttons where available; otherwise click row to open details.</li>
+                </ul>
+                <div class="steps">
+                    <strong>Steps:</strong>
+                    <ul>
+                        <li>Open: Sidebar → Conversations → Active Chats.</li>
+                        <li>Filter: Use search or status filter.</li>
+                        <li>View details: Click a row to open conversation.</li>
+                    </ul>
+                </div>
+
+                <h3>15.3 Guests</h3>
+                <p><em>Images: docs/screenshots/route_guests_bookings.png, route_guests_checkins.png, route_guests_history.png</em></p>
+                <ul>
+                    <li><strong>[Filters]</strong>: Date pickers and search.</li>
+                    <li><strong>[Primary Actions]</strong>: Add/New for manual bookings (if role allows).</li>
+                    <li><strong>[Row Actions]</strong>: View or Edit guest record (role-based).</li>
+                </ul>
+                <div class="steps">
+                    <strong>Steps:</strong>
+                    <ul>
+                        <li>Open Guests → Bookings.</li>
+                        <li>Search by name/room/date.</li>
+                        <li>Open booking to view details.</li>
+                    </ul>
+                </div>
+
+                <h3>15.4 Tasks</h3>
+                <p><em>Images: docs/screenshots/route_tasks_all.png, route_tasks_my.png, route_tasks_housekeeping.png, route_tasks_maintenance.png, route_tasks_frontdesk.png</em></p>
+                <ul>
+                    <li><strong>[Filters]</strong>: Status, priority, assignee.</li>
+                    <li><strong>[Primary Actions]</strong>: Create task.</li>
+                    <li><strong>[Boards/Tables]</strong>: Kanban or table view depending on configuration.</li>
+                </ul>
+                <div class="steps">
+                    <strong>Steps:</strong>
+                    <ul>
+                        <li>Open Tasks → All.</li>
+                        <li>Create: Click Create or Add.</li>
+                        <li>Assign: Select assignee and due date.</li>
+                    </ul>
+                </div>
+
+                <h3>15.5 Broadcast</h3>
+                <p><em>Images: docs/screenshots/route_broadcast_compose.png, route_broadcast_templates.png, route_broadcast_history.png, route_broadcast_emergency.png</em></p>
+                <ul>
+                    <li><strong>[Template Picker]</strong>: Choose saved content.</li>
+                    <li><strong>[Audience Filters]</strong>: Segment by tags, room, language.</li>
+                    <li><strong>[Primary Actions]</strong>: Send/Queue, Save Template, Emergency broadcast.</li>
+                </ul>
+
+                <h3>15.6 Configuration</h3>
+                <p><em>Images: docs/screenshots/route_configuration_services.png, route_configuration_menu.png, route_configuration_templates.png, route_configuration_emergency.png, route_configuration_faqs.png, route_configuration_hotel-info.png</em></p>
+                <ul>
+                    <li><strong>[Sections]</strong>: Services & Amenities, Menu, Templates, Emergency, FAQs, Hotel Info.</li>
+                    <li><strong>[Primary Actions]</strong>: Add/New, Edit, Save.</li>
+                    <li><strong>[Tables/Forms]</strong>: List → View/Edit → Save flow.</li>
+                </ul>
+
+                <h3>15.7 Business Rules</h3>
+                <p><em>Images: docs/screenshots/route_business-rules_dashboard.png, route_business-rules_services.png, route_business-rules_upselling.png, route_business-rules_audit-log.png</em></p>
+                <ul>
+                    <li><strong>[Dashboards]</strong>: KPIs for rules impact.</li>
+                    <li><strong>[Rule Editors]</strong>: Service rules and upselling conditions.</li>
+                </ul>
+
+                <h3>15.8 Users</h3>
+                <p><em>Images: docs/screenshots/route_users_staff.png, route_users_agents.png, route_users_roles.png, route_users_activity.png</em></p>
+                <ul>
+                    <li><strong>[Staff Directory]</strong>: Search and role filters.</li>
+                    <li><strong>[Agents]</strong>: Channel agent status.</li>
+                    <li><strong>[Roles]</strong>: Permission sets.</li>
+                    <li><strong>[Activity]</strong>: Audit trail.</li>
+                </ul>
+
+                <h3>15.9 Reports & Analytics</h3>
+                <p><em>Images: docs/screenshots/route_reports_analytics.png, route_reports_tasks.png, route_reports_satisfaction.png, route_reports_usage.png, route_analytics_business-impact.png</em></p>
+                <ul>
+                    <li><strong>[Filters]</strong>: Date range, department, channel.</li>
+                    <li><strong>[Charts/Tables]</strong>: Export to CSV or PDF.</li>
+                </ul>
+            </section>
+
+            <hr>
+
+            <section id="common-tasks" class="section">
+                <h2>15. Common Tasks (Step-by-Step Examples)</h2>
+
+                <h3>15.1 Example: Guest Requests Extra Towels</h3>
+                <p><strong>Scenario:</strong> A guest in Room 305 messages asking for extra towels.</p>
+                <div class="steps">
+                    <strong>What to do:</strong>
+                    <ol>
+                        <li>Click <strong>Conversations → Active</strong> in the sidebar</li>
+                        <li>Find the message from Room 305 in the list</li>
+                        <li>Click on the conversation to open it</li>
+                        <li>Read the guest's request</li>
+                        <li>Click <strong>Tasks → All</strong> in the sidebar</li>
+                        <li>Click the <strong>"Create Task"</strong> button</li>
+                        <li>Fill in:
+                            <ul>
+                                <li><strong>Title:</strong> "Extra towels for Room 305"</li>
+                                <li><strong>Description:</strong> "Guest requested 2 extra bath towels"</li>
+                                <li><strong>Department:</strong> Housekeeping</li>
+                                <li><strong>Priority:</strong> Medium</li>
+                                <li><strong>Assign to:</strong> Select a housekeeping staff member</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Save"</strong></li>
+                        <li>Go back to the conversation and reply: "We're sending extra towels to your room right away!"</li>
+                    </ol>
+                </div>
+
+                <h3>15.2 Example: Send Welcome Message to New Arrivals</h3>
+                <p><strong>Scenario:</strong> It's 2 PM and you want to welcome all guests checking in today.</p>
+                <div class="steps">
+                    <strong>What to do:</strong>
+                    <ol>
+                        <li>Click <strong>Broadcast → Compose</strong> in the sidebar</li>
+                        <li>Click <strong>"Select Template"</strong> dropdown</li>
+                        <li>Choose <strong>"Welcome Message"</strong> template</li>
+                        <li>Review the message - it should say something like:
+                            <blockquote>"Welcome to [Hotel Name]! We're delighted to have you. If you need anything, just message us here. Enjoy your stay!"</blockquote>
+                        </li>
+                        <li>Under <strong>"Select Audience"</strong>, choose:
+                            <ul>
+                                <li><strong>Filter by:</strong> Check-in Date</li>
+                                <li><strong>Date:</strong> Today</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Preview"</strong> to see how many guests will receive it</li>
+                        <li>Click <strong>"Send Now"</strong></li>
+                        <li>You'll see a confirmation: "Message sent to 12 guests"</li>
+                    </ol>
+                </div>
+
+                <h3>15.3 Example: Room 201 Has a Broken AC</h3>
+                <p><strong>Scenario:</strong> Guest in Room 201 reports the air conditioning isn't working.</p>
+                <div class="steps">
+                    <strong>What to do:</strong>
+                    <ol>
+                        <li>Click <strong>Tasks → All</strong> in the sidebar</li>
+                        <li>Click <strong>"Create Task"</strong></li>
+                        <li>Fill in:
+                            <ul>
+                                <li><strong>Title:</strong> "AC not working - Room 201"</li>
+                                <li><strong>Description:</strong> "Guest reports AC not cooling. Needs immediate attention."</li>
+                                <li><strong>Department:</strong> Maintenance</li>
+                                <li><strong>Priority:</strong> High (because it affects guest comfort)</li>
+                                <li><strong>Due Date:</strong> Today</li>
+                                <li><strong>Assign to:</strong> Select maintenance technician</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Save"</strong></li>
+                        <li>The maintenance team will see this task immediately</li>
+                        <li>Go to <strong>Conversations</strong> and message the guest: "We've notified maintenance and they'll be there within 30 minutes to fix your AC."</li>
+                    </ol>
+                </div>
+
+                <h3>15.4 Example: Add New Room Service Item</h3>
+                <p><strong>Scenario:</strong> Your hotel now offers a "Late Night Snack Box" service.</p>
+                <div class="steps">
+                    <strong>What to do:</strong>
+                    <ol>
+                        <li>Click <strong>Configuration → Services</strong> in the sidebar</li>
+                        <li>Click <strong>"Add New"</strong> button at the top</li>
+                        <li>Fill in the form:
+                            <ul>
+                                <li><strong>Service Name:</strong> "Late Night Snack Box"</li>
+                                <li><strong>Description:</strong> "Assorted snacks and beverages delivered to your room"</li>
+                                <li><strong>Category:</strong> Room Service</li>
+                                <li><strong>Price:</strong> $15.00</li>
+                                <li><strong>Available Hours:</strong> 10 PM - 2 AM</li>
+                                <li><strong>Status:</strong> Active</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Save"</strong></li>
+                        <li>The service now appears in the guest menu and they can order it through the chat</li>
+                    </ol>
+                </div>
+
+                <h3>15.5 Example: Check Today's Check-ins</h3>
+                <p><strong>Scenario:</strong> It's morning and you want to see who's arriving today.</p>
+                <div class="steps">
+                    <strong>What to do:</strong>
+                    <ol>
+                        <li>Click <strong>Guests → Check-ins</strong> in the sidebar</li>
+                        <li>You'll see a list of all guests checking in today with:
+                            <ul>
+                                <li>Guest name</li>
+                                <li>Room number</li>
+                                <li>Expected arrival time</li>
+                                <li>Booking status</li>
+                            </ul>
+                        </li>
+                        <li>Click on any guest to see full booking details</li>
+                        <li>Use this list to prepare rooms and plan staffing</li>
+                        <li>Click <strong>"Export"</strong> to print a copy for the front desk</li>
+                    </ol>
+                </div>
+
+                <h3>15.6 Example: Guest Asks About Pool Hours</h3>
+                <p><strong>Scenario:</strong> Guest messages asking "What time does the pool close?"</p>
+                <div class="steps">
+                    <strong>What to do:</strong>
+                    <ol>
+                        <li>Click <strong>Conversations → Active</strong></li>
+                        <li>Find and open the guest's conversation</li>
+                        <li>Option 1 - Quick Reply:
+                            <ul>
+                                <li>Type your response: "The pool is open from 6 AM to 10 PM daily. Enjoy!"</li>
+                                <li>Click <strong>"Send"</strong></li>
+                            </ul>
+                        </li>
+                        <li>Option 2 - Use FAQ (if available):
+                            <ul>
+                                <li>Click <strong>"Quick Replies"</strong> or <strong>"FAQ"</strong> button</li>
+                                <li>Select "Pool Hours" from the list</li>
+                                <li>The pre-written answer is automatically sent</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+
+                <h3>15.7 Example: View This Week's Performance</h3>
+                <p><strong>Scenario:</strong> Your manager asks for this week's guest satisfaction scores.</p>
+                <div class="steps">
+                    <strong>What to do:</strong>
+                    <ol>
+                        <li>Click <strong>Reports → Analytics</strong> in the sidebar</li>
+                        <li>At the top, click the <strong>date range selector</strong></li>
+                        <li>Click <strong>"This Week"</strong></li>
+                        <li>Scroll down to find the <strong>"Guest Satisfaction"</strong> card</li>
+                        <li>You'll see:
+                            <ul>
+                                <li>Average satisfaction score (e.g., 4.5 out of 5)</li>
+                                <li>Number of responses</li>
+                                <li>Trend compared to last week</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Export"</strong> to download a detailed report</li>
+                        <li>Choose <strong>"PDF"</strong> to share with your manager</li>
+                    </ol>
+                </div>
+
+                <h3>15.8 Example: Emergency - Fire Alarm Test</h3>
+                <p><strong>Scenario:</strong> Fire alarm test scheduled at 2 PM. Need to notify all guests.</p>
+                <div class="steps">
+                    <strong>What to do:</strong>
+                    <ol>
+                        <li>Click <strong>Broadcast → Emergency</strong> in the sidebar</li>
+                        <li>Select <strong>"Fire Alarm Test"</strong> template (or write your own)</li>
+                        <li>Message example:
+                            <blockquote>"NOTICE: Fire alarm test will occur at 2:00 PM today. The alarm will sound for approximately 5 minutes. This is only a test. No action required."</blockquote>
+                        </li>
+                        <li>Under audience, select <strong>"All Current Guests"</strong></li>
+                        <li>Click <strong>"Send Immediately"</strong></li>
+                        <li>All guests receive the notification instantly</li>
+                        <li>Check <strong>Broadcast → History</strong> to confirm delivery</li>
+                    </ol>
+                </div>
+            </section>
+
+            <hr>
+
+            <section class="section">
+                <h2>16. Image Notes</h2>
+                <ul>
+                    <li>Images are generated automatically by Playwright and saved to <code>docs/screenshots/</code>.</li>
+                    <li>If annotations are enabled, overlays and callouts are drawn directly on the images.</li>
+                    <li>To regenerate screenshots, run:</li>
+                </ul>
+                <pre><code>npx --prefix tools/snapshots playwright test tools/snapshots/tests/capture.pw.spec.ts --reporter=list</code></pre>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 StayBot Platform | User Guide Documentation</p>
+        </footer>
+    </div>
+</body>
+</html>

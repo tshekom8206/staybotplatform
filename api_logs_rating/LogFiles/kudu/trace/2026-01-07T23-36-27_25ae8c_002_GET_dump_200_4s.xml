@@ -1,0 +1,15 @@
+<step title="Incoming Request" date="2026-01-07T23:36:27.610" instance="25ae8c" url="/dump" method="GET" type="request" pid="5420,2,7" Connection="Keep-Alive" Accept-Encoding="identity" Authorization="Bea..." Host="staybot-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" x-ms-client-request-id="9e845462-ec21-11f0-adb7-5414f369fc7f" X-ARR-LOG-ID="9e845462-ec21-11f0-adb7-5414f369fc7f" CLIENT-IP="41.121.23.230:9176" X-SITE-DEPLOYMENT-ID="staybot-api" WAS-DEFAULT-HOSTNAME="staybot-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/dump" X-MS-COLDSTART="1" >
+  <step title="ZipStreamContent.OnZip" date="2026-01-07T23:36:30.502" >
+    <step title="Error occurred" date="2026-01-07T23:36:31.376" type="error" text="The remote host closed the connection. The error code is 0x800704CD." stackTrace="   at System.Web.Hosting.IIS7WorkerRequest.RaiseCommunicationError(Int32 result, Boolean throwOnDisconnect)
+   at System.Web.Hosting.IIS7WorkerRequest.ExplicitFlush()
+   at System.Web.HttpResponse.Flush(Boolean finalFlush, Boolean async)
+   at System.Web.HttpWriter.WriteFromStream(Byte[] data, Int32 offset, Int32 size)
+   at Kudu.Services.Infrastructure.ZipStreamContent.StreamWrapper.Write(Byte[] buffer, Int32 offset, Int32 count) in C:\__w\1\s\Kudu.Services\Infrastructure\ZipStreamContent.cs:line 59
+   at System.IO.Compression.ZipArchiveEntry.WriteCentralDirectoryFileHeader()
+   at System.IO.Compression.ZipArchive.WriteFile()
+   at System.IO.Compression.ZipArchive.Dispose(Boolean disposing)
+   at System.IO.Compression.ZipArchive.Dispose()
+   at Kudu.Services.Infrastructure.ZipStreamContent.&lt;&gt;c__DisplayClass0_0.&lt;Create&gt;b__0(Stream outputStream, HttpContent httpContent, TransportContext transportContext) in C:\__w\1\s\Kudu.Services\Infrastructure\ZipStreamContent.cs:line 24" /><!-- duration: 158ms -->
+  </step><!-- duration: 1333ms -->
+  <step title="Outgoing response" date="2026-01-07T23:36:31.907" type="response" statusCode="200" statusText="OK" Server="Microsoft-IIS/10.0" x-ms-request-id="9e845462-ec21-11f0-adb7-5414f369fc7f" Content-Disposition="attachment; filename=dump-01-07-23-36-30.zip" Cache-Control="no-cache" X-AspNet-Version="4.0.30319" Content-Type="application/zip" Pragma="no-cache" Expires="-1" /><!-- duration: 37ms -->
+</step><!-- duration: 4344ms -->

@@ -1,0 +1,8 @@
+<step title="Incoming Request" date="2025-12-15T23:40:36.150" instance="11d75b" url="/logstream" method="GET" type="request" pid="3272,2,7" Connection="Keep-Alive" Accept-Encoding="identity" Authorization="Bea..." Host="staybot-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" x-ms-client-request-id="6132db20-da0f-11f0-9d34-5414f369fc7f" X-ARR-LOG-ID="6132db20-da0f-11f0-9d34-5414f369fc7f" CLIENT-IP="41.121.44.108:40579" X-SITE-DEPLOYMENT-ID="staybot-api" WAS-DEFAULT-HOSTNAME="staybot-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/logstream" X-MS-COLDSTART="1" >
+  <step title="LogStreamHandler.BeginProcessRequest" date="2025-12-15T23:40:37.185" >
+    <step title="LockFile &apos;C:\home\site\locks\hooks.lock&apos; acquired" date="2025-12-15T23:40:38.106" /><!-- duration: 0ms -->
+    <step title="LockFile &apos;C:\home\site\locks\hooks.lock&apos; released" date="2025-12-15T23:40:38.578" /><!-- duration: 10ms -->
+  </step><!-- duration: 1403ms -->
+  <step title="LogStreamHandler.EndProcessRequest" date="2025-12-15T23:41:09.308" /><!-- duration: 234ms -->
+  <step title="Outgoing response" date="2025-12-15T23:41:09.731" type="response" statusCode="200" statusText="OK" Server="Microsoft-IIS/10.0" Cache-Control="private" X-AspNet-Version="4.0.30319" Content-Type="text/plain; charset=utf-8" /><!-- duration: 20ms -->
+</step><!-- duration: 33611ms -->

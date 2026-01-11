@@ -1,0 +1,143 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Hostr.Contracts -> C:\Users\Administrator\Downloads\hostr\packages\contracts\bin\Debug\net8.0\Hostr.Contracts.dll
+  Hostr.Api -> C:\Users\Administrator\Downloads\hostr\apps\api\bin\Debug\net8.0\Hostr.Api.dll
+  Hostr.Tests -> C:\Users\Administrator\Downloads\hostr\tests\bin\Debug\net8.0\Hostr.Tests.dll
+Test run for C:\Users\Administrator\Downloads\hostr\tests\bin\Debug\net8.0\Hostr.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:03:06.84]     Hostr.Tests.ChatbotQA.Tests.LiveApiTests.GenerateAndEvaluateLiveResponses_Subset [FAIL]
+  Failed Hostr.Tests.ChatbotQA.Tests.LiveApiTests.GenerateAndEvaluateLiveResponses_Subset [3 m 6 s]
+  Error Message:
+   Expected liveMetrics.OverallAccuracyRate to be greater than 0.1 because live API should have >10% accuracy rate, but found 0.1.
+  Stack Trace:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Numeric.NumericAssertions`2.BeGreaterThan(T expected, String because, Object[] becauseArgs)
+   at Hostr.Tests.ChatbotQA.Tests.LiveApiTests.GenerateAndEvaluateLiveResponses_Subset() in C:\Users\Administrator\Downloads\hostr\tests\ChatbotQA\Tests\LiveApiTests.cs:line 129
+--- End of stack trace from previous location ---
+  Standard Output Messages:
+ Loaded 10 test cases (subset of 40)
+ 
+Generating fresh responses from localhost API...
+
+ T-001: Our dinner service and room service end by 21:00 and 21:15 respectively. Would y...
+ T-002: Of course! How many towels would you like, and please note that the maximum is 4...
+ T-003: I apologize for any confusion. The current safari price is R1,800 per person. Wo...
+ T-004: I'd be happy to help! We have USB Charger, iPhone Charger, Android Charger, Univ...
+ T-005: I see you're interested in a spa treatment. Which massage type would you prefer?...
+ T-006: I understand you're looking for your lost item. To help our staff search for it,...
+ T-007: I'd be happy to help! Could you please specify what item or service you would li...
+ T-008: Which service would you like to book for your dinner reservation? Would you like...
+ T-009: I see you need help. Could you please specify what kind of assistance you requir...
+ T-010: Of course! What time would you like breakfast delivered to room 305?...
+ 
+================================================================================
+ EVALUATION RESULTS - LIVE RESPONSES
+ ================================================================================
+ 
+=== T-001 ===
+ Guest: Can I get dinner at 22:30?
+ Bot (Live): Our dinner service and room service end by 21:00 and 21:15 respectively. Would you like to know about late dining options or place an order for available times?
+ Verdict: inaccurate
+ Scores: U=1,00, A=0,00, C=0,50, P=0,00, T=1,00
+ Average: 0,50
+ Issues: Accuracy
+ 
+=== T-002 ===
+ Guest: I need towels
+ Bot (Live): Of course! How many towels would you like, and please note that the maximum is 4 towels per room without charge. Also, could you please confirm that you are in room 104?
+ Verdict: partial
+ Scores: U=1,00, A=1,00, C=0,50, P=1,00, T=1,00
+ Average: 0,90
+ 
+=== T-003 ===
+ Guest: You said the safari was R200, not R1800.
+ Bot (Live): I apologize for any confusion. The current safari price is R1,800 per person. Would you like me to check availability or provide more information about the Kruger National Park Day Trip?
+ Verdict: inaccurate
+ Scores: U=0,50, A=0,00, C=0,70, P=1,00, T=1,00
+ Average: 0,64
+ Issues: accuracy
+ 
+=== T-004 ===
+ Guest: I need a charger
+ Bot (Live): I'd be happy to help! We have USB Charger, iPhone Charger, Android Charger, Universal Adapter, Extension Cord, HDMI Cable, Laptop Charger, or Power Bank. Which one would you prefer?
+ Verdict: inaccurate
+ Scores: U=1,00, A=0,00, C=0,50, P=1,00, T=1,00
+ Average: 0,70
+ ⚠️ HALLUCINATION DETECTED
+ Issues: Accuracy
+ 
+=== T-005 ===
+ Guest: I want to book a spa treatment
+ Bot (Live): I see you're interested in a spa treatment. Which massage type would you prefer? We have Traditional Massage and Aromatherapy Massage. Would you like me to connect you with a team member who can help?
+ Verdict: partial
+ Scores: U=1,00, A=1,00, C=0,50, P=1,00, T=1,00
+ Average: 0,90
+ ⚠️ HALLUCINATION DETECTED
+ 
+=== T-006 ===
+ Guest: Where did I leave my keys?
+ Bot (Live): I understand you're looking for your lost item. To help our staff search for it, could you please tell me where you last remember seeing it?
+ Verdict: partial
+ Scores: U=1,00, A=1,00, C=0,50, P=1,00, T=1,00
+ Average: 0,90
+ 
+=== T-007 ===
+ Guest: Can I get one?
+ Bot (Live): I'd be happy to help! Could you please specify what item or service you would like to get?
+ Verdict: partial
+ Scores: U=0,50, A=1,00, C=0,80, P=1,00, T=1,00
+ Average: 0,86
+ 
+=== T-008 ===
+ Guest: I want dinner reservation
+ Bot (Live): Which service would you like to book for your dinner reservation? Would you like me to connect you with a team member who can help?
+ Verdict: partial
+ Scores: U=0,50, A=0,50, C=0,00, P=1,00, T=1,00
+ Average: 0,60
+ Issues: incomplete_response
+ 
+=== T-009 ===
+ Guest: I need help NOW
+ Bot (Live): I see you need help. Could you please specify what kind of assistance you require? For example, extra towels, maintenance, room service, or information about hotel services.
+ Verdict: partial
+ Scores: U=0,50, A=0,00, C=0,50, P=1,00, T=0,50
+ Average: 0,50
+ 
+=== T-010 ===
+ Guest: Can you bring breakfast to room 305?
+ Bot (Live): Of course! What time would you like breakfast delivered to room 305?
+ Verdict: accurate
+ Scores: U=1,00, A=1,00, C=0,90, P=1,00, T=1,00
+ Average: 0,98
+ 
+================================================================================
+ SUMMARY - LIVE API RESPONSES
+ ================================================================================
+ Total Cases: 10
+Accurate: 1 (10,0%)
+Partial: 6
+Inaccurate: 3
+Hard Violations: 3
+Hallucinations: 2
+
+Average Scores:
+  Understanding: 0,80
+  Accuracy: 0,55
+  Completeness: 0,54
+  Policy Compliance: 0,90
+  Tone: 0,95
+  Overall: 0,75
+ 
+✓ Live responses saved to: C:\Users\Administrator\Downloads\hostr\tests\ChatbotQA\Data\eval_cases_live.jsonl
+
+
+
+Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 5 m 31 s - Hostr.Tests.dll (net8.0)

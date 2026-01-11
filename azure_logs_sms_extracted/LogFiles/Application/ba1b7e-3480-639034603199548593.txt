@@ -1,0 +1,15 @@
+2026-01-08T09:11:58  PID[3480] Information 1/8/2026 9:11:58 AM [[4.8]] [DW1SDWK000MEM] DaasRunner.exe with version 4.8.40625.1 and ProcessId=3480 started
+2026-01-08T09:11:59  PID[3480] Information 1/8/2026 9:11:59 AM [[4.8]] [DW1SDWK000MEM] Checking DaaS bits and updating if required
+2026-01-08T09:11:59  PID[3480] Information 1/8/2026 9:11:59 AM [[4.8]] [DW1SDWK000MEM] [daasrunner.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-08T09:11:59  PID[3480] Information 1/8/2026 9:11:59 AM [[4.8]] [DW1SDWK000MEM] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-08T09:11:59  PID[3480] Information 1/8/2026 9:11:59 AM [[4.8]] [DW1SDWK000MEM] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2026-01-08T09:11:59  PID[3480] Information 1/8/2026 9:11:59 AM [[4.8]] [DW1SDWK000MEM] [daasconsole.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2026-01-08T09:11:59  PID[3480] Information 1/8/2026 9:11:59 AM [[4.8]] [DW1SDWK000MEM] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-08T09:11:59  PID[3480] Information 1/8/2026 9:11:59 AM [[4.8]] [DW1SDWK000MEM] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2026-01-08T09:11:59  PID[3480] Information 1/8/2026 9:11:59 AM [[4.8]] [DW1SDWK000MEM] Done checking DaaS bits for any new updates
+2026-01-08T09:13:19  PID[3480] Information 1/8/2026 9:13:19 AM [[4.8]] [DW1SDWK000MEM] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2026-01-08T09:13:19  PID[3480] Information 1/8/2026 9:13:19 AM [[4.8]] [DW1SDWK000MEM] Storage account is not configured
+2026-01-08T13:13:21  PID[3480] Information 1/8/2026 1:13:20 PM [[4.8]] [DW1SDWK000MEM] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2026-01-08T13:13:21  PID[3480] Information 1/8/2026 1:13:20 PM [[4.8]] [DW1SDWK000MEM] Storage account is not configured
+2026-01-08T17:13:22  PID[3480] Information 1/8/2026 5:13:22 PM [[4.8]] [DW1SDWK000MEM] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2026-01-08T17:13:22  PID[3480] Information 1/8/2026 5:13:22 PM [[4.8]] [DW1SDWK000MEM] Storage account is not configured

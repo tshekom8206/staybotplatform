@@ -1,0 +1,11 @@
+2025-12-28T17:57:00  PID[7668] Information 12/28/2025 5:56:59 PM [[4.8]] [dw0sdwk000JAV] DaasRunner.exe with version 4.8.40625.1 and ProcessId=7668 started
+2025-12-28T17:57:03  PID[7668] Information 12/28/2025 5:57:03 PM [[4.8]] [dw0sdwk000JAV] Checking DaaS bits and updating if required
+2025-12-28T17:57:03  PID[7668] Information 12/28/2025 5:57:03 PM [[4.8]] [dw0sdwk000JAV] [daasrunner.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2025-12-28T17:57:03  PID[7668] Information 12/28/2025 5:57:03 PM [[4.8]] [dw0sdwk000JAV] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2025-12-28T17:57:03  PID[7668] Information 12/28/2025 5:57:03 PM [[4.8]] [dw0sdwk000JAV] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2025-12-28T17:57:03  PID[7668] Information 12/28/2025 5:57:03 PM [[4.8]] [dw0sdwk000JAV] [daasconsole.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2025-12-28T17:57:03  PID[7668] Information 12/28/2025 5:57:03 PM [[4.8]] [dw0sdwk000JAV] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2025-12-28T17:57:03  PID[7668] Information 12/28/2025 5:57:03 PM [[4.8]] [dw0sdwk000JAV] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2025-12-28T17:57:03  PID[7668] Information 12/28/2025 5:57:03 PM [[4.8]] [dw0sdwk000JAV] Done checking DaaS bits for any new updates
+2025-12-28T17:58:23  PID[7668] Information 12/28/2025 5:58:23 PM [[4.8]] [dw0sdwk000JAV] Starting cleanup for Completed Sessions MaxDiagnosticSessionsToKeep = [10] MaxNumberOfDaysForSessions= [20]
+2025-12-28T17:58:23  PID[7668] Information 12/28/2025 5:58:23 PM [[4.8]] [dw0sdwk000JAV] Storage account is not configured

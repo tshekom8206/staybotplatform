@@ -1,0 +1,30 @@
+{
+  "messaging_product": "whatsapp",
+  "to": "27783776207",
+  "type": "template",
+  "template": {
+    "name": "checkin_day_ready_v01",
+    "language": {
+      "code": "en"
+    },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          {"type": "text", "text": "Tsheko"},
+          {"type": "text", "text": "101"},
+          {"type": "text", "text": "Dakarai B&B"},
+          {"type": "text", "text": "2:00 PM"}
+        ]
+      },
+      {
+        "type": "button",
+        "sub_type": "url",
+        "index": "0",
+        "parameters": [
+          {"type": "text", "text": "eyJ0IjoiZGFrYXJhaSIsInAiOiJjaGVja2luIn0="}
+        ]
+      }
+    ]
+  }
+}

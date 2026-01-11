@@ -1,0 +1,13 @@
+<step title="Incoming Request" date="2025-12-23T17:58:56.019" instance="3ffd02" url="/dump" method="GET" type="request" pid="1800,2,7" Connection="Keep-Alive" Accept-Encoding="identity" Authorization="Bea..." Host="staybot-api.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" x-ms-client-request-id="fdf59f26-e028-11f0-9624-5414f369fc7f" X-ARR-LOG-ID="fdf59f26-e028-11f0-9624-5414f369fc7f" CLIENT-IP="41.121.39.32:56636" X-SITE-DEPLOYMENT-ID="staybot-api" WAS-DEFAULT-HOSTNAME="staybot-api.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/dump" X-MS-COLDSTART="1" >
+  <step title="ZipStreamContent.OnZip" date="2025-12-23T17:58:58.775" >
+    <step title="Error occurred" date="2025-12-23T17:59:10.519" type="error" text="C:\home\LogFiles\kudu\trace\dw1sdwk000MOD-f20734e5-ef54-44c4-812c-a04c630f4762.txt, System.IO.FileNotFoundException: Could not find file &apos;C:\home\LogFiles\kudu\trace\dw1sdwk000MOD-f20734e5-ef54-44c4-812c-a04c630f4762.txt&apos;.
+File name: &apos;C:\home\LogFiles\kudu\trace\dw1sdwk000MOD-f20734e5-ef54-44c4-812c-a04c630f4762.txt&apos;
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 97ms -->
+  </step><!-- duration: 18402ms -->
+  <step title="Outgoing response" date="2025-12-23T17:59:17.410" type="response" statusCode="200" statusText="OK" Server="Microsoft-IIS/10.0" x-ms-request-id="fdf59f26-e028-11f0-9624-5414f369fc7f" Content-Disposition="attachment; filename=dump-12-23-17-58-58.zip" Cache-Control="no-cache" X-AspNet-Version="4.0.30319" Content-Type="application/zip" Pragma="no-cache" Expires="-1" /><!-- duration: 174ms -->
+</step><!-- duration: 21585ms -->

@@ -1,0 +1,51 @@
+{
+  "cookies": [
+    {
+      "name": "ARRAffinity",
+      "value": "931b9b281a0bf6880ba567a8225539233d83551cdcf66cf326b8e9858f84eb65",
+      "domain": ".demo.staybot.co.za",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "ARRAffinitySameSite",
+      "value": "931b9b281a0bf6880ba567a8225539233d83551cdcf66cf326b8e9858f84eb65",
+      "domain": ".demo.staybot.co.za",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://demo.staybot.co.za",
+      "localStorage": [
+        {
+          "name": "auth_token",
+          "value": "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImVtYWlsIjoidGVzdEBhZG1pbi5jb20iLCJ0aWQiOiIxIiwidGVuYW50X3NsdWciOiJwYW5vcmFtYXZpZXciLCJyb2xlIjoiQWRtaW4iLCJwbGFuIjoiU3RhbmRhcmQiLCJqdGkiOiJiMTFhY2VhMy0zMTkyLTRiZDgtYjI2MC1hNDZmMGM3Nzc0NjEiLCJpYXQiOjE3NjI4MDYyODQsImV4cCI6MTc2MjgwOTg4NCwiaXNzIjoic3RheWJvdC5jby56YSIsImF1ZCI6InN0YXlib3QtYXBpIn0.8-fyVO1Prx5k5ytkY9Y4kH34kCdMdfDOAWXnoZWfxNE\""
+        },
+        {
+          "name": "theme",
+          "value": "light"
+        },
+        {
+          "name": "current_user",
+          "value": "{\"id\":16,\"email\":\"test@admin.com\",\"isActive\":true,\"createdAt\":\"2025-09-20T02:48:40.93911\",\"role\":\"\"}"
+        },
+        {
+          "name": "token_expires_at",
+          "value": "\"2025-11-10T21:24:46.436Z\""
+        },
+        {
+          "name": "current_tenant",
+          "value": "{\"id\":1,\"slug\":\"panoramaview\",\"name\":\"Dakarai B&B\",\"timezone\":\"Africa/Johannesburg\",\"plan\":\"Standard\",\"themePrimary\":\"#2563eb\",\"status\":\"\",\"features\":{\"stock_management\":false,\"collection_workflows\":false,\"advanced_analytics\":true,\"priority_support\":false,\"custom_branding\":true}}"
+        }
+      ]
+    }
+  ]
+}
