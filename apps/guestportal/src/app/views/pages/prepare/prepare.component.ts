@@ -1,15 +1,17 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { GuestApiService, PrepareItem, ServiceRequest, ItemRequest, BookingInfo } from '../../../core/services/guest-api.service';
 import { RoomContextService } from '../../../core/services/room-context.service';
 import { AnalyticsService } from '../../../core/services/analytics.service';
+import { CustomRequestModalComponent } from '../../../shared/components/custom-request-modal/custom-request-modal.component';
 
 @Component({
   selector: 'app-prepare',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, CustomRequestModalComponent],
   template: `
     <div class="page-container">
       <div class="container">
@@ -171,6 +173,19 @@ import { AnalyticsService } from '../../../core/services/analytics.service';
                   </div>
                 }
               </div>
+
+              <!-- Custom Request Card -->
+              <div class="custom-request-card" (click)="openCustomRequestModal()">
+                <i class="bi bi-chat-dots-fill"></i>
+                <div class="card-content">
+                  <h4>{{ 'customRequest.cantFind' | translate }}</h4>
+                  <p>{{ 'customRequest.tellUsWhat' | translate }}</p>
+                </div>
+                <button class="btn-custom-request">
+                  {{ 'customRequest.requestAnything' | translate }}
+                  <i class="bi bi-arrow-right"></i>
+                </button>
+              </div>
             </div>
           }
 
@@ -204,6 +219,14 @@ import { AnalyticsService } from '../../../core/services/analytics.service';
         }
       </div>
     </div>
+
+    <!-- Custom Request Modal -->
+    <app-custom-request-modal
+      [isOpen]="customRequestModalOpen"
+      [showTiming]="true"
+      (closed)="customRequestModalOpen.set(false)"
+      (submitted)="onCustomRequestSubmitted($event)"
+    />
   `,
   styles: [`
     .page-container {
@@ -522,6 +545,88 @@ import { AnalyticsService } from '../../../core/services/analytics.service';
         min-width: 75px;
       }
     }
+
+    /* MATCHED TO EXISTING DESIGN SYSTEM - house-rules gradient cards */
+    .custom-request-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1.5rem 0 0;
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .custom-request-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .custom-request-card > i {
+      font-size: 2rem;
+      flex-shrink: 0;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-request-card .card-content {
+      flex: 1;
+    }
+
+    .custom-request-card .card-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-request-card .card-content p {
+      font-size: 0.9rem;
+      opacity: 0.95;
+      margin: 0;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-request-card .btn-custom-request {
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 50px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-request-card .btn-custom-request:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .custom-request-card .btn-custom-request i {
+      font-size: 1rem;
+      text-shadow: none;
+    }
+
+    @media (max-width: 768px) {
+      .custom-request-card {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .custom-request-card .btn-custom-request {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   `]
 })
 export class PrepareComponent implements OnInit {
@@ -540,6 +645,11 @@ export class PrepareComponent implements OnInit {
   roomNumber = signal<string>('');
   bookingInfo = signal<BookingInfo | null>(null);
   bookingId = signal<number | null>(null);
+
+  // Custom request state
+  customRequestModalOpen = signal(false);
+  itemNotes = signal<Map<number, string>>(new Map());
+  showNotesFor = signal<number | null>(null);
 
   ngOnInit(): void {
     // Check for booking or room in URL params
@@ -703,5 +813,58 @@ export class PrepareComponent implements OnInit {
   resetPage(): void {
     this.submitted.set(false);
     this.selectedItems.set([]);
+  }
+
+  // Custom request methods
+  openCustomRequestModal(): void {
+    this.customRequestModalOpen.set(true);
+  }
+
+  onCustomRequestSubmitted(event: {request: string; timing?: string}): void {
+    const roomNumber = this.roomNumber() || this.bookingInfo()?.roomNumber;
+
+    if (!roomNumber) {
+      console.error('No room number available for custom request');
+      return;
+    }
+
+    this.apiService.submitCustomRequest({
+      description: event.request,
+      roomNumber: roomNumber,
+      timing: event.timing,
+      department: 'Concierge',
+      source: 'prepare_page'
+    }).subscribe({
+      next: (response) => {
+        this.customRequestModalOpen.set(false);
+        // Track analytics
+        this.analyticsService.trackEvent('custom_request_submitted', {
+          source: 'prepare_page',
+          timing: event.timing,
+          success: response.success
+        });
+        // Show success (could add a toast notification here)
+        console.log('Custom request submitted successfully');
+      },
+      error: (error) => {
+        console.error('Error submitting custom request:', error);
+        // Reset modal loading state
+        this.customRequestModalOpen.set(false);
+      }
+    });
+  }
+
+  toggleNotesInput(itemId: number): void {
+    if (this.showNotesFor() === itemId) {
+      this.showNotesFor.set(null);
+    } else {
+      this.showNotesFor.set(itemId);
+    }
+  }
+
+  updateItemNotes(itemId: number, notes: string): void {
+    const current = this.itemNotes();
+    current.set(itemId, notes);
+    this.itemNotes.set(new Map(current));
   }
 }

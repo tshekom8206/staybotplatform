@@ -55,8 +55,8 @@ public class GA4DataService : IGA4DataService
     }
 
     /// <summary>
-    /// Create a filter for GA4 queries based on page path containing tenant slug
-    /// The guest portal URLs are like /panoramaview/... so we filter by pagePath containing the slug
+    /// Create a filter for GA4 queries based on tenant_slug custom dimension
+    /// The guest portal sends tenant_slug as a custom dimension with each event
     /// </summary>
     private FilterExpression CreateTenantFilter(string tenantSlug)
     {
@@ -64,11 +64,11 @@ public class GA4DataService : IGA4DataService
         {
             Filter = new Filter
             {
-                FieldName = "pagePath",
+                FieldName = "customEvent:tenant_slug",
                 StringFilter = new Filter.Types.StringFilter
                 {
-                    Value = $"/{tenantSlug}",
-                    MatchType = Filter.Types.StringFilter.Types.MatchType.BeginsWith
+                    Value = tenantSlug,
+                    MatchType = Filter.Types.StringFilter.Types.MatchType.Exact
                 }
             }
         };
@@ -124,11 +124,12 @@ public class GA4DataService : IGA4DataService
             }
         };
 
-        // Apply tenant filter based on page path
-        if (!string.IsNullOrEmpty(tenantSlug))
-        {
-            request.DimensionFilter = CreateTenantFilter(tenantSlug);
-        }
+        // TODO: Re-enable tenant filtering once tenant_slug custom dimension is registered in GA4 Admin
+        // For now, showing all data since custom dimension filtering requires GA4 setup
+        // if (!string.IsNullOrEmpty(tenantSlug))
+        // {
+        //     request.DimensionFilter = CreateTenantFilter(tenantSlug);
+        // }
 
         var response = await client.RunReportAsync(request);
 
@@ -283,11 +284,12 @@ public class GA4DataService : IGA4DataService
             Limit = limit
         };
 
-        // Apply tenant filter based on page path
-        if (!string.IsNullOrEmpty(tenantSlug))
-        {
-            request.DimensionFilter = CreateTenantFilter(tenantSlug);
-        }
+        // TODO: Re-enable tenant filtering once tenant_slug custom dimension is registered in GA4 Admin
+        // For now, showing all data since custom dimension filtering requires GA4 setup
+        // if (!string.IsNullOrEmpty(tenantSlug))
+        // {
+        //     request.DimensionFilter = CreateTenantFilter(tenantSlug);
+        // }
 
         var response = await client.RunReportAsync(request);
         var result = new List<PageViewDto>();
@@ -332,11 +334,12 @@ public class GA4DataService : IGA4DataService
             }
         };
 
-        // Apply tenant filter based on page path
-        if (!string.IsNullOrEmpty(tenantSlug))
-        {
-            request.DimensionFilter = CreateTenantFilter(tenantSlug);
-        }
+        // TODO: Re-enable tenant filtering once tenant_slug custom dimension is registered in GA4 Admin
+        // For now, showing all data since custom dimension filtering requires GA4 setup
+        // if (!string.IsNullOrEmpty(tenantSlug))
+        // {
+        //     request.DimensionFilter = CreateTenantFilter(tenantSlug);
+        // }
 
         var response = await client.RunReportAsync(request);
         var result = new List<PageViewTimeSeriesDto>();
@@ -382,11 +385,12 @@ public class GA4DataService : IGA4DataService
             }
         };
 
-        // Apply tenant filter based on page path
-        if (!string.IsNullOrEmpty(tenantSlug))
-        {
-            request.DimensionFilter = CreateTenantFilter(tenantSlug);
-        }
+        // TODO: Re-enable tenant filtering once tenant_slug custom dimension is registered in GA4 Admin
+        // For now, showing all data since custom dimension filtering requires GA4 setup
+        // if (!string.IsNullOrEmpty(tenantSlug))
+        // {
+        //     request.DimensionFilter = CreateTenantFilter(tenantSlug);
+        // }
 
         var response = await client.RunReportAsync(request);
         var result = new List<EventDto>();
@@ -423,11 +427,12 @@ public class GA4DataService : IGA4DataService
             }
         };
 
-        // Apply tenant filter based on page path
-        if (!string.IsNullOrEmpty(tenantSlug))
-        {
-            request.DimensionFilter = CreateTenantFilter(tenantSlug);
-        }
+        // TODO: Re-enable tenant filtering once tenant_slug custom dimension is registered in GA4 Admin
+        // For now, showing all data since custom dimension filtering requires GA4 setup
+        // if (!string.IsNullOrEmpty(tenantSlug))
+        // {
+        //     request.DimensionFilter = CreateTenantFilter(tenantSlug);
+        // }
 
         var response = await client.RunReportAsync(request);
         var result = new EngagementDto();

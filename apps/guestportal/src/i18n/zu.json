@@ -306,5 +306,21 @@
     "requestService": "Cela Insizakalo",
     "serviceRequested": "Insizakalo icelwe ngempumelelo!",
     "errorTitle": "Ayikwazi ukulayisha ulwazi lokuphuma"
+  },
+  "customRequest": {
+    "title": "Isicelo Esikhethekile",
+    "subtitle": "Sitshele ukuthi udingani futhi sizokwenza konke okusemandleni ethu ukusiza",
+    "whatDoYouNeed": "Udingani?",
+    "placeholder": "Isib., 'Ubisi lwe-almond lwekofu', 'Isishisisi sebhodlela lomntwana', 'Amakhushini engeziwe okusekela umhlane', 'Amaphetali erozi ngomhla wokuqhubeka'",
+    "whenNeeded": "Ukudinga nini lokhu?",
+    "beforeArrival": "Ngingakafiki",
+    "uponCheckIn": "Lapho ngibhalisela",
+    "laterDuringStay": "Kamuva phakathi nokuhlala kwami",
+    "asap": "Ngokushesha okukhulu",
+    "cantFind": "Awukwazi ukuthola lokho okudingayo?",
+    "tellUsWhat": "Cela noma yini engabhalwe ngenhla",
+    "requestAnything": "Sitshele Ukuthi Udingani",
+    "success": "Isicelo sithunyelwe!",
+    "successMessage": "Sizokwenza konke okusemandleni ethu ukufeza isicelo sakho."
   }
 }

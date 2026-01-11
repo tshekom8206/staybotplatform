@@ -7,6 +7,7 @@ import { RoomPreferencesService, RoomPreference, CreateRoomPreferenceRequest } f
 import { RoomContextService } from '../../../core/services/room-context.service';
 import { GuestApiService, RequestItem } from '../../../core/services/guest-api.service';
 import { PreferenceConfirmModalComponent, PendingPreference } from '../../../shared/components/preference-confirm-modal/preference-confirm-modal.component';
+import { CustomRequestModalComponent } from '../../../shared/components/custom-request-modal/custom-request-modal.component';
 
 interface PreferenceToggle {
   type: string;
@@ -19,7 +20,7 @@ interface PreferenceToggle {
 @Component({
   selector: 'app-housekeeping',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, PreferenceConfirmModalComponent],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, PreferenceConfirmModalComponent, CustomRequestModalComponent],
   template: `
     <div class="page-container">
       <div class="container">
@@ -120,9 +121,9 @@ interface PreferenceToggle {
               <i class="bi bi-moon"></i>
               {{ 'housekeeping.doNotDisturb' | translate }}
             </h3>
-            
+
             <div class="preference-card">
-              <div class="preference-item">
+              <div class="preference-item" [style.border-bottom]="dndPendingTimeSelection ? 'none' : null">
                 <div class="preference-info">
                   <label class="preference-label">{{ 'housekeeping.dndEnabled' | translate }}</label>
                   <p class="preference-description">{{ 'housekeeping.dndDescription' | translate }}</p>
@@ -132,17 +133,39 @@ interface PreferenceToggle {
                          type="checkbox"
                          role="switch"
                          [(ngModel)]="dndEnabled"
-                         (change)="requestDndPreference()">
+                         (change)="onDndToggle()">
                 </div>
               </div>
 
-              @if (dndEnabled) {
-                <div class="preference-note">
-                  <label class="form-label">{{ 'housekeeping.dndUntil' | translate }}</label>
+              @if (dndPendingTimeSelection) {
+                <!-- Time selection step - shown before confirmation -->
+                <div class="dnd-time-selection">
+                  <label class="form-label fw-semibold">{{ 'housekeeping.dndSelectTime' | translate }}</label>
+                  <p class="text-muted small mb-2">{{ 'housekeeping.dndSelectTimeDescription' | translate }}</p>
                   <input type="time"
-                         class="form-control"
-                         [(ngModel)]="dndUntilTime"
-                         (change)="requestDndTimePreference()">
+                         class="form-control mb-3"
+                         [(ngModel)]="dndUntilTime">
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary flex-fill" (click)="cancelDndSelection()">
+                      {{ 'common.cancel' | translate }}
+                    </button>
+                    <button class="btn btn-dark flex-fill" (click)="confirmDndTimeSelection()">
+                      {{ 'common.confirm' | translate }}
+                    </button>
+                  </div>
+                </div>
+              } @else if (dndEnabled && !dndPendingTimeSelection) {
+                <!-- Active DND - show current time with edit option -->
+                <div class="preference-note">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <label class="form-label mb-0">{{ 'housekeeping.dndUntil' | translate }}</label>
+                      <p class="text-muted small mb-0">{{ dndUntilTime }}</p>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="editDndTime()">
+                      <i class="bi bi-pencil"></i> {{ 'common.edit' | translate }}
+                    </button>
+                  </div>
                 </div>
               }
             </div>
@@ -294,6 +317,19 @@ interface PreferenceToggle {
             </div>
           }
 
+          <!-- Custom Request Card -->
+          <div class="custom-request-card" (click)="openCustomRequestModal()">
+            <i class="bi bi-chat-dots-fill"></i>
+            <div class="card-content">
+              <h4>{{ 'customRequest.cantFind' | translate }}</h4>
+              <p>{{ 'customRequest.tellUsWhat' | translate }}</p>
+            </div>
+            <button class="btn-custom-request">
+              {{ 'customRequest.requestAnything' | translate }}
+              <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+
           <!-- Active Preferences List -->
           @if (activePreferences().length > 0) {
             <div class="preference-section">
@@ -350,6 +386,14 @@ interface PreferenceToggle {
             (confirmed)="onConfirmPreference($event)"
             (cancelled)="onCancelPreference()">
           </app-preference-confirm-modal>
+
+          <!-- Custom Request Modal -->
+          <app-custom-request-modal
+            [isOpen]="customRequestModalOpen"
+            [showTiming]="false"
+            (closed)="customRequestModalOpen.set(false)"
+            (submitted)="onCustomRequestSubmitted($event)"
+          />
         }
       </div>
     </div>
@@ -642,6 +686,19 @@ interface PreferenceToggle {
       font-size: 1rem;
     }
 
+    /* DND Time Selection Panel */
+    .dnd-time-selection {
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+    }
+
+    .dnd-time-selection .form-control {
+      font-size: 1.1rem;
+      padding: 0.75rem;
+    }
+
     @media (max-width: 768px) {
       .page-title {
         font-size: 1.5rem;
@@ -662,6 +719,88 @@ interface PreferenceToggle {
         font-size: 0.8rem;
         min-width: 75px;
       }
+
+      .custom-request-card {
+        flex-direction: column;
+        text-align: center;
+
+        .btn-custom-request {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    }
+
+    /* Custom Request Card - MATCHED TO EXISTING DESIGN SYSTEM */
+    .custom-request-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1.5rem 0 0;
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .custom-request-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .custom-request-card i {
+      font-size: 2rem;
+      flex-shrink: 0;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-request-card .card-content {
+      flex: 1;
+    }
+
+    .custom-request-card .card-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-request-card .card-content p {
+      font-size: 0.9rem;
+      opacity: 0.95;
+      margin: 0;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-request-card .btn-custom-request {
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 50px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-request-card .btn-custom-request:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .custom-request-card .btn-custom-request i {
+      font-size: 1rem;
+      text-shadow: none;
     }
   `]
 })
@@ -682,6 +821,11 @@ export class HousekeepingComponent implements OnInit {
   requestedItems = signal<Set<number>>(new Set());
   requestingItem = signal<number | null>(null);
 
+  // Custom request state
+  customRequestModalOpen = signal(false);
+  itemNotes = signal<Map<number, string>>(new Map());
+  showNotesFor = signal<number | null>(null);
+
   // Store previous values for reverting on cancel
   private previousValues: Record<string, any> = {};
 
@@ -692,6 +836,7 @@ export class HousekeepingComponent implements OnInit {
   dailyTowelChange = true;
   dndEnabled = false;
   dndUntilTime = '14:00';
+  dndPendingTimeSelection = false; // Track if user needs to select time first
 
   // New preference states
   cleaningTime = '';
@@ -982,20 +1127,18 @@ export class HousekeepingComponent implements OnInit {
     });
   }
 
-  requestDndPreference(): void {
-    this.previousValues['dndEnabled'] = !this.dndEnabled;
-    this.previousValues['dndUntilTime'] = this.dndUntilTime;
+  // ============================================
+  // Do Not Disturb - New Flow (Time first, then confirm)
+  // ============================================
 
+  onDndToggle(): void {
     if (this.dndEnabled) {
-      this.showConfirmation({
-        type: 'dnd_schedule',
-        value: { until: this.dndUntilTime },
-        label: 'Do Not Disturb',
-        description: `Housekeeping will not enter your room until ${this.dndUntilTime}`,
-        icon: 'bi-moon'
-      });
+      // User turned ON DND - show time selection first
+      this.dndPendingTimeSelection = true;
+      this.dndUntilTime = '14:00'; // Reset to default
     } else {
-      // Cancelling DND
+      // User turned OFF DND - show confirmation to disable
+      this.previousValues['dndEnabled'] = true; // Was enabled before
       this.showConfirmation({
         type: 'dnd_cancel',
         value: null,
@@ -1006,7 +1149,16 @@ export class HousekeepingComponent implements OnInit {
     }
   }
 
-  requestDndTimePreference(): void {
+  cancelDndSelection(): void {
+    // User cancelled time selection - revert toggle
+    this.dndEnabled = false;
+    this.dndPendingTimeSelection = false;
+  }
+
+  confirmDndTimeSelection(): void {
+    // User selected time - now show confirmation modal
+    this.dndPendingTimeSelection = false;
+    this.previousValues['dndEnabled'] = false; // Was disabled before
     this.previousValues['dndUntilTime'] = this.dndUntilTime;
 
     this.showConfirmation({
@@ -1016,6 +1168,11 @@ export class HousekeepingComponent implements OnInit {
       description: `Housekeeping will not enter your room until ${this.dndUntilTime}`,
       icon: 'bi-moon'
     });
+  }
+
+  editDndTime(): void {
+    // Allow editing the DND time
+    this.dndPendingTimeSelection = true;
   }
 
   requestCleaningTime(time: string): void {
@@ -1205,5 +1362,59 @@ export class HousekeepingComponent implements OnInit {
         alert('Failed to submit request. Please try again.');
       }
     });
+  }
+
+  // ============================================
+  // Custom Request Methods
+  // ============================================
+
+  openCustomRequestModal(): void {
+    this.customRequestModalOpen.set(true);
+  }
+
+  onCustomRequestSubmitted(event: {request: string; timing?: string}): void {
+    const roomNumber = this.roomContext.getRoomNumber();
+
+    if (!roomNumber) {
+      console.error('No room number available for custom request');
+      return;
+    }
+
+    this.guestApi.submitCustomRequest({
+      description: event.request,
+      roomNumber: roomNumber,
+      timing: event.timing,
+      department: 'Housekeeping',
+      source: 'housekeeping_page'
+    }).subscribe({
+      next: (response) => {
+        this.customRequestModalOpen.set(false);
+        if (response.success) {
+          // Show success toast
+          this.showSuccessToast.set(true);
+          setTimeout(() => this.showSuccessToast.set(false), 3000);
+        }
+        console.log('Custom request submitted successfully');
+      },
+      error: (error) => {
+        console.error('Error submitting custom request:', error);
+        this.customRequestModalOpen.set(false);
+        alert('Failed to submit custom request. Please try again.');
+      }
+    });
+  }
+
+  toggleNotesInput(itemId: number): void {
+    if (this.showNotesFor() === itemId) {
+      this.showNotesFor.set(null);
+    } else {
+      this.showNotesFor.set(itemId);
+    }
+  }
+
+  updateItemNotes(itemId: number, notes: string): void {
+    const current = this.itemNotes();
+    current.set(itemId, notes);
+    this.itemNotes.set(new Map(current));
   }
 }

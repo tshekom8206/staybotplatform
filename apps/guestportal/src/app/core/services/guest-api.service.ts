@@ -544,6 +544,34 @@ export class GuestApiService {
     );
   }
 
+  submitCustomRequest(request: {
+    description: string;
+    roomNumber?: string;
+    timing?: string;
+    department?: string;
+    source?: string;
+  }): Observable<{success: boolean; message: string; taskId: number}> {
+    return this.http.post<{success: boolean; message: string; taskId: number}>(
+      `${this.apiUrl}/custom-request`,
+      {
+        description: request.description,
+        roomNumber: request.roomNumber,
+        timing: request.timing,
+        department: request.department || 'Concierge',
+        source: request.source || 'guest_portal'
+      }
+    ).pipe(
+      catchError(error => {
+        console.error('Error submitting custom request:', error);
+        return of({
+          success: false,
+          message: 'Failed to submit custom request. Please try again.',
+          taskId: 0
+        });
+      })
+    );
+  }
+
   // Guest Journey - Prepare Page (Pre-Arrival Upsells)
   getPrepareItems(): Observable<PrepareItemsResponse> {
     return this.http.get<PrepareItemsResponse>(`${this.apiUrl}/prepare-items`).pipe(

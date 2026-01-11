@@ -23,6 +23,7 @@ public class PublicGuestController : ControllerBase
     private readonly IRoomValidationService _roomValidationService;
     private readonly IProactiveMessageService _proactiveMessageService;
     private readonly ISmsService _smsService;
+    private readonly IConfiguration _configuration;
 
     public PublicGuestController(
         HostrDbContext context,
@@ -30,7 +31,8 @@ public class PublicGuestController : ControllerBase
         IHubContext<StaffTaskHub> staffTaskHub,
         IRoomValidationService roomValidationService,
         IProactiveMessageService proactiveMessageService,
-        ISmsService smsService)
+        ISmsService smsService,
+        IConfiguration configuration)
     {
         _context = context;
         _logger = logger;
@@ -38,6 +40,7 @@ public class PublicGuestController : ControllerBase
         _roomValidationService = roomValidationService;
         _proactiveMessageService = proactiveMessageService;
         _smsService = smsService;
+        _configuration = configuration;
     }
 
     private async Task<Tenant?> GetTenantBySlugAsync(string slug)
@@ -1574,6 +1577,104 @@ public class PublicGuestController : ControllerBase
         }
     }
 
+    [HttpPost("custom-request")]
+    public async Task<IActionResult> SubmitCustomRequest(string slug, [FromBody] CustomRequestDto request)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(request.Description))
+            {
+                return BadRequest(new { error = "Request description is required" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.RoomNumber))
+            {
+                return BadRequest(new { error = "Room number is required" });
+            }
+
+            // Create StaffTask for custom request
+            var task = new StaffTask
+            {
+                TenantId = tenant.Id,
+                Title = $"Custom Request - Room {request.RoomNumber}",
+                Description = $"Guest requested:\n{request.Description}"
+                            + (string.IsNullOrEmpty(request.Timing) ? "" : $"\n\nTiming: {GetTimingDescription(request.Timing)}"),
+                TaskType = "custom_request",
+                Department = request.Department ?? "Concierge", // Default to concierge
+                RoomNumber = request.RoomNumber,
+                Priority = "Normal",
+                Status = "Open",
+                Notes = $"Submitted via Guest Portal at {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.StaffTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            // Track metric
+            var metric = new PortalUpsellMetric
+            {
+                TenantId = tenant.Id,
+                ServiceType = "Custom Request",
+                RoomNumber = request.RoomNumber,
+                ActionTaken = "requested",
+                Timestamp = DateTime.UtcNow,
+                Source = request.Source ?? "prepare_page"
+            };
+
+            _context.PortalUpsellMetrics.Add(metric);
+            await _context.SaveChangesAsync();
+
+            // Send SignalR notification to staff
+            await _staffTaskHub.Clients.Group($"Tenant_{tenant.Id}")
+                .SendAsync("TaskCreated", new
+                {
+                    taskId = task.Id,
+                    title = task.Title,
+                    roomNumber = task.RoomNumber,
+                    department = task.Department,
+                    taskType = task.TaskType,
+                    createdAt = task.CreatedAt
+                });
+
+            _logger.LogInformation(
+                "Custom request created: Task {TaskId} in Room {RoomNumber} at Tenant {TenantId}",
+                task.Id, request.RoomNumber, tenant.Id);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Your custom request has been submitted successfully",
+                taskId = task.Id
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting custom request for slug {Slug}", slug);
+            return StatusCode(500, new { error = "Error submitting custom request" });
+        }
+    }
+
+    private string GetTimingDescription(string timing)
+    {
+        return timing switch
+        {
+            "before-arrival" => "Before arrival",
+            "check-in" => "Upon check-in",
+            "later" => "Later during stay",
+            "asap" => "As soon as possible",
+            _ => "No specific time"
+        };
+    }
+
     #endregion
 
     #region Guest Journey - Pre-Arrival & Feedback
@@ -2259,6 +2360,11 @@ public class PublicGuestController : ControllerBase
 
             _logger.LogInformation("Sending test SMS to {Phone} for tenant {TenantId}", phone, tenant.Id);
 
+            // Check API key configuration
+            var apiKey = _configuration["ClickaTell:ApiKey"];
+            var hasApiKey = !string.IsNullOrEmpty(apiKey);
+            _logger.LogInformation("API Key configured: {HasApiKey}, Length: {Length}", hasApiKey, apiKey?.Length ?? 0);
+
             var sent = await _smsService.SendMessageAsync(phone, message);
 
             return Ok(new
@@ -2266,13 +2372,64 @@ public class PublicGuestController : ControllerBase
                 success = sent,
                 phone,
                 message,
+                apiKeyConfigured = hasApiKey,
                 timestamp = DateTime.UtcNow
             });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending test SMS to {Phone}", phone);
-            return StatusCode(500, new { error = "Failed to send SMS", details = ex.Message });
+            return StatusCode(500, new { error = "Failed to send SMS", details = ex.Message, stackTrace = ex.StackTrace });
+        }
+    }
+
+    /// <summary>
+    /// Test endpoint: Direct ClickaTell API call (for debugging)
+    /// </summary>
+    [HttpPost("test/sms-direct")]
+    public async Task<IActionResult> TestSmsDirect(
+        string slug,
+        [FromQuery] string phone,
+        [FromQuery] string message)
+    {
+        try
+        {
+            var apiKey = _configuration["ClickaTell:ApiKey"];
+            _logger.LogInformation("Direct ClickaTell test - API Key configured: {HasKey}", !string.IsNullOrEmpty(apiKey));
+
+            using var httpClient = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://platform.clickatell.com/messages");
+
+            var requestBody = new { content = message, to = new[] { phone } };
+            var json = System.Text.Json.JsonSerializer.Serialize(requestBody);
+
+            request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            request.Headers.TryAddWithoutValidation("Authorization", apiKey);
+            request.Headers.TryAddWithoutValidation("User-Agent", "StayBot/1.0");
+            request.Headers.TryAddWithoutValidation("Accept", "application/json");
+
+            _logger.LogInformation("Sending direct HTTP POST to ClickaTell");
+
+            var response = await httpClient.SendAsync(request);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            _logger.LogInformation("Direct ClickaTell response: Status={Status}, Body={Body}",
+                response.StatusCode, responseBody);
+
+            return Ok(new
+            {
+                success = response.IsSuccessStatusCode,
+                statusCode = (int)response.StatusCode,
+                responseBody,
+                phone,
+                message,
+                timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in direct ClickaTell test");
+            return StatusCode(500, new { error = "Failed to send direct SMS", details = ex.Message, stackTrace = ex.StackTrace });
         }
     }
 

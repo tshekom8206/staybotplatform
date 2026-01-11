@@ -502,7 +502,7 @@ public class HotelierReportsService : IHotelierReportsService
             TotalConversations = conversations.Count
         };
 
-        // Count by status
+        // Count by status (bot metrics)
         result.EscalatedToAgent = conversations.Count(c =>
             c.Status == "TransferredToAgent" ||
             c.Status == "Handover" ||
@@ -510,6 +510,26 @@ public class HotelierReportsService : IHotelierReportsService
 
         result.BotResolved = conversations.Count(c =>
             c.Status == "Closed" && !c.AssignedAgentId.HasValue);
+
+        // Get portal "Contact Us" clicks from GA4
+        // Note: Portal contacts are tracked separately - they're proactive guest contacts,
+        // not bot escalations (which represent bot failures to resolve)
+        try
+        {
+            var startDateStr = startDate.ToString("yyyy-MM-dd");
+            var endDateStr = endDate.ToString("yyyy-MM-dd");
+            var events = await _ga4Service.GetEventsAsync(tenantId, startDateStr, endDateStr);
+            var portalContacts = events.FirstOrDefault(e => e.EventName == "whatsapp_opened")?.Count ?? 0;
+
+            // Store portal contacts separately - don't add to bot metrics
+            // These represent guests who proactively sought contact via portal,
+            // not guests the bot failed to help
+            result.PortalEscalations = portalContacts;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get portal contact data from GA4");
+        }
 
         // Calculate rates
         if (result.TotalConversations > 0)

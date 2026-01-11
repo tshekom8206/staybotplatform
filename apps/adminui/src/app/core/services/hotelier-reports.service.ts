@@ -103,6 +103,7 @@ export interface WhatsAppEscalationDto {
   totalConversations: number;
   botResolved: number;
   escalatedToAgent: number;
+  portalEscalations?: number; // Guest Portal "Contact Us" clicks (separate from bot metrics)
   escalationRate: number;
   botSuccessRate: number;
   byIntent: EscalationByIntent[];

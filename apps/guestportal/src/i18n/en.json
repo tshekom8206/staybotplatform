@@ -329,5 +329,21 @@
     "requestService": "Request Service",
     "serviceRequested": "Service requested successfully!",
     "errorTitle": "Unable to load checkout information"
+  },
+  "customRequest": {
+    "title": "Custom Request",
+    "subtitle": "Tell us what you need and we'll do our best to help",
+    "whatDoYouNeed": "What do you need?",
+    "placeholder": "E.g., 'Almond milk for coffee', 'Baby bottle warmer', 'Extra pillows for back support', 'Rose petals for anniversary'",
+    "whenNeeded": "When do you need this?",
+    "beforeArrival": "Before I arrive",
+    "uponCheckIn": "Upon check-in",
+    "laterDuringStay": "Later during my stay",
+    "asap": "As soon as possible",
+    "cantFind": "Can't find what you need?",
+    "tellUsWhat": "Request anything not listed above",
+    "requestAnything": "Tell Us What You Need",
+    "success": "Request submitted!",
+    "successMessage": "We'll do our best to fulfill your request."
   }
 }

@@ -129,6 +129,7 @@ public class WhatsAppEscalationDto
     public int TotalConversations { get; set; }
     public int BotResolved { get; set; }
     public int EscalatedToAgent { get; set; }
+    public int PortalEscalations { get; set; } // Guest Portal "Contact Us" clicks
     public double EscalationRate { get; set; }
     public double BotSuccessRate { get; set; }
     public List<EscalationByIntent> ByIntent { get; set; } = new();
