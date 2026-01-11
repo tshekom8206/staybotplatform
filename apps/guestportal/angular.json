@@ -64,6 +64,11 @@
                 "glob": "custom-sw.js",
                 "input": "src",
                 "output": "/"
+              },
+              {
+                "glob": "web.config",
+                "input": "src",
+                "output": "/"
               }
             ],
             "styles": [
