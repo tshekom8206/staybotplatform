@@ -53,6 +53,10 @@ export const routes: Routes = [
       {
         path: 'feedback',
         loadComponent: () => import('./views/pages/feedback/feedback.component').then(c => c.FeedbackComponent)
+      },
+      {
+        path: 'checkout',
+        loadComponent: () => import('./views/pages/checkout/checkout.component').then(c => c.CheckoutComponent)
       }
     ]
   },

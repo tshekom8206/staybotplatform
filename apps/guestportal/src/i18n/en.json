@@ -316,5 +316,18 @@
     "thankYou": "Thank You!",
     "thankYouPositive": "We're delighted you're enjoying your stay!",
     "thankYouNegative": "We've notified our team and they'll address this shortly."
+  },
+  "checkout": {
+    "title": "Checkout Services",
+    "subtitle": "Request services for your departure",
+    "bookingSummary": "Your Booking",
+    "guestName": "Guest Name",
+    "room": "Room Number",
+    "checkoutDate": "Checkout Date",
+    "noServices": "No checkout services available",
+    "noServicesDescription": "Please contact the front desk for assistance with your checkout.",
+    "requestService": "Request Service",
+    "serviceRequested": "Service requested successfully!",
+    "errorTitle": "Unable to load checkout information"
   }
 }

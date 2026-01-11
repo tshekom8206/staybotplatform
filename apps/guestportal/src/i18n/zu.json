@@ -293,5 +293,18 @@
     "thankYou": "Siyabonga!",
     "thankYouPositive": "Siyajabula ukuthi uthokozela ukuhlala kwakho!",
     "thankYouNegative": "Sazisile ithimba lethu futhi bazokusingatha lokhu maduze."
+  },
+  "checkout": {
+    "title": "Izinsizakalo Zokuphuma",
+    "subtitle": "Cela izinsizakalo zokuhamba kwakho",
+    "bookingSummary": "Ukubhukha Kwakho",
+    "guestName": "Igama Lesivakashi",
+    "room": "Inombolo Yekamelo",
+    "checkoutDate": "Usuku Lokuphuma",
+    "noServices": "Azikho izinsizakalo zokuphuma ezitholakalayo",
+    "noServicesDescription": "Sicela uxhumane nedeski eliphambili ukuze uthole usizo ngokuphuma kwakho.",
+    "requestService": "Cela Insizakalo",
+    "serviceRequested": "Insizakalo icelwe ngempumelelo!",
+    "errorTitle": "Ayikwazi ukulayisha ulwazi lokuphuma"
   }
 }

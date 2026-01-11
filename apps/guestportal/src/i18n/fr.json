@@ -293,5 +293,18 @@
     "thankYou": "Merci!",
     "thankYouPositive": "Nous sommes ravis que vous profitiez de votre séjour!",
     "thankYouNegative": "Nous avons informé notre équipe et ils s'en occuperont sous peu."
+  },
+  "checkout": {
+    "title": "Services de Départ",
+    "subtitle": "Demander des services pour votre départ",
+    "bookingSummary": "Votre Réservation",
+    "guestName": "Nom du Client",
+    "room": "Numéro de Chambre",
+    "checkoutDate": "Date de Départ",
+    "noServices": "Aucun service de départ disponible",
+    "noServicesDescription": "Veuillez contacter la réception pour obtenir de l'aide concernant votre départ.",
+    "requestService": "Demander un Service",
+    "serviceRequested": "Service demandé avec succès!",
+    "errorTitle": "Impossible de charger les informations de départ"
   }
 }
