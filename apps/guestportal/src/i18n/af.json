@@ -306,5 +306,21 @@
     "requestService": "Versoek Diens",
     "serviceRequested": "Diens suksesvol versoek!",
     "errorTitle": "Kan nie uitskakel inligting laai nie"
+  },
+  "customRequest": {
+    "title": "Spesiale Versoek",
+    "subtitle": "Vertel ons wat jy nodig het en ons sal ons bes doen om te help",
+    "whatDoYouNeed": "Wat het jy nodig?",
+    "placeholder": "Bv., 'Amandel melk vir koffie', 'Baba bottelsverwarmer', 'Ekstra kussings vir rugsteun', 'Roosblare vir herdenking'",
+    "whenNeeded": "Wanneer het jy dit nodig?",
+    "beforeArrival": "Voor ek aankom",
+    "uponCheckIn": "By inteken",
+    "laterDuringStay": "Later tydens my verblyf",
+    "asap": "So gou as moontlik",
+    "cantFind": "Kan nie vind wat jy soek nie?",
+    "tellUsWhat": "Versoek enigiets nie gelys hierbo",
+    "requestAnything": "Vertel Ons Wat Jy Nodig Het",
+    "success": "Versoek ingedien!",
+    "successMessage": "Ons sal ons bes doen om jou versoek na te kom."
   }
 }

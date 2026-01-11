@@ -306,5 +306,21 @@
     "requestService": "Service Anfragen",
     "serviceRequested": "Service erfolgreich angefordert!",
     "errorTitle": "Checkout-Informationen können nicht geladen werden"
+  },
+  "customRequest": {
+    "title": "Sonderwunsch",
+    "subtitle": "Sagen Sie uns, was Sie brauchen, und wir werden unser Bestes tun, um zu helfen",
+    "whatDoYouNeed": "Was brauchen Sie?",
+    "placeholder": "Z.B., 'Mandelmilch für Kaffee', 'Babyflaschenwärmer', 'Extra Kissen für Rückenstütze', 'Rosenblätter für Jubiläum'",
+    "whenNeeded": "Wann brauchen Sie das?",
+    "beforeArrival": "Vor meiner Ankunft",
+    "uponCheckIn": "Beim Check-in",
+    "laterDuringStay": "Später während meines Aufenthalts",
+    "asap": "So schnell wie möglich",
+    "cantFind": "Können Sie nicht finden, was Sie brauchen?",
+    "tellUsWhat": "Fordern Sie alles an, was oben nicht aufgeführt ist",
+    "requestAnything": "Sagen Sie Uns, Was Sie Brauchen",
+    "success": "Anfrage eingereicht!",
+    "successMessage": "Wir werden unser Bestes tun, um Ihre Anfrage zu erfüllen."
   }
 }

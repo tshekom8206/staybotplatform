@@ -306,5 +306,21 @@
     "requestService": "Demander un Service",
     "serviceRequested": "Service demandé avec succès!",
     "errorTitle": "Impossible de charger les informations de départ"
+  },
+  "customRequest": {
+    "title": "Demande Personnalisée",
+    "subtitle": "Dites-nous ce dont vous avez besoin et nous ferons de notre mieux pour vous aider",
+    "whatDoYouNeed": "De quoi avez-vous besoin?",
+    "placeholder": "Par ex., 'Lait d'amande pour le café', 'Chauffe-biberon', 'Oreillers supplémentaires pour le soutien du dos', 'Pétales de rose pour anniversaire'",
+    "whenNeeded": "Quand en avez-vous besoin?",
+    "beforeArrival": "Avant mon arrivée",
+    "uponCheckIn": "Lors de l'enregistrement",
+    "laterDuringStay": "Plus tard pendant mon séjour",
+    "asap": "Dès que possible",
+    "cantFind": "Vous ne trouvez pas ce dont vous avez besoin?",
+    "tellUsWhat": "Demandez tout ce qui n'est pas listé ci-dessus",
+    "requestAnything": "Dites-Nous Ce Dont Vous Avez Besoin",
+    "success": "Demande soumise!",
+    "successMessage": "Nous ferons de notre mieux pour répondre à votre demande."
   }
 }

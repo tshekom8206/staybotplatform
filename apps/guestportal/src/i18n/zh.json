@@ -306,5 +306,21 @@
     "requestService": "申请服务",
     "serviceRequested": "服务申请成功！",
     "errorTitle": "无法加载退房信息"
+  },
+  "customRequest": {
+    "title": "定制请求",
+    "subtitle": "告诉我们您需要什么，我们将尽力帮助",
+    "whatDoYouNeed": "您需要什么？",
+    "placeholder": "例如，'咖啡用杏仁奶'，'婴儿奶瓶加热器'，'背部支撑用额外枕头'，'周年纪念玫瑰花瓣'",
+    "whenNeeded": "您什么时候需要？",
+    "beforeArrival": "到达之前",
+    "uponCheckIn": "办理入住时",
+    "laterDuringStay": "入住期间稍后",
+    "asap": "尽快",
+    "cantFind": "找不到您需要的吗？",
+    "tellUsWhat": "请求上面未列出的任何内容",
+    "requestAnything": "告诉我们您需要什么",
+    "success": "请求已提交！",
+    "successMessage": "我们将尽力满足您的请求。"
   }
 }

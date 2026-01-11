@@ -347,6 +347,16 @@ import {
                       </div>
                     </div>
 
+                    @if (escalation()?.portalEscalations && escalation()!.portalEscalations! > 0) {
+                      <div class="mb-3 pt-2 border-top">
+                        <div class="d-flex justify-content-between">
+                          <span class="text-info"><i class="cil-mobile"></i> Portal Contacts</span>
+                          <strong>{{ escalation()?.portalEscalations | number }}</strong>
+                        </div>
+                        <small class="text-muted">Guests who clicked "Contact Us" on portal</small>
+                      </div>
+                    }
+
                     <h6 class="small text-muted mb-2">Top Escalation Reasons</h6>
                     @for (intent of escalation()?.byIntent?.slice(0, 3) || []; track intent.intent) {
                       <div class="mb-1 small">
