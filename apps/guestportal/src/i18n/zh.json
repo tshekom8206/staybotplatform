@@ -293,5 +293,18 @@
     "thankYou": "谢谢您！",
     "thankYouPositive": "我们很高兴您享受入住！",
     "thankYouNegative": "我们已通知团队，他们会尽快处理。"
+  },
+  "checkout": {
+    "title": "退房服务",
+    "subtitle": "为您的离店申请服务",
+    "bookingSummary": "您的预订",
+    "guestName": "客人姓名",
+    "room": "房间号",
+    "checkoutDate": "退房日期",
+    "noServices": "没有可用的退房服务",
+    "noServicesDescription": "请联系前台寻求退房协助。",
+    "requestService": "申请服务",
+    "serviceRequested": "服务申请成功！",
+    "errorTitle": "无法加载退房信息"
   }
 }

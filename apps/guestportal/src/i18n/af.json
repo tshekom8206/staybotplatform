@@ -293,5 +293,18 @@
     "thankYou": "Dankie!",
     "thankYouPositive": "Ons is bly dat jy jou verblyf geniet!",
     "thankYouNegative": "Ons het ons span in kennis gestel en hulle sal dit binnekort hanteer."
+  },
+  "checkout": {
+    "title": "Uitskakel Dienste",
+    "subtitle": "Versoek dienste vir jou vertrek",
+    "bookingSummary": "Jou Bespreking",
+    "guestName": "Gas Naam",
+    "room": "Kamernommer",
+    "checkoutDate": "Uitskakel Datum",
+    "noServices": "Geen uitskakel dienste beskikbaar nie",
+    "noServicesDescription": "Kontak asseblief die voorlessenaar vir hulp met jou uitskakel.",
+    "requestService": "Versoek Diens",
+    "serviceRequested": "Diens suksesvol versoek!",
+    "errorTitle": "Kan nie uitskakel inligting laai nie"
   }
 }

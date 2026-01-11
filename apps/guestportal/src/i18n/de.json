@@ -293,5 +293,18 @@
     "thankYou": "Vielen Dank!",
     "thankYouPositive": "Wir freuen uns, dass Sie Ihren Aufenthalt genießen!",
     "thankYouNegative": "Wir haben unser Team informiert und sie werden sich in Kürze darum kümmern."
+  },
+  "checkout": {
+    "title": "Auschecken Services",
+    "subtitle": "Dienstleistungen für Ihre Abreise anfordern",
+    "bookingSummary": "Ihre Buchung",
+    "guestName": "Gastname",
+    "room": "Zimmernummer",
+    "checkoutDate": "Abreisedatum",
+    "noServices": "Keine Checkout-Services verfügbar",
+    "noServicesDescription": "Bitte wenden Sie sich für Hilfe beim Auschecken an die Rezeption.",
+    "requestService": "Service Anfragen",
+    "serviceRequested": "Service erfolgreich angefordert!",
+    "errorTitle": "Checkout-Informationen können nicht geladen werden"
   }
 }
