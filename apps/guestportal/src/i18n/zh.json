@@ -160,6 +160,10 @@
   "services": {
     "title": "酒店服务",
     "subtitle": "通过我们的优质服务提升您的入住体验",
+    "searchPlaceholder": "搜索服务...",
+    "noResults": "未找到服务",
+    "noResultsMessage": "尝试调整您的搜索或使用我们的自定义请求功能。",
+    "customRequest": "提出自定义请求",
     "enhanceYourStay": "提升您的入住体验",
     "requestService": "申请此服务",
     "sendRequest": "发送请求",
@@ -295,17 +299,40 @@
     "thankYouNegative": "我们已通知团队，他们会尽快处理。"
   },
   "checkout": {
-    "title": "退房服务",
-    "subtitle": "为您的离店申请服务",
+    "title": "退房",
+    "subtitle": "感谢您的光临",
     "bookingSummary": "您的预订",
     "guestName": "客人姓名",
     "room": "房间号",
     "checkoutDate": "退房日期",
+    "checkoutTime": "退房时间",
+    "requestCheckout": "申请退房",
+    "thankYou": "感谢您的光临！",
+    "thankYouMessage": "您的退房申请已提交。",
+    "thankYouDetails": "前台将很快处理您的退房。",
+    "lostAndFound": "遗落物品？",
+    "reportItem": "报告遗失物品",
+    "shareExperience": "分享您的体验",
+    "leaveFeedback": "留下反馈",
     "noServices": "没有可用的退房服务",
     "noServicesDescription": "请联系前台寻求退房协助。",
     "requestService": "申请服务",
     "serviceRequested": "服务申请成功！",
-    "errorTitle": "无法加载退房信息"
+    "errorTitle": "无法加载退房信息",
+    "submittingRequest": "正在提交退房申请..."
+  },
+  "myRequests": {
+    "title": "我的申请",
+    "subtitle": "跟踪您的所有申请及其状态",
+    "empty": "暂无申请",
+    "emptyDescription": "您还没有提出任何申请。提出申请后，它们会显示在这里。",
+    "requestedAt": "申请时间",
+    "completedAt": "完成时间",
+    "status": {
+      "open": "待处理",
+      "inProgress": "处理中",
+      "completed": "已完成"
+    }
   },
   "customRequest": {
     "title": "定制请求",

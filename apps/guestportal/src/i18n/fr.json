@@ -160,6 +160,10 @@
   "services": {
     "title": "Services de l'Hôtel",
     "subtitle": "Améliorez votre séjour avec nos services premium",
+    "searchPlaceholder": "Rechercher des services...",
+    "noResults": "Aucun service trouvé",
+    "noResultsMessage": "Essayez d'ajuster votre recherche ou utilisez notre demande personnalisée.",
+    "customRequest": "Faire une Demande Personnalisée",
     "enhanceYourStay": "Améliorez Votre Séjour",
     "requestService": "Demander Ce Service",
     "sendRequest": "Envoyer la Demande",
@@ -295,17 +299,40 @@
     "thankYouNegative": "Nous avons informé notre équipe et ils s'en occuperont sous peu."
   },
   "checkout": {
-    "title": "Services de Départ",
-    "subtitle": "Demander des services pour votre départ",
+    "title": "Départ",
+    "subtitle": "Merci d'avoir séjourné chez nous",
     "bookingSummary": "Votre Réservation",
     "guestName": "Nom du Client",
     "room": "Numéro de Chambre",
     "checkoutDate": "Date de Départ",
+    "checkoutTime": "Heure de Départ",
+    "requestCheckout": "Demander le Départ",
+    "thankYou": "Merci d'avoir séjourné chez nous!",
+    "thankYouMessage": "Votre demande de départ a été soumise.",
+    "thankYouDetails": "La réception traitera votre départ sous peu.",
+    "lostAndFound": "Avez-vous oublié quelque chose?",
+    "reportItem": "Signaler un Objet Perdu",
+    "shareExperience": "Partagez Votre Expérience",
+    "leaveFeedback": "Laisser un Commentaire",
     "noServices": "Aucun service de départ disponible",
     "noServicesDescription": "Veuillez contacter la réception pour obtenir de l'aide concernant votre départ.",
     "requestService": "Demander un Service",
     "serviceRequested": "Service demandé avec succès!",
-    "errorTitle": "Impossible de charger les informations de départ"
+    "errorTitle": "Impossible de charger les informations de départ",
+    "submittingRequest": "Envoi de la demande de départ..."
+  },
+  "myRequests": {
+    "title": "Mes Demandes",
+    "subtitle": "Suivez toutes vos demandes et leur statut",
+    "empty": "Aucune demande pour le moment",
+    "emptyDescription": "Vous n'avez pas encore fait de demande. Lorsque vous le ferez, elles apparaîtront ici.",
+    "requestedAt": "Demandé le",
+    "completedAt": "Complété le",
+    "status": {
+      "open": "En attente",
+      "inProgress": "En cours",
+      "completed": "Terminé"
+    }
   },
   "customRequest": {
     "title": "Demande Personnalisée",

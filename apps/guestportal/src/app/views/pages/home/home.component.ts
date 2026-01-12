@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -12,7 +12,7 @@ import { WeatherUpsellBannerComponent } from '../../../shared/components/weather
 import { TenantService } from '../../../core/services/tenant.service';
 import { RoomContextService } from '../../../core/services/room-context.service';
 import { AnalyticsService } from '../../../core/services/analytics.service';
-import { FeaturedService } from '../../../core/services/guest-api.service';
+import { GuestApiService, FeaturedService } from '../../../core/services/guest-api.service';
 import { WeatherData } from '../../../core/services/weather.service';
 import { WeatherUpsellService } from '../../../core/services/weather-upsell.service';
 
@@ -30,13 +30,22 @@ import { WeatherUpsellService } from '../../../core/services/weather-upsell.serv
           }
           <h1 class="hero-title">{{ 'home.welcome' | translate }}</h1>
           <p class="hero-subtitle">{{ 'home.howCanWeHelp' | translate }}</p>
-          @if (roomNumber) {
-            <button class="room-badge" (click)="openRoomEdit()">
-              <i class="bi bi-door-open"></i>
-              <span>Room {{ roomNumber }}</span>
-              <i class="bi bi-pencil edit-icon"></i>
-            </button>
-          }
+          <div class="badge-container">
+            @if (roomNumber) {
+              <button class="room-badge" (click)="openRoomEdit()">
+                <i class="bi bi-door-open"></i>
+                <span>Room {{ roomNumber }}</span>
+                <i class="bi bi-pencil edit-icon"></i>
+              </button>
+            }
+            @if (activeRequestCount() > 0 && roomNumber) {
+              <a routerLink="/my-requests" class="requests-badge">
+                <i class="bi bi-list-check"></i>
+                <span>{{ activeRequestCount() }} Active Request{{ activeRequestCount() > 1 ? 's' : '' }}</span>
+                <i class="bi bi-chevron-right arrow-icon"></i>
+              </a>
+            }
+          </div>
           <!-- Weather Widget -->
           <app-weather-widget (weatherLoaded)="onWeatherLoaded($event)" />
           <!-- WiFi Bottom Sheet (floating button in hero) -->
@@ -119,6 +128,14 @@ import { WeatherUpsellService } from '../../../core/services/weather-upsell.serv
       text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
     }
 
+    .badge-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.625rem;
+      margin-top: 0.5rem;
+    }
+
     .room-badge {
       display: inline-flex;
       align-items: center;
@@ -152,6 +169,43 @@ import { WeatherUpsellService } from '../../../core/services/weather-upsell.serv
     .room-badge .edit-icon {
       font-size: 0.75rem;
       opacity: 0.7;
+      margin-left: 0.25rem;
+    }
+
+    .requests-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(25, 135, 84, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .requests-badge:hover {
+      background: rgba(25, 135, 84, 1);
+      transform: scale(1.02);
+      color: white;
+    }
+
+    .requests-badge:active {
+      transform: scale(0.98);
+    }
+
+    .requests-badge i {
+      font-size: 1rem;
+    }
+
+    .requests-badge .arrow-icon {
+      font-size: 0.75rem;
+      opacity: 0.8;
       margin-left: 0.25rem;
     }
 
@@ -206,10 +260,11 @@ import { WeatherUpsellService } from '../../../core/services/weather-upsell.serv
     }
   `]
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit, OnDestroy {
   private tenantService = inject(TenantService);
   private roomContextService = inject(RoomContextService);
   private analyticsService = inject(AnalyticsService);
+  private apiService = inject(GuestApiService);
 
   tenant = this.tenantService.getCurrentTenant();
   roomNumber = this.roomContextService.getRoomNumber();
@@ -225,6 +280,10 @@ export class HomeComponent {
   // Weather state for upsell banner
   weatherTemperature = signal<number | null>(null);
   weatherCode = signal<number | null>(null);
+
+  // Request tracking
+  activeRequestCount = signal(0);
+  private pollingInterval?: number;
 
   menuCards: MenuCardData[] = [
     {
@@ -276,6 +335,42 @@ export class HomeComponent {
       action: () => this.openWhatsApp()
     }
   ];
+
+  ngOnInit(): void {
+    if (this.roomNumber) {
+      this.loadActiveRequests(this.roomNumber);
+
+      // Poll every 30 seconds for updates
+      this.pollingInterval = window.setInterval(() => {
+        if (this.roomNumber) {
+          this.loadActiveRequests(this.roomNumber, true);
+        }
+      }, 30000);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+    }
+  }
+
+  loadActiveRequests(roomNumber: string, silent: boolean = false): void {
+    this.apiService.getTasksByRoomNumber(roomNumber).subscribe({
+      next: (tasks) => {
+        // Count only Open and In Progress tasks
+        const activeTasks = tasks.filter((task: any) =>
+          task.Status !== 'Completed' && task.Status !== 'Cancelled'
+        );
+        this.activeRequestCount.set(activeTasks.length);
+      },
+      error: (err) => {
+        if (!silent) {
+          console.error('Error loading active requests:', err);
+        }
+      }
+    });
+  }
 
   openWhatsApp(): void {
     this.analyticsService.trackWhatsAppOpened();

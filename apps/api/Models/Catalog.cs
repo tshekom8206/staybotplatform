@@ -95,6 +95,12 @@ public class Booking
     public bool SurveyOptOut { get; set; } = false;
     public bool IsStaff { get; set; } = false;
     public int? ExtendedFromBookingId { get; set; }
+
+    // Special occasion flags for personalized messaging
+    public bool IsAnniversary { get; set; } = false;
+    public bool IsBirthday { get; set; } = false;
+    [MaxLength(200)]
+    public string? SpecialOccasionNotes { get; set; }
     [JsonPropertyName("actualCheckInDate")]
     public DateTime? CheckInDate { get; set; }
     [JsonPropertyName("actualCheckOutDate")]

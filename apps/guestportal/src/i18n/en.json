@@ -167,6 +167,10 @@
   "services": {
     "title": "Hotel Services",
     "subtitle": "Enhance your stay with our premium services",
+    "searchPlaceholder": "Search services...",
+    "noResults": "No services found",
+    "noResultsMessage": "Try adjusting your search or use our custom request feature.",
+    "customRequest": "Make Custom Request",
     "enhanceYourStay": "Enhance Your Stay",
     "mostLoved": "Most loved by guests",
     "chefsPick": "Chef's pick",
@@ -318,17 +322,40 @@
     "thankYouNegative": "We've notified our team and they'll address this shortly."
   },
   "checkout": {
-    "title": "Checkout Services",
-    "subtitle": "Request services for your departure",
+    "title": "Checkout",
+    "subtitle": "Thank you for staying with us",
     "bookingSummary": "Your Booking",
     "guestName": "Guest Name",
     "room": "Room Number",
     "checkoutDate": "Checkout Date",
+    "checkoutTime": "Checkout Time",
+    "requestCheckout": "Request Checkout",
+    "thankYou": "Thank you for staying with us!",
+    "thankYouMessage": "Your checkout request has been submitted.",
+    "thankYouDetails": "Front desk will process your checkout shortly.",
+    "lostAndFound": "Left something behind?",
+    "reportItem": "Report Lost Item",
+    "shareExperience": "Share Your Experience",
+    "leaveFeedback": "Leave Feedback",
     "noServices": "No checkout services available",
     "noServicesDescription": "Please contact the front desk for assistance with your checkout.",
     "requestService": "Request Service",
     "serviceRequested": "Service requested successfully!",
-    "errorTitle": "Unable to load checkout information"
+    "errorTitle": "Unable to load checkout information",
+    "submittingRequest": "Submitting checkout request..."
+  },
+  "myRequests": {
+    "title": "My Requests",
+    "subtitle": "Track all your requests and their status",
+    "empty": "No requests yet",
+    "emptyDescription": "You haven't made any requests yet. When you do, they'll appear here.",
+    "requestedAt": "Requested at",
+    "completedAt": "Completed at",
+    "status": {
+      "open": "Pending",
+      "inProgress": "In Progress",
+      "completed": "Completed"
+    }
   },
   "customRequest": {
     "title": "Custom Request",

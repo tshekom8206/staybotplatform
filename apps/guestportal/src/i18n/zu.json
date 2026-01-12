@@ -160,6 +160,10 @@
   "services": {
     "title": "Amasevisi Ehotela",
     "subtitle": "Thuthukisa ukuhlala kwakho ngamasevisi ethu aphezulu",
+    "searchPlaceholder": "Sesha amasevisi...",
+    "noResults": "Awekho amasevisi atholakalayo",
+    "noResultsMessage": "Zama ukulungisa usesho lwakho noma usebenzise isicelo sethu esiqondile.",
+    "customRequest": "Yenza Isicelo Esiqondile",
     "enhanceYourStay": "Thuthukisa Ukuhlala Kwakho",
     "requestService": "Cela Le Sevisi",
     "sendRequest": "Thumela Isicelo",
@@ -295,17 +299,40 @@
     "thankYouNegative": "Sazisile ithimba lethu futhi bazokusingatha lokhu maduze."
   },
   "checkout": {
-    "title": "Izinsizakalo Zokuphuma",
-    "subtitle": "Cela izinsizakalo zokuhamba kwakho",
+    "title": "Ukuphuma",
+    "subtitle": "Siyabonga ngokuhlala nathi",
     "bookingSummary": "Ukubhukha Kwakho",
     "guestName": "Igama Lesivakashi",
     "room": "Inombolo Yekamelo",
     "checkoutDate": "Usuku Lokuphuma",
+    "checkoutTime": "Isikhathi Sokuphuma",
+    "requestCheckout": "Cela Ukuphuma",
+    "thankYou": "Siyabonga ngokuhlala nathi!",
+    "thankYouMessage": "Isicelo sakho sokuphuma sithunyelwe.",
+    "thankYouDetails": "Ideski eliphambili lizocubungula ukuphuma kwakho maduze.",
+    "lostAndFound": "Ushiye into?",
+    "reportItem": "Bika Into Elahlekile",
+    "shareExperience": "Yabelana Ngolwazi Lwakho",
+    "leaveFeedback": "Shiya Impendulo",
     "noServices": "Azikho izinsizakalo zokuphuma ezitholakalayo",
     "noServicesDescription": "Sicela uxhumane nedeski eliphambili ukuze uthole usizo ngokuphuma kwakho.",
     "requestService": "Cela Insizakalo",
     "serviceRequested": "Insizakalo icelwe ngempumelelo!",
-    "errorTitle": "Ayikwazi ukulayisha ulwazi lokuphuma"
+    "errorTitle": "Ayikwazi ukulayisha ulwazi lokuphuma",
+    "submittingRequest": "Kuthunyelwa isicelo sokuphuma..."
+  },
+  "myRequests": {
+    "title": "Izicelo Zami",
+    "subtitle": "Landelela zonke izicelo zakho nesimo sazo",
+    "empty": "Azikho izicelo okwamanje",
+    "emptyDescription": "Awukenzanga noma yisiphi isicelo okwamanje. Uma wenza, zizovela lapha.",
+    "requestedAt": "Kucelwe ku",
+    "completedAt": "Kuqediwe ku",
+    "status": {
+      "open": "Kulindile",
+      "inProgress": "Kuyaqhubeka",
+      "completed": "Kuqediwe"
+    }
   },
   "customRequest": {
     "title": "Isicelo Esikhethekile",

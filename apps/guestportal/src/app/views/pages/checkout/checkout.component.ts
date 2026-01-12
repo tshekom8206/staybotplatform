@@ -2,7 +2,7 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { GuestApiService, BookingInfo, ServiceCategory, ServiceItem } from '../../../core/services/guest-api.service';
+import { GuestApiService, BookingInfo } from '../../../core/services/guest-api.service';
 import { RoomContextService } from '../../../core/services/room-context.service';
 
 @Component({
@@ -38,6 +38,39 @@ import { RoomContextService } from '../../../core/services/room-context.service'
               </a>
             </div>
           </div>
+        } @else if (checkoutSuccess()) {
+          <!-- Success State -->
+          <div class="success-container">
+            <div class="success-card">
+              <i class="bi bi-check-circle"></i>
+              <h2>{{ 'checkout.thankYou' | translate }}</h2>
+              <p class="success-message">{{ 'checkout.thankYouMessage' | translate }}</p>
+              <p class="success-details">{{ 'checkout.thankYouDetails' | translate }}</p>
+
+              <!-- Lost & Found Reminder -->
+              <div class="lost-found-reminder">
+                <i class="bi bi-box-seam"></i>
+                <div class="reminder-content">
+                  <h4>{{ 'checkout.lostAndFound' | translate }}</h4>
+                  <a routerLink="/lost-and-found" class="btn btn-outline-dark">
+                    {{ 'checkout.reportItem' | translate }}
+                  </a>
+                </div>
+              </div>
+
+              <!-- Feedback Link -->
+              <div class="feedback-prompt">
+                <h4>{{ 'checkout.shareExperience' | translate }}</h4>
+                <a routerLink="/feedback" class="btn btn-primary">
+                  {{ 'checkout.leaveFeedback' | translate }}
+                </a>
+              </div>
+
+              <a routerLink="/" class="btn btn-secondary">
+                {{ 'common.backToHome' | translate }}
+              </a>
+            </div>
+          </div>
         } @else {
           <!-- Booking Summary Card -->
           @if (bookingInfo()) {
@@ -60,75 +93,31 @@ import { RoomContextService } from '../../../core/services/room-context.service'
                     <span class="label">{{ 'checkout.checkoutDate' | translate }}</span>
                     <span class="value">{{ bookingInfo()?.checkoutDate | date:'mediumDate' }}</span>
                   </div>
+                  <div class="summary-row">
+                    <span class="label">{{ 'checkout.checkoutTime' | translate }}</span>
+                    <span class="value">11:00 AM</span>
+                  </div>
                 </div>
               </div>
             </div>
           }
 
-          <!-- Services by Category -->
-          @if (categories().length === 0) {
-            <div class="no-services-container">
-              <div class="no-services-card">
-                <i class="bi bi-inbox"></i>
-                <h3>{{ 'checkout.noServices' | translate }}</h3>
-                <p>{{ 'checkout.noServicesDescription' | translate }}</p>
-              </div>
-            </div>
-          } @else {
-            @for (category of categories(); track category.category) {
-              <div class="service-category-section">
-                <h3 class="category-title">
-                  <i class="bi" [class]="'bi-' + category.icon"></i>
-                  {{ category.category }}
-                </h3>
-
-                <div class="services-grid">
-                  @for (service of category.services; track service.id) {
-                    <div class="service-card" (click)="onServiceRequest(service)">
-                      @if (service.imageUrl) {
-                        <div class="service-image-container">
-                          <img [src]="service.imageUrl" [alt]="service.name" class="service-image">
-                        </div>
-                      }
-
-                      <div class="service-content">
-                        <h4 class="service-name">{{ service.name }}</h4>
-
-                        @if (service.description) {
-                          <p class="service-description">{{ service.description }}</p>
-                        }
-
-                        <div class="service-meta">
-                          @if (service.priceAmount && service.priceAmount > 0) {
-                            <div class="service-price">
-                              <span class="price-amount">{{ service.currency }} {{ service.priceAmount | number:'1.2-2' }}</span>
-                              @if (service.pricingUnit) {
-                                <span class="price-unit">/ {{ service.pricingUnit }}</span>
-                              }
-                            </div>
-                          }
-
-                          @if (service.availableHours) {
-                            <div class="service-hours">
-                              <i class="bi bi-clock"></i>
-                              <span>{{ service.availableHours }}</span>
-                            </div>
-                          }
-                        </div>
-                      </div>
-
-                      <div class="service-action">
-                        <button class="btn btn-sm request-service-btn">
-                          {{ 'checkout.requestService' | translate }}
-                          <i class="bi bi-arrow-right"></i>
-                        </button>
-                      </div>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          }
+          <!-- Checkout Action -->
+          <div class="checkout-action-section">
+            <button
+              class="btn-checkout"
+              (click)="requestCheckout()"
+              [disabled]="submitting()"
+            >
+              @if (submitting()) {
+                <span class="spinner"></span>
+                {{ 'checkout.submittingRequest' | translate }}
+              } @else {
+                <i class="bi bi-door-open"></i>
+                {{ 'checkout.requestCheckout' | translate }}
+              }
+            </button>
+          </div>
         }
       </div>
     </div>
@@ -238,148 +227,190 @@ import { RoomContextService } from '../../../core/services/room-context.service'
       color: #1a1a1a;
     }
 
-    /* Service Categories */
-    .service-category-section {
-      margin-bottom: 2rem;
+    /* Checkout Action */
+    .checkout-action-section {
+      margin: 2rem 0;
     }
 
-    .category-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+    .btn-checkout {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      background: #333;
       color: white;
-      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .category-title i {
-      font-size: 1rem;
-    }
-
-    /* Services Grid */
-    .services-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-
-    @media (min-width: 768px) {
-      .services-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    .service-card {
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border: none;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1.1rem;
       cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .service-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    }
-
-    .service-image-container {
-      width: 100%;
-      height: 160px;
-      overflow: hidden;
-      background: #f5f7fa;
-    }
-
-    .service-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .service-content {
-      padding: 1rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .service-name {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin: 0 0 0.5rem;
-      color: #1a1a1a;
-    }
-
-    .service-description {
-      font-size: 0.85rem;
-      color: #666;
-      margin: 0 0 1rem;
-      line-height: 1.4;
-      flex: 1;
-    }
-
-    .service-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .service-price {
-      display: flex;
-      align-items: baseline;
-      gap: 0.5rem;
-    }
-
-    .price-amount {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #333;
-    }
-
-    .price-unit {
-      font-size: 0.85rem;
-      color: #666;
-    }
-
-    .service-hours {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-      color: #666;
-    }
-
-    .service-hours i {
-      font-size: 0.9rem;
-    }
-
-    .service-action {
-      padding: 0 1rem 1rem;
-    }
-
-    .request-service-btn {
-      width: 100%;
-      padding: 0.75rem;
-      background-color: #333;
-      border-color: #333;
-      color: white;
-      border-radius: 8px;
-      font-weight: 500;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
       transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    .request-service-btn:hover {
-      background-color: #1a1a1a;
-      border-color: #1a1a1a;
+    .btn-checkout:hover:not(:disabled) {
+      background: #1a1a1a;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .btn-checkout:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-checkout i {
+      font-size: 1.25rem;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Success State */
+    .success-container {
+      padding: 2rem 0;
+    }
+
+    .success-card {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .success-card i.bi-check-circle {
+      font-size: 4rem;
+      color: #16a34a;
+      margin-bottom: 1rem;
+    }
+
+    .success-card h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 0 0 0.5rem;
+    }
+
+    .success-message {
+      font-size: 1.1rem;
+      color: #666;
+      margin: 0 0 0.5rem;
+    }
+
+    .success-details {
+      font-size: 0.95rem;
+      color: #888;
+      margin: 0 0 2rem;
+    }
+
+    /* Lost & Found Reminder */
+    .lost-found-reminder {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
       color: white;
+    }
+
+    .lost-found-reminder i {
+      font-size: 2.5rem;
+      flex-shrink: 0;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .reminder-content {
+      flex: 1;
+      text-align: left;
+    }
+
+    .reminder-content h4 {
+      margin: 0 0 0.75rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .reminder-content .btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      padding: 0.5rem 1.25rem;
+      font-weight: 500;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .reminder-content .btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Feedback Prompt */
+    .feedback-prompt {
+      margin: 2rem 0;
+    }
+
+    .feedback-prompt h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 0 0 1rem;
+    }
+
+    .btn-primary {
+      background: #333;
+      border-color: #333;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+
+    .btn-primary:hover {
+      background: #1a1a1a;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .btn-secondary {
+      background: #f8f9fa;
+      border-color: #f8f9fa;
+      color: #666;
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 1rem;
+      width: 100%;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-secondary:hover {
+      background: #e9ecef;
+      color: #666;
     }
 
     /* Error State */
@@ -413,49 +444,23 @@ import { RoomContextService } from '../../../core/services/room-context.service'
       margin: 0 0 1.5rem;
     }
 
-    /* No Services State */
-    .no-services-container {
-      padding: 2rem 0;
-    }
-
-    .no-services-card {
-      background: white;
-      border-radius: 12px;
-      padding: 3rem 2rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      text-align: center;
-    }
-
-    .no-services-card i {
-      font-size: 3rem;
-      color: #adb5bd;
-      margin-bottom: 1rem;
-    }
-
-    .no-services-card h3 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #1a1a1a;
-      margin: 0 0 0.5rem;
-    }
-
-    .no-services-card p {
-      color: #666;
-      margin: 0;
-    }
-
     /* Mobile Adjustments */
     @media (max-width: 768px) {
       .page-title {
         font-size: 1.5rem;
       }
 
-      .service-name {
+      .btn-checkout {
         font-size: 1rem;
       }
 
-      .price-amount {
-        font-size: 1.1rem;
+      .lost-found-reminder {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .reminder-content {
+        text-align: center;
       }
     }
   `]
@@ -463,9 +468,10 @@ import { RoomContextService } from '../../../core/services/room-context.service'
 export class CheckoutComponent implements OnInit {
   // State management with signals
   bookingInfo = signal<BookingInfo | null>(null);
-  categories = signal<ServiceCategory[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
+  checkoutSuccess = signal(false);
+  submitting = signal(false);
 
   // Injected services
   private route = inject(ActivatedRoute);
@@ -479,7 +485,6 @@ export class CheckoutComponent implements OnInit {
         const bookingId = parseInt(params['booking'], 10);
         if (!isNaN(bookingId)) {
           this.loadBookingInfo(bookingId);
-          this.loadCheckoutServices();
         } else {
           this.error.set('Invalid booking information');
           this.loading.set(false);
@@ -499,67 +504,47 @@ export class CheckoutComponent implements OnInit {
           if (booking.roomNumber) {
             this.roomContext.setRoomNumber(booking.roomNumber);
           }
+          this.loading.set(false);
         } else {
           this.error.set('Booking not found');
+          this.loading.set(false);
         }
       },
       error: (err) => {
         console.error('Error loading booking info:', err);
         this.error.set('Unable to load booking information');
+        this.loading.set(false);
       }
     });
   }
 
-  loadCheckoutServices(): void {
-    this.loading.set(true);
+  requestCheckout(): void {
+    const booking = this.bookingInfo();
+    if (!booking || !booking.roomNumber) {
+      this.error.set('Room number is required');
+      return;
+    }
 
-    // Fetch all services and filter by checkout-relevant categories
-    this.apiService.getServices().subscribe({
-      next: (response) => {
-        // Filter categories relevant to checkout
-        const checkoutCategories = this.filterCheckoutCategories(response.categories);
-        this.categories.set(checkoutCategories);
-        this.loading.set(false);
+    this.submitting.set(true);
+
+    // Use the existing custom request endpoint
+    const checkoutRequest = {
+      description: `Checkout request for Room ${booking.roomNumber}`,
+      roomNumber: booking.roomNumber,
+      department: 'FrontDesk',
+      source: 'checkout_page'
+    };
+
+    this.apiService.submitCustomRequest(checkoutRequest).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.checkoutSuccess.set(true);
       },
       error: (err) => {
-        console.error('Error loading services:', err);
-        this.error.set('Unable to load services');
-        this.loading.set(false);
+        console.error('Error submitting checkout request:', err);
+        this.error.set('Unable to submit checkout request. Please try again.');
+        this.submitting.set(false);
       }
     });
-  }
-
-  private filterCheckoutCategories(categories: ServiceCategory[]): ServiceCategory[] {
-    // Define checkout-relevant category keywords
-    const checkoutKeywords = [
-      'transport', 'shuttle', 'taxi', 'transfer',
-      'checkout', 'late checkout', 'early checkout',
-      'luggage', 'storage', 'baggage',
-      'departure', 'leaving',
-      'concierge', // Often includes checkout services
-      'travel', 'airport'
-    ];
-
-    return categories
-      .map(category => ({
-        ...category,
-        services: category.services.filter(service => {
-          const categoryLower = category.category.toLowerCase();
-          const serviceLower = service.name.toLowerCase();
-
-          // Check if category or service name contains checkout keywords
-          return checkoutKeywords.some(keyword =>
-            categoryLower.includes(keyword) || serviceLower.includes(keyword)
-          );
-        })
-      }))
-      .filter(category => category.services.length > 0); // Only include categories with services
-  }
-
-  onServiceRequest(service: ServiceItem): void {
-    // For now, just log - we'll integrate with service request modal in next phase
-    console.log('Service requested:', service);
-    // TODO: Open service request modal with booking and room context
-    alert(`Request submitted for: ${service.name}\n\nThis will be integrated with the service request modal.`);
   }
 }

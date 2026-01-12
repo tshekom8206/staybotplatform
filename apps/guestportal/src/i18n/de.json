@@ -160,6 +160,10 @@
   "services": {
     "title": "Hotelservices",
     "subtitle": "Verbessern Sie Ihren Aufenthalt mit unseren Premium-Services",
+    "searchPlaceholder": "Services suchen...",
+    "noResults": "Keine Services gefunden",
+    "noResultsMessage": "Versuchen Sie, Ihre Suche anzupassen, oder nutzen Sie unsere benutzerdefinierte Anfrage.",
+    "customRequest": "Benutzerdefinierte Anfrage stellen",
     "enhanceYourStay": "Verbessern Sie Ihren Aufenthalt",
     "requestService": "Diesen Service Anfordern",
     "sendRequest": "Anfrage Senden",
@@ -295,17 +299,40 @@
     "thankYouNegative": "Wir haben unser Team informiert und sie werden sich in Kürze darum kümmern."
   },
   "checkout": {
-    "title": "Auschecken Services",
-    "subtitle": "Dienstleistungen für Ihre Abreise anfordern",
+    "title": "Auschecken",
+    "subtitle": "Vielen Dank für Ihren Aufenthalt",
     "bookingSummary": "Ihre Buchung",
     "guestName": "Gastname",
     "room": "Zimmernummer",
     "checkoutDate": "Abreisedatum",
+    "checkoutTime": "Abreisezeit",
+    "requestCheckout": "Auschecken Anfordern",
+    "thankYou": "Vielen Dank für Ihren Aufenthalt!",
+    "thankYouMessage": "Ihre Checkout-Anfrage wurde eingereicht.",
+    "thankYouDetails": "Die Rezeption wird Ihr Auschecken in Kürze bearbeiten.",
+    "lostAndFound": "Etwas vergessen?",
+    "reportItem": "Verlorenen Gegenstand Melden",
+    "shareExperience": "Teilen Sie Ihre Erfahrung",
+    "leaveFeedback": "Feedback Hinterlassen",
     "noServices": "Keine Checkout-Services verfügbar",
     "noServicesDescription": "Bitte wenden Sie sich für Hilfe beim Auschecken an die Rezeption.",
     "requestService": "Service Anfragen",
     "serviceRequested": "Service erfolgreich angefordert!",
-    "errorTitle": "Checkout-Informationen können nicht geladen werden"
+    "errorTitle": "Checkout-Informationen können nicht geladen werden",
+    "submittingRequest": "Checkout-Anfrage wird eingereicht..."
+  },
+  "myRequests": {
+    "title": "Meine Anfragen",
+    "subtitle": "Verfolgen Sie alle Ihre Anfragen und deren Status",
+    "empty": "Noch keine Anfragen",
+    "emptyDescription": "Sie haben noch keine Anfragen gestellt. Wenn Sie dies tun, werden sie hier angezeigt.",
+    "requestedAt": "Angefordert am",
+    "completedAt": "Abgeschlossen am",
+    "status": {
+      "open": "Ausstehend",
+      "inProgress": "In Bearbeitung",
+      "completed": "Abgeschlossen"
+    }
   },
   "customRequest": {
     "title": "Sonderwunsch",

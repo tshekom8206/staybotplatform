@@ -614,4 +614,14 @@ export class GuestApiService {
       })
     );
   }
+
+  // Request History - Get Tasks by Room Number
+  getTasksByRoomNumber(roomNumber: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/tasks/${roomNumber}`).pipe(
+      catchError(error => {
+        console.error('Error fetching tasks:', error);
+        return of([]);
+      })
+    );
+  }
 }

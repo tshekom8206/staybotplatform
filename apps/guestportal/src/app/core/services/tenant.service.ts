@@ -60,12 +60,12 @@ export class TenantService {
 
     // For local development, use a default tenant
     if (host === 'localhost' || host === '127.0.0.1') {
-      return 'panoramaview'; // Default tenant for development
+      return 'riboville'; // Default tenant for development
     }
 
     // For Azure test deployment (staybot-guest.azurewebsites.net)
     if (host.includes('azurewebsites.net')) {
-      return 'panoramaview'; // Default tenant for Azure testing
+      return 'riboville'; // Default tenant for Azure testing
     }
 
     // Extract subdomain from hostname (e.g., panoramaview.staybot.co.za)
@@ -74,7 +74,7 @@ export class TenantService {
       return parts[0];
     }
 
-    return 'panoramaview'; // Fallback
+    return 'riboville'; // Fallback
   }
 
   /**
@@ -98,8 +98,8 @@ export class TenantService {
         if (!environment.production) {
           const mockTenant: TenantInfo = {
             id: 1,
-            name: 'Panorama View Guest House',
-            slug: 'panoramaview',
+            name: 'Riboville Hotel',
+            slug: 'riboville',
             logoUrl: undefined,
             backgroundImageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&q=80',
             themePrimary: '#1976d2',

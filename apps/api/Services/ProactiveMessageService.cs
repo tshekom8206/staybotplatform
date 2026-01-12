@@ -664,7 +664,40 @@ We're here for anything you need!";
         string? ButtonUrlParameter);
 
     /// <summary>
+    /// Detects personalization opportunities based on booking data
+    /// Returns a personalized greeting suffix (e.g., "Happy Anniversary!", "Welcome back!")
+    /// </summary>
+    private string GetPersonalizedGreeting(Booking booking)
+    {
+        // Check for special occasions first (highest priority)
+        if (booking.IsAnniversary)
+        {
+            _logger.LogInformation("Booking {BookingId}: Anniversary celebration detected - enabling personalized messaging",
+                booking.Id);
+            return " Happy Anniversary! 🎉";
+        }
+
+        if (booking.IsBirthday)
+        {
+            _logger.LogInformation("Booking {BookingId}: Birthday celebration detected - enabling personalized messaging",
+                booking.Id);
+            return " Happy Birthday! 🎂";
+        }
+
+        // Check for repeat guest (second priority)
+        if (booking.IsRepeatGuest)
+        {
+            _logger.LogInformation("Booking {BookingId}: Repeat guest detected - enabling warm welcome",
+                booking.Id);
+            return " Welcome back!";
+        }
+
+        return string.Empty;
+    }
+
+    /// <summary>
     /// Builds WhatsApp template parameters based on message type and booking data
+    /// Includes personalization for special occasions and repeat guests
     /// </summary>
     private async Task<TemplateInfo?> BuildTemplateParametersAsync(
         ScheduledMessageType messageType,
@@ -683,10 +716,23 @@ We're here for anything you need!";
 
             var tenantSlug = tenant.Slug ?? tenant.Name.ToLower().Replace(" ", "-");
             var hotelName = tenant.Name;
+
+            // Build personalized guest greeting
             var guestName = booking.GuestName;
+            var personalizedGreeting = GetPersonalizedGreeting(booking);
+            var fullGreeting = guestName + personalizedGreeting;
+
             var roomNumber = booking.RoomNumber ?? "your room";
 
+            // Log personalization context for analytics
+            _logger.LogInformation(
+                "Building template {MessageType} for booking {BookingId}: " +
+                "IsAnniversary={IsAnniversary}, IsBirthday={IsBirthday}, IsRepeatGuest={IsRepeatGuest}",
+                messageType, booking.Id, booking.IsAnniversary, booking.IsBirthday, booking.IsRepeatGuest);
+
             // Build template based on message type
+            // NOTE: For templates with personalization, use fullGreeting instead of guestName
+            // to include special occasion messages (Anniversary, Birthday, Repeat Guest)
             switch (messageType)
             {
                 case ScheduledMessageType.PreArrival:
@@ -694,7 +740,7 @@ We're here for anything you need!";
                     var token = GenerateRedirectToken(tenantSlug, "prepare");
                     return new TemplateInfo(
                         "pre_arrival_welcome_v04",
-                        new List<string> { guestName, hotelName, roomNumber, checkinDate },
+                        new List<string> { fullGreeting, hotelName, roomNumber, checkinDate },
                         token);
 
                 case ScheduledMessageType.CheckinDay:
@@ -702,7 +748,7 @@ We're here for anything you need!";
                     token = GenerateRedirectToken(tenantSlug, $"services/{booking.Id}");
                     return new TemplateInfo(
                         "checkin_day_ready_v04",
-                        new List<string> { guestName, roomNumber, hotelName, checkinTime },
+                        new List<string> { fullGreeting, roomNumber, hotelName, checkinTime },
                         token);
 
                 case ScheduledMessageType.WelcomeSettled:
@@ -716,7 +762,7 @@ We're here for anything you need!";
                     token = GenerateRedirectToken(tenantSlug, $"housekeeping/{booking.Id}");
                     return new TemplateInfo(
                         "mid_stay_checkup_v04",
-                        new List<string> { guestName, hotelName, roomNumber },
+                        new List<string> { fullGreeting, hotelName, roomNumber },
                         token);
 
                 case ScheduledMessageType.PreCheckout:
@@ -724,14 +770,14 @@ We're here for anything you need!";
                     token = GenerateRedirectToken(tenantSlug, $"checkout/{booking.Id}");
                     return new TemplateInfo(
                         "pre_checkout_reminder_v03",
-                        new List<string> { guestName, hotelName, roomNumber, checkoutTime },
+                        new List<string> { fullGreeting, hotelName, roomNumber, checkoutTime },
                         token);
 
                 case ScheduledMessageType.PostStay:
                     token = GenerateRedirectToken(tenantSlug, $"feedback/{booking.Id}");
                     return new TemplateInfo(
                         "post_stay_survey_v03",
-                        new List<string> { guestName, hotelName, roomNumber },
+                        new List<string> { fullGreeting, hotelName, roomNumber },
                         token);
 
                 default:

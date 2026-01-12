@@ -160,6 +160,10 @@
   "services": {
     "title": "Hoteldienste",
     "subtitle": "Verbeter jou verblyf met ons premiumdienste",
+    "searchPlaceholder": "Soek dienste...",
+    "noResults": "Geen dienste gevind nie",
+    "noResultsMessage": "Probeer jou soektog aanpas of gebruik ons aangepaste versoekvorm.",
+    "customRequest": "Maak Aangepaste Versoek",
     "enhanceYourStay": "Verbeter Jou Verblyf",
     "requestService": "Versoek Hierdie Diens",
     "sendRequest": "Stuur Versoek",
@@ -295,17 +299,40 @@
     "thankYouNegative": "Ons het ons span in kennis gestel en hulle sal dit binnekort hanteer."
   },
   "checkout": {
-    "title": "Uitskakel Dienste",
-    "subtitle": "Versoek dienste vir jou vertrek",
+    "title": "Uitskakel",
+    "subtitle": "Dankie dat jy by ons gebly het",
     "bookingSummary": "Jou Bespreking",
     "guestName": "Gas Naam",
     "room": "Kamernommer",
     "checkoutDate": "Uitskakel Datum",
+    "checkoutTime": "Uitskakel Tyd",
+    "requestCheckout": "Versoek Uitskakel",
+    "thankYou": "Dankie dat jy by ons gebly het!",
+    "thankYouMessage": "Jou uitskakel versoek is ingedien.",
+    "thankYouDetails": "Die voorlessenaar sal jou uitskakel binnekort verwerk.",
+    "lostAndFound": "Iets agtergelaat?",
+    "reportItem": "Rapporteer Verlore Item",
+    "shareExperience": "Deel Jou Ervaring",
+    "leaveFeedback": "Los Terugvoer",
     "noServices": "Geen uitskakel dienste beskikbaar nie",
     "noServicesDescription": "Kontak asseblief die voorlessenaar vir hulp met jou uitskakel.",
     "requestService": "Versoek Diens",
     "serviceRequested": "Diens suksesvol versoek!",
-    "errorTitle": "Kan nie uitskakel inligting laai nie"
+    "errorTitle": "Kan nie uitskakel inligting laai nie",
+    "submittingRequest": "Besig om uitskakel versoek in te dien..."
+  },
+  "myRequests": {
+    "title": "My Versoeke",
+    "subtitle": "Volg al jou versoeke en hul status",
+    "empty": "Geen versoeke nog nie",
+    "emptyDescription": "Jy het nog geen versoeke gemaak nie. Wanneer jy dit doen, sal dit hier verskyn.",
+    "requestedAt": "Versoek op",
+    "completedAt": "Voltooi op",
+    "status": {
+      "open": "Hangende",
+      "inProgress": "Besig",
+      "completed": "Voltooi"
+    }
   },
   "customRequest": {
     "title": "Spesiale Versoek",

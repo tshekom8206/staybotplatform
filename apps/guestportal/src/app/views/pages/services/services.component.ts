@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { GuestApiService, ServiceCategory, ServiceItem, FeaturedService } from '../../../core/services/guest-api.service';
 import { AnalyticsService } from '../../../core/services/analytics.service';
@@ -9,7 +10,7 @@ import { ServiceRequestModalComponent } from '../../../shared/components/service
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, ServiceRequestModalComponent],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, ServiceRequestModalComponent],
   template: `
     <div class="page-container">
       <div class="container">
@@ -22,6 +23,26 @@ import { ServiceRequestModalComponent } from '../../../shared/components/service
           <p class="page-subtitle">{{ 'services.subtitle' | translate }}</p>
         </div>
 
+        <!-- Search Bar -->
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <i class="bi bi-search search-icon"></i>
+            <input
+              type="text"
+              class="search-input"
+              [(ngModel)]="searchQuery"
+              (ngModelChange)="onSearchChange($event)"
+              [placeholder]="'services.searchPlaceholder' | translate"
+              autocomplete="off"
+            />
+            @if (searchQuery()) {
+              <button class="clear-search" (click)="clearSearch()">
+                <i class="bi bi-x-circle-fill"></i>
+              </button>
+            }
+          </div>
+        </div>
+
         @if (loading()) {
           <div class="loading-spinner">
             <div class="spinner-border text-primary" role="status">
@@ -32,6 +53,16 @@ import { ServiceRequestModalComponent } from '../../../shared/components/service
           <div class="empty-state">
             <i class="bi bi-stars"></i>
             <p>{{ 'amenities.noServices' | translate }}</p>
+          </div>
+        } @else if (filteredAndSearchedCategories().length === 0) {
+          <div class="empty-state">
+            <i class="bi bi-search"></i>
+            <h3>{{ 'services.noResults' | translate }}</h3>
+            <p>{{ 'services.noResultsMessage' | translate }}</p>
+            <button class="custom-request-btn" (click)="openCustomRequest()">
+              <i class="bi bi-plus-circle"></i>
+              {{ 'services.customRequest' | translate }}
+            </button>
           </div>
         } @else {
           <!-- Category Pills -->
@@ -55,7 +86,7 @@ import { ServiceRequestModalComponent } from '../../../shared/components/service
 
           <!-- Services Grid -->
           <div class="services-grid">
-            @for (category of filteredCategories(); track category.category) {
+            @for (category of filteredAndSearchedCategories(); track category.category) {
               <div class="category-section">
                 <div class="category-header">
                   <div class="category-icon">
@@ -173,10 +204,65 @@ import { ServiceRequestModalComponent } from '../../../shared/components/service
       justify-content: center;
       padding: 3rem;
     }
+    /* Search Bar */
+    .search-container {
+      margin-bottom: 1.25rem;
+    }
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.1rem;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .search-input {
+      width: 100%;
+      padding: 0.85rem 3rem 0.85rem 3rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50px;
+      font-size: 0.95rem;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      transition: all 0.2s ease;
+    }
+    .search-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    .search-input:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    .clear-search {
+      position: absolute;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s ease;
+    }
+    .clear-search:hover {
+      color: white;
+    }
+
     .empty-state {
       text-align: center;
-      padding: 3rem;
-      background: #f8f9fa;
+      padding: 3rem 1.5rem;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
       border-radius: 16px;
       color: #666;
     }
@@ -184,6 +270,36 @@ import { ServiceRequestModalComponent } from '../../../shared/components/service
       font-size: 3rem;
       margin-bottom: 1rem;
       opacity: 0.5;
+      color: #1a1a1a;
+    }
+    .empty-state h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 0 0 0.5rem;
+    }
+    .empty-state p {
+      margin: 0 0 1.5rem;
+      color: #666;
+    }
+    .custom-request-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .custom-request-btn:hover {
+      background: #333;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     /* Category Pills */
@@ -425,10 +541,42 @@ export class ServicesComponent implements OnInit {
   categories = signal<ServiceCategory[]>([]);
   loading = signal(true);
   selectedCategory = signal('');
+  searchQuery = signal('');
 
   // Modal state
   modalOpen = signal(false);
   selectedService = signal<FeaturedService | null>(null);
+
+  // Computed signal for filtered and searched categories
+  filteredAndSearchedCategories = computed(() => {
+    let result = this.categories();
+
+    // Filter by selected category pill
+    const selected = this.selectedCategory();
+    if (selected) {
+      result = result.filter(c => c.category === selected);
+    }
+
+    // Filter by search query
+    const query = this.searchQuery().toLowerCase().trim();
+    if (query) {
+      result = result.map(category => {
+        const filteredServices = category.services.filter(service => {
+          const matchesName = service.name.toLowerCase().includes(query);
+          const matchesDescription = service.description?.toLowerCase().includes(query) || false;
+          const matchesCategory = category.category.toLowerCase().includes(query);
+          return matchesName || matchesDescription || matchesCategory;
+        });
+
+        return {
+          ...category,
+          services: filteredServices
+        };
+      }).filter(category => category.services.length > 0);
+    }
+
+    return result;
+  });
 
   ngOnInit(): void {
     this.loadServices();
@@ -458,14 +606,30 @@ export class ServicesComponent implements OnInit {
     return [...new Set(this.categories().map(c => c.category))];
   }
 
-  filteredCategories(): ServiceCategory[] {
-    const selected = this.selectedCategory();
-    if (!selected) return this.categories();
-    return this.categories().filter(c => c.category === selected);
-  }
-
   selectCategory(category: string): void {
     this.selectedCategory.set(category);
+  }
+
+  onSearchChange(query: string): void {
+    this.searchQuery.set(query);
+
+    // Track search event for analytics
+    if (query.trim()) {
+      this.analyticsService.trackEvent('search', {
+        search_term: query,
+        page_location: '/services'
+      });
+    }
+  }
+
+  clearSearch(): void {
+    this.searchQuery.set('');
+  }
+
+  openCustomRequest(): void {
+    // Open the modal with no service selected (custom request)
+    this.selectedService.set(null);
+    this.modalOpen.set(true);
   }
 
   openServiceModal(service: ServiceItem): void {

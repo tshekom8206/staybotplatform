@@ -1724,6 +1724,48 @@ public class PublicGuestController : ControllerBase
     }
 
     /// <summary>
+    /// Get all tasks (requests) for a specific room number
+    /// Used by My Requests page to show guest's request history and status
+    /// </summary>
+    [HttpGet("tasks/{roomNumber}")]
+    public async Task<IActionResult> GetTasksByRoomNumber(string slug, string roomNumber)
+    {
+        try
+        {
+            var tenant = await GetTenantBySlugAsync(slug);
+            if (tenant == null)
+            {
+                return NotFound(new { error = "Hotel not found" });
+            }
+
+            // Get all tasks for this room number
+            var tasks = await _context.StaffTasks
+                .Where(t => t.TenantId == tenant.Id && t.RoomNumber == roomNumber)
+                .OrderByDescending(t => t.CreatedAt)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    t.Description,
+                    t.Status,
+                    t.Department,
+                    t.TaskType,
+                    CreatedAt = t.CreatedAt.ToString("o"),
+                    UpdatedAt = t.UpdatedAt.ToString("o"),
+                    CompletedAt = t.CompletedAt.HasValue ? t.CompletedAt.Value.ToString("o") : null
+                })
+                .ToListAsync();
+
+            return Ok(tasks);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting tasks for room {RoomNumber}, slug {Slug}", roomNumber, slug);
+            return StatusCode(500, new { error = "Error retrieving tasks" });
+        }
+    }
+
+    /// <summary>
     /// Get available items and services for pre-arrival upsells (prepare page)
     /// This combines RequestItems and Services marked for pre-arrival
     /// </summary>
