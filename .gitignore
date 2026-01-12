@@ -91,3 +91,4 @@ adminui_output.log
 apps/apipublish/ga4-credentials.json
 fix-azure-settings.ps1
 apps/api/ga4-credentials.json
+apps/api/.publish/ga4-credentials.json
