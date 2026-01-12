@@ -86,3 +86,8 @@ adminui_output.log
 !docs/screenshots/**
 !docs/manual/
 !docs/manual/**
+
+# Sensitive files
+apps/apipublish/ga4-credentials.json
+fix-azure-settings.ps1
+apps/api/ga4-credentials.json
